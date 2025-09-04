@@ -1,0 +1,12 @@
+body { font-family: Arial, sans-serif; background:#f8f9fa; margin:0; padding:0; text-align:center; }
+header { background:#e63946; color:white; padding:15px; font-size:1.5em; font-weight:bold; }
+.cardapio { background:white; max-width:500px; margin:20px auto; padding:20px; border-radius:10px; box-shadow:0 4px 6px rgba(0,0,0,0.1); }
+h2 { color:#333; margin-bottom:10px; }
+ul { list-style:none; padding:0; }
+li { margin:5px 0; cursor:pointer; padding:5px; border-radius:5px; }
+li:hover { background:#f1f1f1; }
+.selecionado { background:#a8dadc; }
+.preco, .pedido { margin-top:20px; padding:15px; background:#f1f1f1; border-radius:8px; text-align:left; }
+input, textarea { width: 100%; padding:5px; margin-top:5px; border-radius:5px; border:1px solid #ccc; }
+button { margin-top:10px; padding:10px 20px; background:#e63946; color:white; border:none; border-radius:5px; cursor:pointer; }
+button:hover { background:#d62828; }
