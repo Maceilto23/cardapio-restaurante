@@ -3,23 +3,265 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Restaurante Colinas - Cardápio</title>
-<link rel="stylesheet" href="style.css">
+<title>Cardápio Interativo</title>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+  }
+
+  .cardapio {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    max-width: 500px;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  /* Cabeçalho com logo */
+  .logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 20px;
+  }
+  .logo-container img {
+    height: 60px;
+    margin-right: 15px;
+    border-radius: 8px;
+  }
+  .titulo-container h1 {
+    font-size: 1.5rem;
+    color: #007BFF;
+    margin-bottom: 5px;
+  }
+  .titulo-container h2 {
+    font-size: 1.1rem;
+    color: #555;
+    font-weight: normal;
+  }
+
+  /* Marmita opções */
+  .marmita-options h3 {
+    font-size: 1rem;
+    margin-bottom: 10px;
+  }
+  .marmita-options label {
+    display: block;
+    margin-bottom: 5px;
+    cursor: pointer;
+  }
+
+  h3 { margin-bottom: 10px; color: #333; }
+  ul { list-style: none; padding: 0; }
+  li {
+    margin: 5px 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  li:hover { background: #f0f0f0; }
+
+  /* Quadrado com X */
+  .checkbox-fake {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #007BFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    color: #fff;
+    background: #007BFF;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    flex-shrink: 0;
+  }
+  li.selected .checkbox-fake {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  li span { flex: 1; }
+
+  /* Pedido selecionado */
+  #itensPedido {
+    margin-top: 15px;
+    padding: 12px;
+    background: #e9f5ff;
+    border-radius: 8px;
+  }
+  #itensPedido li { margin: 4px 0; }
+
+  /* Input adicionais */
+  #adicionais {
+    width: 100%;
+    padding: 8px;
+    margin-top: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+
+  /* Botão WhatsApp */
+  #enviarWhats {
+    margin-top: 12px;
+    padding: 10px;
+    background: #25D366;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  /* Responsividade */
+  @media (max-width: 600px) {
+    .logo-container { flex-direction: column; align-items: center; text-align: center; }
+    .logo-container img { margin-right: 0; margin-bottom: 8px; height: 50px; }
+    .titulo-container h1 { font-size: 1.3rem; }
+    .titulo-container h2 { font-size: 1rem; }
+    #enviarWhats { font-size: 0.95rem; }
+  }
+</style>
 </head>
 <body>
 
-<header>🍽️ Restaurante Colinas - Cardápio do Dia</header>
+<div class="cardapio">
+  <div class="logo-container">
+    <img src="logo.png" alt="Logo Restaurante">
+    <div class="titulo-container">
+      <h1>Restaurante Colinas</h1>
+      <h2>🍽️Cardápio de Hoje,<span id="diaSemana"></span>,<span id="dataHoje"></span></h2>
+    </div>
+  </div>
+ <div>
+  _________
+   
+  </div>
 
-<div class="cardapio" id="cardapio"></div>
+  <div class="marmita-options">
+    <h3>🍱 Escolha o tipo de Marmita</h3>
+    <label><input type="radio" name="marmita" value="Marmita Pequena - R$15,00 (1 carne)"> Marmita Pequena - R$15,00 (1 carne)</label>
+    <label><input type="radio" name="marmita" value="Marmita Grande - R$20,00 (2 carnes)"> Marmita Grande - R$20,00 (2 carnes)</label>
+  </div>
 
-<div class="pedido" id="pedido">
-  <h3>Seu Pedido</h3>
-  <ul id="itensPedido"></ul>
-  <label for="adicionais">Adicionais:</label>
-  <textarea id="adicionais" placeholder="Digite adicionais aqui..."></textarea>
-  <button id="enviarWhats">Enviar Pedido via WhatsApp</button>
+  <h3>🍖 Carnes</h3>
+  <ul id="carnes"></ul>
+
+  <h3>🥗 Acompanhamentos</h3>
+  <ul id="acompanhamentos"></ul>
+
+  <h3>Adicionais:</h3>
+  <input type="text" id="adicionais" placeholder="Digite adicionais">
+  <button id="enviarWhats">Enviar via WhatsApp</button>
+
+  <h3>📋 Pedido Selecionado</h3>
+  <ul id="itensPedido"><li>Nenhum item selecionado</li></ul>
 </div>
 
-<script src="script.js"></script>
+<script>
+const diasSemana = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+const hojeDate = new Date();
+
+// Nome do dia
+const nomeDia = diasSemana[hojeDate.getDay()];
+document.getElementById("diaSemana").innerText = nomeDia;
+
+// Data formatada dd/mm/yyyy
+const dia = String(hojeDate.getDate()).padStart(2,'0');
+const mes = String(hojeDate.getMonth()+1).padStart(2,'0');
+const ano = hojeDate.getFullYear();
+document.getElementById("dataHoje").innerText = `– ${dia}/${mes}/${ano}`;
+
+// Cardápio do dia
+const cardapios = {
+  "segunda-feira": { carnes:["Costela com mandioca","Frango ao molho","Peito de frango grelhado"], acompanhamentos:["Arroz","Feijão","Macarrão alho e óleo","Purê","Farofa","Verduras cozidas","Salada"] },
+  "terça-feira": { carnes:["Churrasco","Carne de porco frita","Frango ao molho"], acompanhamentos:["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
+  "quarta-feira": { carnes:["Churrasco","Strogonoff de frango","Frango ao molho"], acompanhamentos:["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata palha","Batata temperada"] },
+  "quinta-feira": { carnes:["Churrasco","Frango ao molho","Fígado"], acompanhamentos:["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
+  "sexta-feira": { carnes:["Churrasco","Frango ao molho","Coxa e sobrecoxa assada"], acompanhamentos:["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
+  "sábado": { carnes:["Churrasco","Feijoada","Frango ao molho"], acompanhamentos:["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
+  "domingo": { carnes:["Churrasco","Frango ao molho","Lasanha"], acompanhamentos:["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Maionese"] }
+};
+
+const cardapioHoje = cardapios[nomeDia.toLowerCase()];
+const carnesList = document.getElementById("carnes");
+const acompanhamentosList = document.getElementById("acompanhamentos");
+const itensPedido = document.getElementById("itensPedido");
+let pedido = [];
+let marmita = "";
+
+// Renderiza carnes e acompanhamentos
+cardapioHoje.carnes.forEach(c => {
+  const li = document.createElement("li");
+  li.setAttribute("data-item", c);
+  li.innerHTML = `<div class="checkbox-fake">X</div><span>${c}</span>`;
+  carnesList.appendChild(li);
+});
+cardapioHoje.acompanhamentos.forEach(a => {
+  const li = document.createElement("li");
+  li.setAttribute("data-item", a);
+  li.innerHTML = `<div class="checkbox-fake">X</div><span>${a}</span>`;
+  acompanhamentosList.appendChild(li);
+});
+
+// Função de clique nos itens
+function habilitarClick() {
+  pedido = [];
+  document.querySelectorAll("#carnes li, #acompanhamentos li").forEach(li => {
+    li.addEventListener("click", () => {
+      li.classList.toggle("selected");
+      const item = li.getAttribute("data-item");
+      if(li.classList.contains("selected")){
+        if(!pedido.includes(item)) pedido.push(item);
+      } else {
+        pedido = pedido.filter(i => i !== item);
+      }
+      atualizarPedido();
+    });
+  });
+
+  document.querySelectorAll("input[name='marmita']").forEach(radio => {
+    radio.addEventListener("change", () => {
+      marmita = radio.value;
+      atualizarPedido();
+    });
+  });
+}
+
+// Atualiza lista do pedido
+function atualizarPedido() {
+  itensPedido.innerHTML = `
+    ${marmita ? `<li>🍱 ${marmita}</li>` : ""}
+    ${pedido.length ? pedido.map(i => `<li>✅ ${i}</li>`).join("") : "<li>Nenhum item selecionado</li>"}
+  `;
+}
+
+// Enviar via WhatsApp
+document.getElementById("enviarWhats").addEventListener("click", () => {
+  const itensSelecionados = pedido.map(i => "- " + i).join("%0A");
+  const adicionais = encodeURIComponent(document.getElementById("adicionais").value);
+  const mensagem = `Olá! Gostaria de fazer o pedido:%0A%0A${marmita ? marmita + "%0A%0A" : ""}Itens:%0A${itensSelecionados}%0A%0AAdicionais:%0A${adicionais}`;
+  const telefone = "556192633504"; 
+  const url = `https://api.whatsapp.com/send/?phone=${telefone}&text=${mensagem}&type=phone_number&app_absent=0`;
+  window.open(url, "_blank");
+});
+
+habilitarClick();
+</script>
+
 </body>
 </html>
