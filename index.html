@@ -14,7 +14,6 @@
     align-items: center;
     padding: 10px;
   }
-
   .cardapio {
     background: #fff;
     padding: 20px;
@@ -24,110 +23,26 @@
     width: 100%;
     margin-bottom: 20px;
   }
-
-  /* Cabeçalho com logo */
-  .logo-container {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    margin-bottom: 20px;
-  }
-  .logo-container img {
-    height: 60px;
-    margin-right: 15px;
-    border-radius: 8px;
-  }
-  .titulo-container h1 {
-    font-size: 1.5rem;
-    color: #007BFF;
-    margin-bottom: 5px;
-  }
-  .titulo-container h2 {
-    font-size: 1.1rem;
-    color: #555;
-    font-weight: normal;
-  }
-
-  /* Marmita opções */
-  .marmita-options h3 {
-    font-size: 1rem;
-    margin-bottom: 10px;
-  }
-  .marmita-options label {
-    display: block;
-    margin-bottom: 5px;
-    cursor: pointer;
-  }
-
+  .cliente-info { margin-bottom: 20px; width: 100%; }
+  .cliente-info label { display: block; margin-bottom: 5px; font-weight: bold; color: #007BFF; }
+  .cliente-info input { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 0.95rem; }
+  .logo-container { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 20px; }
+  .logo-container img { height: 60px; margin-right: 15px; border-radius: 8px; }
+  .titulo-container h1 { font-size: 1.5rem; color: #007BFF; margin-bottom: 5px; }
+  .titulo-container h2 { font-size: 1.1rem; color: #555; font-weight: normal; }
+  .marmita-options h3 { font-size: 1rem; margin-bottom: 10px; }
+  .marmita-options label { display: block; margin-bottom: 5px; cursor: pointer; }
   h3 { margin-bottom: 10px; color: #333; }
   ul { list-style: none; padding: 0; }
-  li {
-    margin: 5px 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    padding: 6px 10px;
-    border-radius: 8px;
-    transition: background 0.2s;
-  }
+  li { margin: 5px 0; cursor: pointer; display: flex; align-items: center; padding: 6px 10px; border-radius: 8px; transition: background 0.2s; }
   li:hover { background: #f0f0f0; }
-
-  /* Quadrado com X */
-  .checkbox-fake {
-    width: 22px;
-    height: 22px;
-    border: 2px solid #007BFF;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 10px;
-    border-radius: 4px;
-    font-weight: bold;
-    color: #fff;
-    background: #007BFF;
-    opacity: 0;
-    transition: opacity 0.2s, transform 0.2s;
-    flex-shrink: 0;
-  }
-  li.selected .checkbox-fake {
-    opacity: 1;
-    transform: scale(1.1);
-  }
+  .checkbox-fake { width: 22px; height: 22px; border: 2px solid #007BFF; display: flex; align-items: center; justify-content: center; margin-right: 10px; border-radius: 4px; font-weight: bold; color: #fff; background: #007BFF; opacity: 0; transition: opacity 0.2s, transform 0.2s; flex-shrink: 0; }
+  li.selected .checkbox-fake { opacity: 1; transform: scale(1.1); }
   li span { flex: 1; }
-
-  /* Pedido selecionado */
-  #itensPedido {
-    margin-top: 15px;
-    padding: 12px;
-    background: #e9f5ff;
-    border-radius: 8px;
-  }
+  #itensPedido { margin-top: 15px; padding: 12px; background: #e9f5ff; border-radius: 8px; }
   #itensPedido li { margin: 4px 0; }
-
-  /* Input adicionais */
-  #adicionais {
-    width: 100%;
-    padding: 8px;
-    margin-top: 8px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-  }
-
-  /* Botão WhatsApp */
-  #enviarWhats {
-    margin-top: 12px;
-    padding: 10px;
-    background: #25D366;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    width: 100%;
-    font-size: 1rem;
-  }
-
-  /* Responsividade */
+  #adicionais { width: 100%; padding: 8px; margin-top: 8px; border-radius: 6px; border: 1px solid #ccc; }
+  #enviarWhats { margin-top: 12px; padding: 10px; background: #25D366; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; }
   @media (max-width: 600px) {
     .logo-container { flex-direction: column; align-items: center; text-align: center; }
     .logo-container img { margin-right: 0; margin-bottom: 8px; height: 50px; }
@@ -140,16 +55,13 @@
 <body>
 
 <div class="cardapio">
+
   <div class="logo-container">
     <img src="logo.png" alt="Logo Restaurante">
     <div class="titulo-container">
       <h1>Restaurante Colinas</h1>
-      <h2>🍽️Cardápio de Hoje,<span id="diaSemana"></span>,<span id="dataHoje"></span></h2>
+      <h2>🍽️ Cardápio de Hoje – <span id="diaSemana"></span>, <span id="dataHoje"></span></h2>
     </div>
-  </div>
- <div>
-  _________
-   
   </div>
 
   <div class="marmita-options">
@@ -166,38 +78,44 @@
 
   <h3>Adicionais:</h3>
   <input type="text" id="adicionais" placeholder="Digite adicionais">
+
+  <div class="cliente-info">
+    <label for="nomeCliente">Nome do Cliente:</label>
+    <input type="text" id="nomeCliente" placeholder="Digite seu nome">
+    <label for="enderecoCliente">Endereço:</label>
+    <input type="text" id="enderecoCliente" placeholder="Digite o endereço de entrega">
+  </div>
+
   <button id="enviarWhats">Enviar via WhatsApp</button>
 
   <h3>📋 Pedido Selecionado</h3>
   <ul id="itensPedido"><li>Nenhum item selecionado</li></ul>
+
 </div>
 
 <script>
 const diasSemana = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
 const hojeDate = new Date();
-
-// Nome do dia
 const nomeDia = diasSemana[hojeDate.getDay()];
 document.getElementById("diaSemana").innerText = nomeDia;
-
-// Data formatada dd/mm/yyyy
 const dia = String(hojeDate.getDate()).padStart(2,'0');
 const mes = String(hojeDate.getMonth()+1).padStart(2,'0');
 const ano = hojeDate.getFullYear();
-document.getElementById("dataHoje").innerText = `– ${dia}/${mes}/${ano}`;
+document.getElementById("dataHoje").innerText = `${dia}/${mes}/${ano}`;
 
-// Cardápio do dia
-const cardapios = {
-  "segunda-feira": { carnes:["Costela com mandioca","Frango ao molho","Peito de frango grelhado"], acompanhamentos:["Arroz","Feijão","Macarrão alho e óleo","Purê","Farofa","Verduras cozidas","Salada"] },
-  "terça-feira": { carnes:["Churrasco","Carne de porco frita","Frango ao molho"], acompanhamentos:["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-  "quarta-feira": { carnes:["Churrasco","Strogonoff de frango","Frango ao molho"], acompanhamentos:["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata palha","Batata temperada"] },
-  "quinta-feira": { carnes:["Churrasco","Frango ao molho","Fígado"], acompanhamentos:["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-  "sexta-feira": { carnes:["Churrasco","Frango ao molho","Coxa e sobrecoxa assada"], acompanhamentos:["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-  "sábado": { carnes:["Churrasco","Feijoada","Frango ao molho"], acompanhamentos:["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-  "domingo": { carnes:["Churrasco","Frango ao molho","Lasanha"], acompanhamentos:["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Maionese"] }
+// Carrega cardápio do localStorage ou default
+const defaultCardapio = {
+  "segunda-feira": { "carnes":["Costela com mandioca","Frango ao molho","Peito de frango grelhado"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Purê","Farofa","Verduras cozidas","Salada"] },
+  "terça-feira": { "carnes":["Churrasco","Carne de porco frita","Frango ao molho"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
+  "quarta-feira": { "carnes":["Churrasco","Strogonoff de frango","Frango ao molho"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata palha","Batata temperada"] },
+  "quinta-feira": { "carnes":["Churrasco","Frango ao molho","Fígado"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
+  "sexta-feira": { "carnes":["Churrasco","Frango ao molho","Coxa e sobrecoxa assada"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
+  "sábado": { "carnes":["Churrasco","Feijoada","Frango ao molho"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
+  "domingo": { "carnes":["Churrasco","Frango ao molho","Lasanha"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Maionese"] }
 };
 
-const cardapioHoje = cardapios[nomeDia.toLowerCase()];
+const cardapio = JSON.parse(localStorage.getItem("cardapio")) || defaultCardapio;
+const cardapioHoje = cardapio[nomeDia.toLowerCase()];
 const carnesList = document.getElementById("carnes");
 const acompanhamentosList = document.getElementById("acompanhamentos");
 const itensPedido = document.getElementById("itensPedido");
@@ -205,18 +123,23 @@ let pedido = [];
 let marmita = "";
 
 // Renderiza carnes e acompanhamentos
-cardapioHoje.carnes.forEach(c => {
-  const li = document.createElement("li");
-  li.setAttribute("data-item", c);
-  li.innerHTML = `<div class="checkbox-fake">X</div><span>${c}</span>`;
-  carnesList.appendChild(li);
-});
-cardapioHoje.acompanhamentos.forEach(a => {
-  const li = document.createElement("li");
-  li.setAttribute("data-item", a);
-  li.innerHTML = `<div class="checkbox-fake">X</div><span>${a}</span>`;
-  acompanhamentosList.appendChild(li);
-});
+function renderizarCardapio() {
+  carnesList.innerHTML = "";
+  acompanhamentosList.innerHTML = "";
+  cardapioHoje.carnes.forEach(c => {
+    const li = document.createElement("li");
+    li.setAttribute("data-item", c);
+    li.innerHTML = `<div class="checkbox-fake">X</div><span>${c}</span>`;
+    carnesList.appendChild(li);
+  });
+  cardapioHoje.acompanhamentos.forEach(a => {
+    const li = document.createElement("li");
+    li.setAttribute("data-item", a);
+    li.innerHTML = `<div class="checkbox-fake">X</div><span>${a}</span>`;
+    acompanhamentosList.appendChild(li);
+  });
+  habilitarClick();
+}
 
 // Função de clique nos itens
 function habilitarClick() {
@@ -233,7 +156,6 @@ function habilitarClick() {
       atualizarPedido();
     });
   });
-
   document.querySelectorAll("input[name='marmita']").forEach(radio => {
     radio.addEventListener("change", () => {
       marmita = radio.value;
@@ -242,7 +164,6 @@ function habilitarClick() {
   });
 }
 
-// Atualiza lista do pedido
 function atualizarPedido() {
   itensPedido.innerHTML = `
     ${marmita ? `<li>🍱 ${marmita}</li>` : ""}
@@ -252,15 +173,17 @@ function atualizarPedido() {
 
 // Enviar via WhatsApp
 document.getElementById("enviarWhats").addEventListener("click", () => {
+  const nomeCliente = encodeURIComponent(document.getElementById("nomeCliente").value || "Não informado");
+  const enderecoCliente = encodeURIComponent(document.getElementById("enderecoCliente").value || "Não informado");
   const itensSelecionados = pedido.map(i => "- " + i).join("%0A");
   const adicionais = encodeURIComponent(document.getElementById("adicionais").value);
-  const mensagem = `Olá! Gostaria de fazer o pedido:%0A%0A${marmita ? marmita + "%0A%0A" : ""}Itens:%0A${itensSelecionados}%0A%0AAdicionais:%0A${adicionais}`;
+  const mensagem = `Olá! Gostaria de fazer o pedido:%0A%0ACliente: ${nomeCliente}%0AEndereço: ${enderecoCliente}%0A%0A${marmita ? marmita + "%0A%0A" : ""}Itens:%0A${itensSelecionados}%0A%0AAdicionais:%0A${adicionais}`;
   const telefone = "556192633504"; 
   const url = `https://api.whatsapp.com/send/?phone=${telefone}&text=${mensagem}&type=phone_number&app_absent=0`;
   window.open(url, "_blank");
 });
 
-habilitarClick();
+renderizarCardapio();
 </script>
 
 </body>

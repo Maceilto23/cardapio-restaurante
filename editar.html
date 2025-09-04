@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editar Cardápio</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  padding: 20px;
+}
+
+h1 { color: #007BFF; margin-bottom: 20px; }
+
+.dia-section {
+  background: #fff;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.dia-section h2 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.lista-itens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.lista-itens input {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: calc(50% - 5px);
+}
+
+button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  margin-right: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button.add { background: #28a745; color: #fff; }
+button.remove { background: #dc3545; color: #fff; }
+button.save { background: #007BFF; color: #fff; margin-top:10px; }
+textarea#jsonOutput {
+  width: 100%;
+  height: 200px;
+  margin-top: 10px;
+  border-radius: 8px;
+  padding: 10px;
+  font-family: monospace;
+}
+</style>
+</head>
+<body>
+
+<h1>Editar Cardápio Visualmente</h1>
+<p>Edite os itens de cada dia. Depois copie o JSON gerado para substituir <strong>cardapio.json</strong> no GitHub.</p>
+
+<div id="editor"></div>
+
+<button class="save" onclick="gerarJSON()">Gerar JSON</button>
+<textarea id="jsonOutput" readonly></textarea>
+
+<script>
+// Dias da semana
+const diasSemana = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
+
+// Carrega o cardápio atual
+fetch('cardapio.json')
+  .then(res => res.json())
+  .then(cardapio => {
+    const editorDiv = document.getElementById('editor');
+
+    diasSemana.forEach(dia => {
+      const diaData = cardapio[dia] || {carnes:[], acompanhamentos:[]};
+      const section = document.createElement('div');
+      section.className = 'dia-section';
+      section.innerHTML = `<h2>${dia.charAt(0).toUpperCase() + dia.slice(1)}</h2>`;
+
+      // Carnes
+      const carnesDiv = document.createElement('div');
+      carnesDiv.innerHTML = `<h3>Carnes:</h3>`;
+      const carnesLista = document.createElement('div');
+      carnesLista.className = 'lista-itens';
+      diaData.carnes.forEach(item => {
+        const input = document.createElement('input');
+        input.value = item;
+        carnesLista.appendChild(input);
+      });
+      // Botão adicionar carne
+      const btnAddCarne = document.createElement('button');
+      btnAddCarne.className = 'add';
+      btnAddCarne.innerText = '+ Carne';
+      btnAddCarne.onclick = () => {
+        const input = document.createElement('input');
+        carnesLista.appendChild(input);
+      };
+      carnesDiv.appendChild(carnesLista);
+      carnesDiv.appendChild(btnAddCarne);
+
+      // Acompanhamentos
+      const acompDiv = document.createElement('div');
+      acompDiv.innerHTML = `<h3>Acompanhamentos:</h3>`;
+      const acompLista = document.createElement('div');
+      acompLista.className = 'lista-itens';
+      diaData.acompanhamentos.forEach(item => {
+        const input = document.createElement('input');
+        input.value = item;
+        acompLista.appendChild(input);
+      });
+      const btnAddAcomp = document.createElement('button');
+      btnAddAcomp.className = 'add';
+      btnAddAcomp.innerText = '+ Acompanhamento';
+      btnAddAcomp.onclick = () => {
+        const input = document.createElement('input');
+        acompLista.appendChild(input);
+      };
+      acompDiv.appendChild(acompLista);
+      acompDiv.appendChild(btnAddAcomp);
+
+      section.appendChild(carnesDiv);
+      section.appendChild(acompDiv);
+      editorDiv.appendChild(section);
+    });
+  });
+
+// Gera JSON final
+function gerarJSON(){
+  const editorDiv = document.getElementById('editor');
+  const dias = editorDiv.querySelectorAll('.dia-section');
+  const novoCardapio = {};
+
+  dias.forEach(diaSec => {
+    const diaNome = diaSec.querySelector('h2').innerText.toLowerCase();
+    const carnes = Array.from(diaSec.querySelectorAll('div.lista-itens')[0].querySelectorAll('input')).map(i => i.value).filter(v => v);
+    const acompanhamentos = Array.from(diaSec.querySelectorAll('div.lista-itens')[1].querySelectorAll('input')).map(i => i.value).filter(v => v);
+    novoCardapio[diaNome] = { carnes, acompanhamentos };
+  });
+
+  document.getElementById('jsonOutput').value = JSON.stringify(novoCardapio, null, 2);
+  alert("JSON gerado! Copie o conteúdo acima para substituir cardapio.json no GitHub.");
+}
+</script>
+
+</body>
+</html>

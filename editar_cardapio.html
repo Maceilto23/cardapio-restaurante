@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor Visual do Cardápio</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    padding: 20px;
+  }
+  h1 { color: #007BFF; text-align: center; margin-bottom: 20px; }
+  .dia {
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  h2 { margin-bottom: 10px; color: #007BFF; font-size: 1.1rem; }
+  label { display: block; margin: 5px 0; font-weight: bold; }
+  input, textarea {
+    width: 100%;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+  }
+  textarea { resize: vertical; height: 80px; }
+  button {
+    display: block;
+    margin: 0 auto 20px auto;
+    padding: 10px 20px;
+    background: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .status { text-align: center; font-weight: bold; margin-top: 10px; }
+  .status.success { color: green; }
+  .status.error { color: red; }
+</style>
+</head>
+<body>
+
+<h1>Editor Visual do Cardápio</h1>
+
+<div id="editorContainer"></div>
+
+<button id="salvarBtn">Salvar Cardápio</button>
+<div class="status" id="statusMsg"></div>
+
+<script>
+const diasSemana = ["segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado","domingo"];
+const defaultCardapio = {
+  "segunda-feira": { "carnes":["Costela com mandioca","Frango ao molho","Peito de frango grelhado"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Purê","Farofa","Verduras cozidas","Salada"] },
+  "terça-feira": { "carnes":["Churrasco","Carne de porco frita","Frango ao molho"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
+  "quarta-feira": { "carnes":["Churrasco","Strogonoff de frango","Frango ao molho"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata palha","Batata temperada"] },
+  "quinta-feira": { "carnes":["Churrasco","Frango ao molho","Fígado"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
+  "sexta-feira": { "carnes":["Churrasco","Frango ao molho","Coxa e sobrecoxa assada"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
+  "sábado": { "carnes":["Churrasco","Feijoada","Frango ao molho"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
+  "domingo": { "carnes":["Churrasco","Frango ao molho","Lasanha"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Maionese"] }
+};
+
+// Carrega cardápio do localStorage ou padrão
+let cardapio = JSON.parse(localStorage.getItem("cardapio")) || defaultCardapio;
+
+const editorContainer = document.getElementById("editorContainer");
+
+// Cria campos visuais para cada dia
+diasSemana.forEach(dia => {
+  const diaDiv = document.createElement("div");
+  diaDiv.className = "dia";
+  diaDiv.innerHTML = `
+    <h2>${dia.charAt(0).toUpperCase()+dia.slice(1)}</h2>
+    <label>Carnes (separadas por vírgula):</label>
+    <textarea id="carnes_${dia}">${cardapio[dia].carnes.join(", ")}</textarea>
+    <label>Acompanhamentos (separados por vírgula):</label>
+    <textarea id="acomp_${dia}">${cardapio[dia].acompanhamentos.join(", ")}</textarea>
+  `;
+  editorContainer.appendChild(diaDiv);
+});
+
+// Salvar alterações
+document.getElementById("salvarBtn").addEventListener("click", () => {
+  try {
+    diasSemana.forEach(dia => {
+      const carnes = document.getElementById(`carnes_${dia}`).value.split(",").map(i => i.trim()).filter(i => i);
+      const acomp = document.getElementById(`acomp_${dia}`).value.split(",").map(i => i.trim()).filter(i => i);
+      cardapio[dia] = { carnes, acompanhamentos: acomp };
+    });
+    localStorage.setItem("cardapio", JSON.stringify(cardapio));
+    statusMsg.textContent = "Cardápio salvo com sucesso!";
+    statusMsg.className = "status success";
+  } catch(e) {
+    statusMsg.textContent = "Erro ao salvar cardápio: " + e.message;
+    statusMsg.className = "status error";
+  }
+});
+</script>
+
+</body>
+</html>
