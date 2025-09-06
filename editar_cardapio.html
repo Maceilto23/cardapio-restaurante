@@ -3,104 +3,154 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Editor Visual do Cardápio</title>
+<title>Editar Cardápio</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f5f5f5;
-    padding: 20px;
-  }
-  h1 { color: #007BFF; text-align: center; margin-bottom: 20px; }
-  .dia {
-    background: #fff;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  }
-  h2 { margin-bottom: 10px; color: #007BFF; font-size: 1.1rem; }
-  label { display: block; margin: 5px 0; font-weight: bold; }
-  input, textarea {
-    width: 100%;
-    padding: 6px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    margin-bottom: 10px;
-    font-size: 0.95rem;
-  }
-  textarea { resize: vertical; height: 80px; }
-  button {
-    display: block;
-    margin: 0 auto 20px auto;
-    padding: 10px 20px;
-    background: #007BFF;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  .status { text-align: center; font-weight: bold; margin-top: 10px; }
-  .status.success { color: green; }
-  .status.error { color: red; }
+body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+h1 { text-align: center; margin-bottom: 20px; }
+.section { background: #fff; padding: 15px; margin-bottom: 15px; border-radius: 6px; }
+label { display: block; margin-top: 10px; font-weight: bold; }
+input[type=text], input[type=time], input[type=number] { width: 100%; padding: 6px; margin-top: 2px; border: 1px solid #ccc; border-radius: 4px; }
+button { margin-top: 6px; padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; }
+.add-btn { background-color: #28a745; color: white; }
+.add-btn:hover { background-color: #218838; }
+.remove-btn { background-color: #dc3545; color: white; }
+.remove-btn:hover { background-color: #c82333; }
+.list-item { display: flex; gap: 5px; margin-top: 5px; }
+.list-item input { flex: 1; }
 </style>
 </head>
 <body>
 
-<h1>Editor Visual do Cardápio</h1>
+<h1>Editar Cardápio</h1>
 
-<div id="editorContainer"></div>
+<div class="section">
+  <h2>Horário de Funcionamento</h2>
+  <label>Abertura</label>
+  <input type="time" id="abertura">
+  <label>Fechamento</label>
+  <input type="time" id="fechamento">
+</div>
 
-<button id="salvarBtn">Salvar Cardápio</button>
-<div class="status" id="statusMsg"></div>
+<div class="section">
+  <h2>Valores das Marmitas</h2>
+  <label>Pequena</label>
+  <input type="number" id="valorPequena">
+  <label>Grande</label>
+  <input type="number" id="valorGrande">
+</div>
+
+<div id="cardapioDias"></div>
+
+<div class="section">
+  <h2>Locais de Entrega</h2>
+  <div id="listaLocais"></div>
+  <button class="add-btn" onclick="adicionarLocal()">Adicionar Local</button>
+</div>
+
+<div class="section">
+  <h2>Formas de Pagamento</h2>
+  <div id="listaPagamentos"></div>
+  <button class="add-btn" onclick="adicionarPagamento()">Adicionar Forma</button>
+</div>
+
+<button class="add-btn" onclick="salvarLocalStorage()">Salvar Cardápio</button>
 
 <script>
-const diasSemana = ["segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado","domingo"];
-const defaultCardapio = {
-  "segunda-feira": { "carnes":["Costela com mandioca","Frango ao molho","Peito de frango grelhado"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Purê","Farofa","Verduras cozidas","Salada"] },
-  "terça-feira": { "carnes":["Churrasco","Carne de porco frita","Frango ao molho"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-  "quarta-feira": { "carnes":["Churrasco","Strogonoff de frango","Frango ao molho"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata palha","Batata temperada"] },
-  "quinta-feira": { "carnes":["Churrasco","Frango ao molho","Fígado"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-  "sexta-feira": { "carnes":["Churrasco","Frango ao molho","Coxa e sobrecoxa assada"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-  "sábado": { "carnes":["Churrasco","Feijoada","Frango ao molho"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-  "domingo": { "carnes":["Churrasco","Frango ao molho","Lasanha"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Maionese"] }
+// Função para carregar o cardápio do LocalStorage ou usar o original
+let cardapio = JSON.parse(localStorage.getItem("cardapio")) || {
+  "horarioFuncionamento": {"abertura":"11:30","fechamento":"14:00"},
+  "valoresMarmita": {"Pequena":15,"Grande":20},
+  "cardapio": {
+    "segunda-feira": {"carnes":["Costela com mandioca","Frango ao molho","Peito de frango grelhado"],"acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Purê","Farofa","Verduras cozidas","Salada"]},
+    "terça-feira": {"carnes":["Churrasco","Carne de porco frita","Frango ao molho"],"acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"]},
+    "quarta-feira": {"carnes":["Churrasco","Strogonoff de frango","Frango ao molho"],"acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata palha","Batata temperada"]},
+    "quinta-feira": {"carnes":["Churrasco","Frango ao molho","Fígado"],"acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"]},
+    "sexta-feira": {"carnes":["Churrasco","Frango ao molho","Coxa e sobrecoxa assada"],"acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"]},
+    "sábado": {"carnes":["Churrasco","Feijoada","Frango ao molho"],"acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"]},
+    "domingo": {"carnes":["Churrasco","Frango ao molho","Lasanha"],"acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Maionese"]}
+  },
+  "locaisEntrega":[{"nome":"Alvorada","taxa":2},{"nome":"Lago Azul","taxa":3},{"nome":"Lunabel","taxa":4},{"nome":"Novo Gama","taxa":5}],
+  "formasPagamento":["Dinheiro","Pix","Cartão de Crédito"]
 };
 
-// Carrega cardápio do localStorage ou padrão
-let cardapio = JSON.parse(localStorage.getItem("cardapio")) || defaultCardapio;
+// Inicializar campos
+document.getElementById("abertura").value = cardapio.horarioFuncionamento.abertura;
+document.getElementById("fechamento").value = cardapio.horarioFuncionamento.fechamento;
+document.getElementById("valorPequena").value = cardapio.valoresMarmita.Pequena;
+document.getElementById("valorGrande").value = cardapio.valoresMarmita.Grande;
 
-const editorContainer = document.getElementById("editorContainer");
+// Cardápio dias
+const cardapioDiasDiv = document.getElementById("cardapioDias");
+function renderCardapioDias(){
+  cardapioDiasDiv.innerHTML = "";
+  Object.keys(cardapio.cardapio).forEach(dia=>{
+    const diaDiv = document.createElement("div");
+    diaDiv.className="section";
+    diaDiv.innerHTML=`<h2>${dia}</h2>`;
 
-// Cria campos visuais para cada dia
-diasSemana.forEach(dia => {
-  const diaDiv = document.createElement("div");
-  diaDiv.className = "dia";
-  diaDiv.innerHTML = `
-    <h2>${dia.charAt(0).toUpperCase()+dia.slice(1)}</h2>
-    <label>Carnes (separadas por vírgula):</label>
-    <textarea id="carnes_${dia}">${cardapio[dia].carnes.join(", ")}</textarea>
-    <label>Acompanhamentos (separados por vírgula):</label>
-    <textarea id="acomp_${dia}">${cardapio[dia].acompanhamentos.join(", ")}</textarea>
-  `;
-  editorContainer.appendChild(diaDiv);
-});
+    const carnesDiv = document.createElement("div");
+    carnesDiv.innerHTML="<strong>Carnes:</strong>";
+    cardapio.cardapio[dia].carnes.forEach((c,idx)=>carnesDiv.appendChild(criarInput(dia,"carnes",c,idx)));
+    const addCarneBtn = document.createElement("button"); addCarneBtn.className="add-btn"; addCarneBtn.textContent="Adicionar Carne";
+    addCarneBtn.onclick=()=>{ const idx=cardapio.cardapio[dia].carnes.length; cardapio.cardapio[dia].carnes.push(""); carnesDiv.appendChild(criarInput(dia,"carnes","",idx)); }
+    carnesDiv.appendChild(addCarneBtn);
+    diaDiv.appendChild(carnesDiv);
 
-// Salvar alterações
-document.getElementById("salvarBtn").addEventListener("click", () => {
-  try {
-    diasSemana.forEach(dia => {
-      const carnes = document.getElementById(`carnes_${dia}`).value.split(",").map(i => i.trim()).filter(i => i);
-      const acomp = document.getElementById(`acomp_${dia}`).value.split(",").map(i => i.trim()).filter(i => i);
-      cardapio[dia] = { carnes, acompanhamentos: acomp };
-    });
-    localStorage.setItem("cardapio", JSON.stringify(cardapio));
-    statusMsg.textContent = "Cardápio salvo com sucesso!";
-    statusMsg.className = "status success";
-  } catch(e) {
-    statusMsg.textContent = "Erro ao salvar cardápio: " + e.message;
-    statusMsg.className = "status error";
-  }
-});
+    const acompDiv = document.createElement("div");
+    acompDiv.innerHTML="<strong>Acompanhamentos:</strong>";
+    cardapio.cardapio[dia].acompanhamentos.forEach((a,idx)=>acompDiv.appendChild(criarInput(dia,"acompanhamentos",a,idx)));
+    const addAcompBtn = document.createElement("button"); addAcompBtn.className="add-btn"; addAcompBtn.textContent="Adicionar Acompanhamento";
+    addAcompBtn.onclick=()=>{ const idx=cardapio.cardapio[dia].acompanhamentos.length; cardapio.cardapio[dia].acompanhamentos.push(""); acompDiv.appendChild(criarInput(dia,"acompanhamentos","",idx)); }
+    acompDiv.appendChild(addAcompBtn);
+    diaDiv.appendChild(acompDiv);
+
+    cardapioDiasDiv.appendChild(diaDiv);
+  });
+}
+function criarInput(dia,tipo,valor,idx){
+  const div=document.createElement("div"); div.className="list-item";
+  const input=document.createElement("input"); input.type="text"; input.value=valor; input.oninput=e=>cardapio.cardapio[dia][tipo][idx]=e.target.value;
+  const btn=document.createElement("button"); btn.className="remove-btn"; btn.textContent="X"; btn.onclick=()=>{ cardapio.cardapio[dia][tipo].splice(idx,1); renderCardapioDias(); }
+  div.appendChild(input); div.appendChild(btn); return div;
+}
+renderCardapioDias();
+
+// Locais de entrega
+function atualizarLocais(){
+  const lista=document.getElementById("listaLocais"); lista.innerHTML="";
+  cardapio.locaisEntrega.forEach((l,idx)=>{
+    const div=document.createElement("div"); div.className="list-item";
+    const inNome=document.createElement("input"); inNome.value=l.nome; inNome.oninput=e=>cardapio.locaisEntrega[idx].nome=e.target.value;
+    const inTaxa=document.createElement("input"); inTaxa.type="number"; inTaxa.step="0.01"; inTaxa.value=l.taxa; inTaxa.oninput=e=>cardapio.locaisEntrega[idx].taxa=parseFloat(e.target.value);
+    const btn=document.createElement("button"); btn.className="remove-btn"; btn.textContent="X"; btn.onclick=()=>{cardapio.locaisEntrega.splice(idx,1); atualizarLocais();}
+    div.appendChild(inNome); div.appendChild(inTaxa); div.appendChild(btn); lista.appendChild(div);
+  });
+}
+function adicionarLocal(){ cardapio.locaisEntrega.push({nome:"",taxa:0}); atualizarLocais(); }
+atualizarLocais();
+
+// Formas de pagamento
+function atualizarPagamentos(){
+  const lista=document.getElementById("listaPagamentos"); lista.innerHTML="";
+  cardapio.formasPagamento.forEach((f,idx)=>{
+    const div=document.createElement("div"); div.className="list-item";
+    const input=document.createElement("input"); input.value=f; input.oninput=e=>cardapio.formasPagamento[idx]=e.target.value;
+    const btn=document.createElement("button"); btn.className="remove-btn"; btn.textContent="X"; btn.onclick=()=>{cardapio.formasPagamento.splice(idx,1); atualizarPagamentos();}
+    div.appendChild(input); div.appendChild(btn); lista.appendChild(div);
+  });
+}
+function adicionarPagamento(){ cardapio.formasPagamento.push(""); atualizarPagamentos(); }
+atualizarPagamentos();
+
+// Salvar no LocalStorage
+function salvarLocalStorage(){
+  cardapio.horarioFuncionamento.abertura=document.getElementById("abertura").value;
+  cardapio.horarioFuncionamento.fechamento=document.getElementById("fechamento").value;
+  cardapio.valoresMarmita.Pequena=parseFloat(document.getElementById("valorPequena").value);
+  cardapio.valoresMarmita.Grande=parseFloat(document.getElementById("valorGrande").value);
+  localStorage.setItem("cardapio", JSON.stringify(cardapio));
+  alert("Cardápio salvo com sucesso! Ele permanecerá salvo mesmo após recarregar a página.");
+}
 </script>
 
 </body>

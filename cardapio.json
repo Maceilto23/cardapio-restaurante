@@ -1,85 +1,47 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Editar Cardápio</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f5f5f5;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-  }
-  h1 { color: #007BFF; margin-bottom: 20px; }
-  textarea {
-    width: 100%;
-    max-width: 600px;
-    height: 400px;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    font-family: monospace;
-    font-size: 0.95rem;
-  }
-  button {
-    margin-top: 15px;
-    padding: 10px 20px;
-    background: #007BFF;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  .status {
-    margin-top: 10px;
-    font-weight: bold;
-  }
-  .status.success { color: green; }
-  .status.error { color: red; }
-</style>
-</head>
-<body>
-
-<h1>Editar Cardápio</h1>
-<textarea id="jsonEditor"></textarea>
-<button id="salvarBtn">Salvar Cardápio</button>
-<div class="status" id="statusMsg"></div>
-
-<script>
-const editor = document.getElementById("jsonEditor");
-const statusMsg = document.getElementById("statusMsg");
-
-// Carrega cardápio do localStorage ou padrão
-const defaultCardapio = {
-  "segunda-feira": { "carnes":["Costela com mandioca","Frango ao molho","Peito de frango grelhado"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Purê","Farofa","Verduras cozidas","Salada"] },
-  "terça-feira": { "carnes":["Churrasco","Carne de porco frita","Frango ao molho"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-  "quarta-feira": { "carnes":["Churrasco","Strogonoff de frango","Frango ao molho"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata palha","Batata temperada"] },
-  "quinta-feira": { "carnes":["Churrasco","Frango ao molho","Fígado"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-  "sexta-feira": { "carnes":["Churrasco","Frango ao molho","Coxa e sobrecoxa assada"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-  "sábado": { "carnes":["Churrasco","Feijoada","Frango ao molho"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-  "domingo": { "carnes":["Churrasco","Frango ao molho","Lasanha"], "acompanhamentos":["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Maionese"] }
-};
-
-let cardapio = JSON.parse(localStorage.getItem("cardapio")) || defaultCardapio;
-editor.value = JSON.stringify(cardapio, null, 2);
-
-// Salvar no localStorage
-document.getElementById("salvarBtn").addEventListener("click", () => {
-  try {
-    const novoCardapio = JSON.parse(editor.value);
-    localStorage.setItem("cardapio", JSON.stringify(novoCardapio));
-    statusMsg.textContent = "Cardápio salvo com sucesso!";
-    statusMsg.className = "status success";
-  } catch(e) {
-    statusMsg.textContent = "Erro no JSON: " + e.message;
-    statusMsg.className = "status error";
-  }
-});
-</script>
-
-</body>
-</html>
+{
+  "horarioFuncionamento": {
+    "abertura": "11:30",
+    "fechamento": "14:00"
+  },
+  "valoresMarmita": {
+    "Pequena": 15,
+    "Grande": 20
+  },
+  "cardapio": {
+    "segunda-feira": {
+      "carnes": ["Costela com mandioca", "Frango ao molho", "Peito de frango grelhado"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Purê", "Farofa", "Verduras cozidas", "Salada"]
+    },
+    "terça-feira": {
+      "carnes": ["Churrasco", "Carne de porco frita", "Frango ao molho"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"]
+    },
+    "quarta-feira": {
+      "carnes": ["Churrasco", "Strogonoff de frango", "Frango ao molho"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata palha", "Batata temperada"]
+    },
+    "quinta-feira": {
+      "carnes": ["Churrasco", "Frango ao molho", "Fígado"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"]
+    },
+    "sexta-feira": {
+      "carnes": ["Churrasco", "Frango ao molho", "Coxa e sobrecoxa assada"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"]
+    },
+    "sábado": {
+      "carnes": ["Churrasco", "Feijoada", "Frango ao molho"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"]
+    },
+    "domingo": {
+      "carnes": ["Churrasco", "Frango ao molho", "Lasanha"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Maionese"]
+    }
+  },
+  "locaisEntrega": [
+    {"nome": "Alvorada", "taxa": 2.00},
+    {"nome": "Lago Azul", "taxa": 3.00},
+    {"nome": "Lunabel", "taxa": 4.00},
+    {"nome": "Novo Gama", "taxa": 5.00}
+  ],
+  "formasPagamento": ["Dinheiro", "Pix", "Cartão de Crédito"]
+}
