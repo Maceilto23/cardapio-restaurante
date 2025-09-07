@@ -3,53 +3,63 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Editar Valores da Marmita</title>
+<title>Editar Marmitas</title>
 <style>
-  body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
-  .card { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-  h1 { text-align: center; }
-  label { display: block; margin-top: 15px; font-weight: bold; }
-  input { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
-  button { margin-top: 20px; width: 100%; padding: 10px; border: none; border-radius: 5px; background: #4CAF50; color: white; cursor: pointer; }
-  button:hover { background: #45a049; }
+  body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+  h1 { margin-bottom: 20px; }
+  label { display: block; margin-top: 10px; }
+  input, textarea, button { margin-top: 5px; padding: 8px; width: 100%; max-width: 400px; }
+  textarea { height: 60px; }
+  .marmita { background: #fff; padding: 10px; margin-bottom: 15px; border-radius: 5px; box-shadow: 0 0 5px #ccc; }
 </style>
 </head>
 <body>
+<h1>Editar Marmitas</h1>
 
-<div class="card">
-  <h1>Editar Valores da Marmita</h1>
-  <label>Pequena</label>
-  <input type="number" id="valorPequena" step="0.01">
-  
-  <label>Grande</label>
-  <input type="number" id="valorGrande" step="0.01">
-  
-  <button onclick="salvarValores()">Salvar</button>
-</div>
+<div id="editor"></div>
+<button onclick="salvarLocalStorage()">Salvar Alterações</button>
 
 <script>
-// JSON inicial do cardápio (somente valores das marmitas)
-let cardapioData = {
-  "valoresMarmita": {
-    "Pequena": 15,
-    "Grande": 20
-  }
+// JSON padrão
+const jsonPadrao = {
+  "marmitas": [
+    { "titulo": "Pequena", "opcoes": ["Frango", "Arroz", "Feijão"] },
+    { "titulo": "Grande", "opcoes": ["Bife", "Arroz", "Feijão", "Salada"] }
+  ]
 };
 
-// Carregar valores iniciais
-document.getElementById("valorPequena").value = cardapioData.valoresMarmita.Pequena;
-document.getElementById("valorGrande").value = cardapioData.valoresMarmita.Grande;
+// Carrega do localStorage ou usa padrão
+let cardapio = JSON.parse(localStorage.getItem('cardapioMarmitas')) || jsonPadrao;
 
-// Função para salvar alterações
-function salvarValores() {
-  cardapioData.valoresMarmita.Pequena = parseFloat(document.getElementById("valorPequena").value);
-  cardapioData.valoresMarmita.Grande = parseFloat(document.getElementById("valorGrande").value);
-
-  // Aqui você pode salvar no localStorage ou enviar para backend
-  console.log("Valores de Marmita atualizados:", cardapioData);
-  alert("Valores da marmita atualizados! Veja o console para verificar.");
+// Função para exibir editor
+function carregarEditor() {
+  const editorDiv = document.getElementById('editor');
+  editorDiv.innerHTML = '';
+  
+  cardapio.marmitas.forEach((marmita, index) => {
+    const div = document.createElement('div');
+    div.classList.add('marmita');
+    
+    div.innerHTML = `
+      <label>Título:</label>
+      <input type="text" value="${marmita.titulo}" onchange="cardapio.marmitas[${index}].titulo=this.value">
+      
+      <label>Opções (separadas por vírgula):</label>
+      <textarea onchange="cardapio.marmitas[${index}].opcoes=this.value.split(',').map(item => item.trim())">${marmita.opcoes.join(', ')}</textarea>
+    `;
+    
+    editorDiv.appendChild(div);
+  });
 }
-</script>
 
+// Função para salvar no localStorage
+function salvarLocalStorage() {
+  localStorage.setItem('cardapioMarmitas', JSON.stringify(cardapio, null, 2));
+  alert('Alterações salvas no localStorage!');
+}
+
+// Carrega o editor ao iniciar
+carregarEditor();
+</script>
 </body>
 </html>
