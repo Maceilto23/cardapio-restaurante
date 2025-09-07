@@ -6,12 +6,12 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
     h2 { margin-top: 30px; }
-    label { display: block; margin-top: 10px; }
-    input, select, textarea { width: 100%; padding: 6px; margin-top: 4px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, textarea { width: 100%; padding: 6px; margin-top: 4px; border-radius: 5px; border: 1px solid #ccc; }
     .dia { border: 1px solid #ccc; padding: 15px; margin: 10px 0; background: #fff; border-radius: 8px; }
     button { margin-top: 15px; padding: 10px 20px; border: none; border-radius: 6px; background: #007bff; color: #fff; cursor: pointer; }
     button:hover { background: #0056b3; }
-    pre { background: #222; color: #0f0; padding: 15px; border-radius: 6px; margin-top: 20px; }
+    pre { background: #222; color: #0f0; padding: 15px; border-radius: 6px; margin-top: 20px; white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -37,11 +37,12 @@
 
   <button onclick="salvar()">Salvar Alterações</button>
 
-  <h2>📦 JSON Gerado</h2>
+  <h2>📦 JSON Atualizado</h2>
   <pre id="saida"></pre>
 
 <script>
-const dados = {
+// Dados iniciais (seu JSON)
+let dados = {
   "horarioFuncionamento": { "abertura": "11:30", "fechamento": "14:00" },
   "valoresMarmita": { "Pequena": 15, "Grande": 20 },
   "cardapio": {
@@ -52,23 +53,47 @@ const dados = {
     "terça-feira": {
       "carnes": ["Churrasco", "Carne de porco frita", "Frango ao molho"],
       "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"]
+    },
+    "quarta-feira": {
+      "carnes": ["Churrasco", "Strogonoff de frango", "Frango ao molho"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata palha", "Batata temperada"]
+    },
+    "quinta-feira": {
+      "carnes": ["Churrasco", "Frango ao molho", "Fígado"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"]
+    },
+    "sexta-feira": {
+      "carnes": ["Churrasco", "Frango ao molho", "Coxa e sobrecoxa assada"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"]
+    },
+    "sábado": {
+      "carnes": ["Churrasco", "Feijoada", "Frango ao molho"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"]
+    },
+    "domingo": {
+      "carnes": ["Churrasco", "Frango ao molho", "Lasanha"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Maionese"]
     }
-    // ... restante dos dias aqui
   },
   "locaisEntrega": [
     { "nome": "Boa Vista 1", "taxa": 2.00 },
-    { "nome": "Boa Vista 2", "taxa": 4.00 }
+    { "nome": "Boa Vista 2", "taxa": 4.00 },
+    { "nome": "Mont Serrat", "taxa": 2.00 },
+    { "nome": "Lunabel", "taxa": 2.00 },
+    { "nome": "Lago Azul", "taxa": 4.00 },
+    { "nome": "Alvorada", "taxa": 2.00 },
+    { "nome": "América do Sul", "taxa": 4.00 }
   ],
   "formasPagamento": ["Dinheiro", "Pix", "Cartão de Crédito"]
 };
 
-// Preenche formulário
+// Preenche o formulário
 document.getElementById("abertura").value = dados.horarioFuncionamento.abertura;
 document.getElementById("fechamento").value = dados.horarioFuncionamento.fechamento;
 document.getElementById("precoPequena").value = dados.valoresMarmita.Pequena;
 document.getElementById("precoGrande").value = dados.valoresMarmita.Grande;
 
-// Cria blocos para cada dia do cardápio
+// Cardápio
 const cardapioDiv = document.getElementById("cardapio");
 for (let dia in dados.cardapio) {
   const bloco = document.createElement("div");
@@ -79,34 +104,34 @@ for (let dia in dados.cardapio) {
   cardapioDiv.appendChild(bloco);
 }
 
-// Locais e pagamento
+// Locais e pagamentos
 document.getElementById("locaisEntrega").value = dados.locaisEntrega.map(l => `${l.nome}:${l.taxa}`).join(", ");
 document.getElementById("formasPagamento").value = dados.formasPagamento.join(", ");
 
-// Salvar
+// Salvar (só altera em memória e mostra o JSON atualizado)
 function salvar() {
   dados.horarioFuncionamento.abertura = document.getElementById("abertura").value;
   dados.horarioFuncionamento.fechamento = document.getElementById("fechamento").value;
   dados.valoresMarmita.Pequena = parseFloat(document.getElementById("precoPequena").value);
   dados.valoresMarmita.Grande = parseFloat(document.getElementById("precoGrande").value);
 
-  // Atualiza cardápio
   for (let dia in dados.cardapio) {
     dados.cardapio[dia].carnes = document.getElementById("carnes-" + dia).value.split(",").map(x => x.trim());
     dados.cardapio[dia].acompanhamentos = document.getElementById("acomp-" + dia).value.split(",").map(x => x.trim());
   }
 
-  // Locais
   dados.locaisEntrega = document.getElementById("locaisEntrega").value.split(",").map(x => {
     let [nome, taxa] = x.split(":");
     return { nome: nome.trim(), taxa: parseFloat(taxa) };
   });
 
-  // Pagamento
   dados.formasPagamento = document.getElementById("formasPagamento").value.split(",").map(x => x.trim());
 
   document.getElementById("saida").textContent = JSON.stringify(dados, null, 2);
 }
+
+// Mostra JSON inicial
+document.getElementById("saida").textContent = JSON.stringify(dados, null, 2);
 </script>
 
 </body>
