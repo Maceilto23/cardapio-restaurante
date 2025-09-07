@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editar Valores da Marmita</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+  .card { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+  h1 { text-align: center; }
+  label { display: block; margin-top: 15px; font-weight: bold; }
+  input { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
+  button { margin-top: 20px; width: 100%; padding: 10px; border: none; border-radius: 5px; background: #4CAF50; color: white; cursor: pointer; }
+  button:hover { background: #45a049; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Editar Valores da Marmita</h1>
+  <label>Pequena</label>
+  <input type="number" id="valorPequena" step="0.01">
+  
+  <label>Grande</label>
+  <input type="number" id="valorGrande" step="0.01">
+  
+  <button onclick="salvarValores()">Salvar</button>
+</div>
+
+<script>
+// JSON inicial do cardápio (somente valores das marmitas)
+let cardapioData = {
+  "valoresMarmita": {
+    "Pequena": 15,
+    "Grande": 20
+  }
+};
+
+// Carregar valores iniciais
+document.getElementById("valorPequena").value = cardapioData.valoresMarmita.Pequena;
+document.getElementById("valorGrande").value = cardapioData.valoresMarmita.Grande;
+
+// Função para salvar alterações
+function salvarValores() {
+  cardapioData.valoresMarmita.Pequena = parseFloat(document.getElementById("valorPequena").value);
+  cardapioData.valoresMarmita.Grande = parseFloat(document.getElementById("valorGrande").value);
+
+  // Aqui você pode salvar no localStorage ou enviar para backend
+  console.log("Valores de Marmita atualizados:", cardapioData);
+  alert("Valores da marmita atualizados! Veja o console para verificar.");
+}
+</script>
+
+</body>
+</html>
