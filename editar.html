@@ -1,155 +1,111 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Editar Cardápio</title>
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f5f5f5;
-  padding: 20px;
-}
-
-h1 { color: #007BFF; margin-bottom: 20px; }
-
-.dia-section {
-  background: #fff;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 10px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-}
-
-.dia-section h2 {
-  margin-bottom: 10px;
-  color: #333;
-}
-
-.lista-itens {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-bottom: 10px;
-}
-
-.lista-itens input {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  width: calc(50% - 5px);
-}
-
-button {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  margin-right: 5px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-button.add { background: #28a745; color: #fff; }
-button.remove { background: #dc3545; color: #fff; }
-button.save { background: #007BFF; color: #fff; margin-top:10px; }
-textarea#jsonOutput {
-  width: 100%;
-  height: 200px;
-  margin-top: 10px;
-  border-radius: 8px;
-  padding: 10px;
-  font-family: monospace;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Editor de Cardápio</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+    h2 { margin-top: 30px; }
+    label { display: block; margin-top: 10px; }
+    input, select, textarea { width: 100%; padding: 6px; margin-top: 4px; }
+    .dia { border: 1px solid #ccc; padding: 15px; margin: 10px 0; background: #fff; border-radius: 8px; }
+    button { margin-top: 15px; padding: 10px 20px; border: none; border-radius: 6px; background: #007bff; color: #fff; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    pre { background: #222; color: #0f0; padding: 15px; border-radius: 6px; margin-top: 20px; }
+  </style>
 </head>
 <body>
 
-<h1>Editar Cardápio Visualmente</h1>
-<p>Edite os itens de cada dia. Depois copie o JSON gerado para substituir <strong>cardapio.json</strong> no GitHub.</p>
+  <h1>📋 Editor do Cardápio</h1>
 
-<div id="editor"></div>
+  <h2>⏰ Horário de Funcionamento</h2>
+  <label>Abertura: <input type="time" id="abertura"></label>
+  <label>Fechamento: <input type="time" id="fechamento"></label>
 
-<button class="save" onclick="gerarJSON()">Gerar JSON</button>
-<textarea id="jsonOutput" readonly></textarea>
+  <h2>💰 Valores da Marmita</h2>
+  <label>Pequena (R$): <input type="number" id="precoPequena"></label>
+  <label>Grande (R$): <input type="number" id="precoGrande"></label>
+
+  <h2>🥩 Cardápio por dia</h2>
+  <div id="cardapio"></div>
+
+  <h2>📍 Locais de Entrega</h2>
+  <textarea id="locaisEntrega" rows="4"></textarea>
+
+  <h2>💳 Formas de Pagamento</h2>
+  <textarea id="formasPagamento" rows="2"></textarea>
+
+  <button onclick="salvar()">Salvar Alterações</button>
+
+  <h2>📦 JSON Gerado</h2>
+  <pre id="saida"></pre>
 
 <script>
-// Dias da semana
-const diasSemana = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
+const dados = {
+  "horarioFuncionamento": { "abertura": "11:30", "fechamento": "14:00" },
+  "valoresMarmita": { "Pequena": 15, "Grande": 20 },
+  "cardapio": {
+    "segunda-feira": {
+      "carnes": ["Costela com mandioca", "Frango ao molho", "Peito de frango grelhado"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Purê", "Farofa", "Verduras cozidas", "Salada"]
+    },
+    "terça-feira": {
+      "carnes": ["Churrasco", "Carne de porco frita", "Frango ao molho"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"]
+    }
+    // ... restante dos dias aqui
+  },
+  "locaisEntrega": [
+    { "nome": "Boa Vista 1", "taxa": 2.00 },
+    { "nome": "Boa Vista 2", "taxa": 4.00 }
+  ],
+  "formasPagamento": ["Dinheiro", "Pix", "Cartão de Crédito"]
+};
 
-// Carrega o cardápio atual
-fetch('cardapio.json')
-  .then(res => res.json())
-  .then(cardapio => {
-    const editorDiv = document.getElementById('editor');
+// Preenche formulário
+document.getElementById("abertura").value = dados.horarioFuncionamento.abertura;
+document.getElementById("fechamento").value = dados.horarioFuncionamento.fechamento;
+document.getElementById("precoPequena").value = dados.valoresMarmita.Pequena;
+document.getElementById("precoGrande").value = dados.valoresMarmita.Grande;
 
-    diasSemana.forEach(dia => {
-      const diaData = cardapio[dia] || {carnes:[], acompanhamentos:[]};
-      const section = document.createElement('div');
-      section.className = 'dia-section';
-      section.innerHTML = `<h2>${dia.charAt(0).toUpperCase() + dia.slice(1)}</h2>`;
+// Cria blocos para cada dia do cardápio
+const cardapioDiv = document.getElementById("cardapio");
+for (let dia in dados.cardapio) {
+  const bloco = document.createElement("div");
+  bloco.className = "dia";
+  bloco.innerHTML = `<h3>${dia}</h3>
+    <label>Carnes:<textarea rows="2" id="carnes-${dia}">${dados.cardapio[dia].carnes.join(", ")}</textarea></label>
+    <label>Acompanhamentos:<textarea rows="2" id="acomp-${dia}">${dados.cardapio[dia].acompanhamentos.join(", ")}</textarea></label>`;
+  cardapioDiv.appendChild(bloco);
+}
 
-      // Carnes
-      const carnesDiv = document.createElement('div');
-      carnesDiv.innerHTML = `<h3>Carnes:</h3>`;
-      const carnesLista = document.createElement('div');
-      carnesLista.className = 'lista-itens';
-      diaData.carnes.forEach(item => {
-        const input = document.createElement('input');
-        input.value = item;
-        carnesLista.appendChild(input);
-      });
-      // Botão adicionar carne
-      const btnAddCarne = document.createElement('button');
-      btnAddCarne.className = 'add';
-      btnAddCarne.innerText = '+ Carne';
-      btnAddCarne.onclick = () => {
-        const input = document.createElement('input');
-        carnesLista.appendChild(input);
-      };
-      carnesDiv.appendChild(carnesLista);
-      carnesDiv.appendChild(btnAddCarne);
+// Locais e pagamento
+document.getElementById("locaisEntrega").value = dados.locaisEntrega.map(l => `${l.nome}:${l.taxa}`).join(", ");
+document.getElementById("formasPagamento").value = dados.formasPagamento.join(", ");
 
-      // Acompanhamentos
-      const acompDiv = document.createElement('div');
-      acompDiv.innerHTML = `<h3>Acompanhamentos:</h3>`;
-      const acompLista = document.createElement('div');
-      acompLista.className = 'lista-itens';
-      diaData.acompanhamentos.forEach(item => {
-        const input = document.createElement('input');
-        input.value = item;
-        acompLista.appendChild(input);
-      });
-      const btnAddAcomp = document.createElement('button');
-      btnAddAcomp.className = 'add';
-      btnAddAcomp.innerText = '+ Acompanhamento';
-      btnAddAcomp.onclick = () => {
-        const input = document.createElement('input');
-        acompLista.appendChild(input);
-      };
-      acompDiv.appendChild(acompLista);
-      acompDiv.appendChild(btnAddAcomp);
+// Salvar
+function salvar() {
+  dados.horarioFuncionamento.abertura = document.getElementById("abertura").value;
+  dados.horarioFuncionamento.fechamento = document.getElementById("fechamento").value;
+  dados.valoresMarmita.Pequena = parseFloat(document.getElementById("precoPequena").value);
+  dados.valoresMarmita.Grande = parseFloat(document.getElementById("precoGrande").value);
 
-      section.appendChild(carnesDiv);
-      section.appendChild(acompDiv);
-      editorDiv.appendChild(section);
-    });
+  // Atualiza cardápio
+  for (let dia in dados.cardapio) {
+    dados.cardapio[dia].carnes = document.getElementById("carnes-" + dia).value.split(",").map(x => x.trim());
+    dados.cardapio[dia].acompanhamentos = document.getElementById("acomp-" + dia).value.split(",").map(x => x.trim());
+  }
+
+  // Locais
+  dados.locaisEntrega = document.getElementById("locaisEntrega").value.split(",").map(x => {
+    let [nome, taxa] = x.split(":");
+    return { nome: nome.trim(), taxa: parseFloat(taxa) };
   });
 
-// Gera JSON final
-function gerarJSON(){
-  const editorDiv = document.getElementById('editor');
-  const dias = editorDiv.querySelectorAll('.dia-section');
-  const novoCardapio = {};
+  // Pagamento
+  dados.formasPagamento = document.getElementById("formasPagamento").value.split(",").map(x => x.trim());
 
-  dias.forEach(diaSec => {
-    const diaNome = diaSec.querySelector('h2').innerText.toLowerCase();
-    const carnes = Array.from(diaSec.querySelectorAll('div.lista-itens')[0].querySelectorAll('input')).map(i => i.value).filter(v => v);
-    const acompanhamentos = Array.from(diaSec.querySelectorAll('div.lista-itens')[1].querySelectorAll('input')).map(i => i.value).filter(v => v);
-    novoCardapio[diaNome] = { carnes, acompanhamentos };
-  });
-
-  document.getElementById('jsonOutput').value = JSON.stringify(novoCardapio, null, 2);
-  alert("JSON gerado! Copie o conteúdo acima para substituir cardapio.json no GitHub.");
+  document.getElementById("saida").textContent = JSON.stringify(dados, null, 2);
 }
 </script>
 
