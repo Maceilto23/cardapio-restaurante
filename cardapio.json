@@ -38,13 +38,13 @@
     }
   },
   "locaisEntrega": [
-  {"nome": "Boa Vista 1", "taxa": 2.00},
-  {"nome": "Boa Vista 2", "taxa": 4.00},
-  {"nome": "Mont Serrat", "taxa": 2.00},
-  {"nome": "Lunabel", "taxa": 2.00},
-  {"nome": "Lago Azul", "taxa": 4.00},
-  {"nome": "Alvorada", "taxa": 2.00},
-  {"nome": "América do Sul", "taxa": 4.00}
-],
-"formasPagamento": ["Dinheiro", "Pix", "Cartão de Crédito"]
-
+    { "nome": "Boa Vista 1", "taxa": 2.00 },
+    { "nome": "Boa Vista 2", "taxa": 4.00 },
+    { "nome": "Mont Serrat", "taxa": 2.00 },
+    { "nome": "Lunabel", "taxa": 2.00 },
+    { "nome": "Lago Azul", "taxa": 4.00 },
+    { "nome": "Alvorada", "taxa": 2.00 },
+    { "nome": "América do Sul", "taxa": 4.00 }
+  ],
+  "formasPagamento": ["Dinheiro", "Pix", "Cartão de Crédito"]
+}
