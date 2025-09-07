@@ -13,22 +13,138 @@
     { "nome": "Centro", "taxa": 5.00 }
   ],
   "cardapio": {
-    "carnes": [
-      "Frango grelhado",
-      "Carne de panela",
-      "Bife acebolado"
-    ],
-    "guarnicoes": [
-      "Arroz branco",
-      "Feijão carioca",
-      "Macarrão alho e óleo",
-      "Farofa simples"
-    ],
-    "saladas": [
-      "Alface",
-      "Tomate",
-      "Cenoura ralada",
-      "Beterraba"
-    ]
+    "segunda-feira": {
+      "carnes": [
+        "Frango grelhado",
+        "Carne de panela",
+        "Bife acebolado"
+      ],
+      "guarnicoes": [
+        "Arroz branco",
+        "Feijão carioca",
+        "Macarrão alho e óleo",
+        "Farofa simples"
+      ],
+      "saladas": [
+        "Alface",
+        "Tomate",
+        "Cenoura ralada",
+        "Beterraba"
+      ]
+    },
+    "terca-feira": {
+      "carnes": [
+        "Frango grelhado",
+        "Carne de panela",
+        "Bife acebolado"
+      ],
+      "guarnicoes": [
+        "Arroz branco",
+        "Feijão carioca",
+        "Macarrão alho e óleo",
+        "Farofa simples"
+      ],
+      "saladas": [
+        "Alface",
+        "Tomate",
+        "Cenoura ralada",
+        "Beterraba"
+      ]
+    },
+    "quarta-feira": {
+      "carnes": [
+        "Frango grelhado",
+        "Carne de panela",
+        "Bife acebolado"
+      ],
+      "guarnicoes": [
+        "Arroz branco",
+        "Feijão carioca",
+        "Macarrão alho e óleo",
+        "Farofa simples"
+      ],
+      "saladas": [
+        "Alface",
+        "Tomate",
+        "Cenoura ralada",
+        "Beterraba"
+      ]
+    },
+    "quinta-feira": {
+      "carnes": [
+        "Frango grelhado",
+        "Carne de panela",
+        "Bife acebolado"
+      ],
+      "guarnicoes": [
+        "Arroz branco",
+        "Feijão carioca",
+        "Macarrão alho e óleo",
+        "Farofa simples"
+      ],
+      "saladas": [
+        "Alface",
+        "Tomate",
+        "Cenoura ralada",
+        "Beterraba"
+      ]
+    },
+    "sexta-feira": {
+      "carnes": [
+        "Frango grelhado",
+        "Carne de panela",
+        "Bife acebolado"
+      ],
+      "guarnicoes": [
+        "Arroz branco",
+        "Feijão carioca",
+        "Macarrão alho e óleo",
+        "Farofa simples"
+      ],
+      "saladas": [
+        "Alface",
+        "Tomate",
+        "Cenoura ralada",
+        "Beterraba"
+      ]
+    },
+    "sabado": {
+      "carnes": [
+        "Frango grelhado",
+        "Carne de panela",
+        "Bife acebolado"
+      ],
+      "guarnicoes": [
+        "Arroz branco",
+        "Feijão carioca",
+        "Macarrão alho e óleo",
+        "Farofa simples"
+      ],
+      "saladas": [
+        "Alface",
+        "Tomate",
+        "Cenoura ralada",
+        "Beterraba"
+      ]
+    },
+    "domingo": {
+      "carnes": [
+        "Frango grelhado",
+        "Carne de panela",
+        "Bife acebolado"
+      ],
+      "guarnicoes": [
+        "Arroz branco",
+        "Feijão carioca",
+        "Macarrão alho e óleo",
+        "Farofa simples"
+      ],
+      "saladas": [
+        "Alface",
+        "Tomate",
+        "Cenoura ralada",
+        "Beterraba"
+      ]
+    }
   }
 }
