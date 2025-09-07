@@ -3,148 +3,52 @@
     "abertura": "11:30",
     "fechamento": "14:00"
   },
+
   "valoresMarmita": {
     "Pequena": 15,
     "Grande": 20
   },
-  "locaisEntrega": [
-    { "nome": "Alvorada", "taxa": 2.00 },
-    { "nome": "Lago Azul", "taxa": 3.00 },
-    { "nome": "Centro", "taxa": 5.00 }
-  ],
+
   "cardapio": {
     "segunda-feira": {
-      "carnes": [
-        "Frango grelhado",
-        "Carne de panela",
-        "Bife acebolado"
-      ],
-      "guarnicoes": [
-        "Arroz branco",
-        "Feijão carioca",
-        "Macarrão alho e óleo",
-        "Farofa simples"
-      ],
-      "saladas": [
-        "Alface",
-        "Tomate",
-        "Cenoura ralada",
-        "Beterraba"
-      ]
+      "carnes": ["Costela com mandioca", "Frango ao molho", "Peito de frango grelhado"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Purê", "Farofa", "Verduras cozidas", "Salada"]
     },
-    "terca-feira": {
-      "carnes": [
-        "Frango grelhado",
-        "Carne de panela",
-        "Bife acebolado"
-      ],
-      "guarnicoes": [
-        "Arroz branco",
-        "Feijão carioca",
-        "Macarrão alho e óleo",
-        "Farofa simples"
-      ],
-      "saladas": [
-        "Alface",
-        "Tomate",
-        "Cenoura ralada",
-        "Beterraba"
-      ]
+    "terça-feira": {
+      "carnes": ["Churrasco", "Carne de porco frita", "Frango ao molho"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"]
     },
     "quarta-feira": {
-      "carnes": [
-        "Frango grelhado",
-        "Carne de panela",
-        "Bife acebolado"
-      ],
-      "guarnicoes": [
-        "Arroz branco",
-        "Feijão carioca",
-        "Macarrão alho e óleo",
-        "Farofa simples"
-      ],
-      "saladas": [
-        "Alface",
-        "Tomate",
-        "Cenoura ralada",
-        "Beterraba"
-      ]
+      "carnes": ["Churrasco", "Strogonoff de frango", "Frango ao molho"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata palha", "Batata temperada"]
     },
     "quinta-feira": {
-      "carnes": [
-        "Frango grelhado",
-        "Carne de panela",
-        "Bife acebolado"
-      ],
-      "guarnicoes": [
-        "Arroz branco",
-        "Feijão carioca",
-        "Macarrão alho e óleo",
-        "Farofa simples"
-      ],
-      "saladas": [
-        "Alface",
-        "Tomate",
-        "Cenoura ralada",
-        "Beterraba"
-      ]
+      "carnes": ["Churrasco", "Frango ao molho", "Fígado"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"]
     },
     "sexta-feira": {
-      "carnes": [
-        "Frango grelhado",
-        "Carne de panela",
-        "Bife acebolado"
-      ],
-      "guarnicoes": [
-        "Arroz branco",
-        "Feijão carioca",
-        "Macarrão alho e óleo",
-        "Farofa simples"
-      ],
-      "saladas": [
-        "Alface",
-        "Tomate",
-        "Cenoura ralada",
-        "Beterraba"
-      ]
+      "carnes": ["Churrasco", "Frango ao molho", "Coxa e sobrecoxa assada"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"]
     },
-    "sabado": {
-      "carnes": [
-        "Frango grelhado",
-        "Carne de panela",
-        "Bife acebolado"
-      ],
-      "guarnicoes": [
-        "Arroz branco",
-        "Feijão carioca",
-        "Macarrão alho e óleo",
-        "Farofa simples"
-      ],
-      "saladas": [
-        "Alface",
-        "Tomate",
-        "Cenoura ralada",
-        "Beterraba"
-      ]
+    "sábado": {
+      "carnes": ["Churrasco", "Feijoada", "Frango ao molho"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"]
     },
     "domingo": {
-      "carnes": [
-        "Frango grelhado",
-        "Carne de panela",
-        "Bife acebolado"
-      ],
-      "guarnicoes": [
-        "Arroz branco",
-        "Feijão carioca",
-        "Macarrão alho e óleo",
-        "Farofa simples"
-      ],
-      "saladas": [
-        "Alface",
-        "Tomate",
-        "Cenoura ralada",
-        "Beterraba"
-      ]
+      "carnes": ["Churrasco", "Frango ao molho", "Lasanha"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Maionese"]
     }
-  }
+  },
+
+  "locaisEntrega": [
+    { "nome": "Boa Vista 1", "taxa": 2.00 },
+    { "nome": "Boa Vista 2", "taxa": 4.00 },
+    { "nome": "Mont Serrat", "taxa": 2.00 },
+    { "nome": "Lunabel", "taxa": 2.00 },
+    { "nome": "Lago Azul", "taxa": 4.00 },
+    { "nome": "Alvorada", "taxa": 2.00 },
+    { "nome": "América do Sul", "taxa": 4.00 }
+  ],
+
+  "formasPagamento": ["Dinheiro", "Pix", "Cartão de Crédito"]
 }
