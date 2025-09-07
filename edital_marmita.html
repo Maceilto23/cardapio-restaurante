@@ -3,18 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Editar Marmitas</title>
+<title>Editar Valores Marmitas</title>
 <style>
   body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
   h1 { margin-bottom: 20px; }
   label { display: block; margin-top: 10px; }
-  input, textarea, button { margin-top: 5px; padding: 8px; width: 100%; max-width: 400px; }
-  textarea { height: 60px; }
+  input, button { margin-top: 5px; padding: 8px; width: 100%; max-width: 200px; }
   .marmita { background: #fff; padding: 10px; margin-bottom: 15px; border-radius: 5px; box-shadow: 0 0 5px #ccc; }
 </style>
 </head>
 <body>
-<h1>Editar Marmitas</h1>
+<h1>Editar Valores das Marmitas</h1>
 
 <div id="editor"></div>
 <button onclick="salvarLocalStorage()">Salvar Alterações</button>
@@ -22,10 +21,10 @@
 <script>
 // JSON padrão
 const jsonPadrao = {
-  "marmitas": [
-    { "titulo": "Pequena", "opcoes": ["Frango", "Arroz", "Feijão"] },
-    { "titulo": "Grande", "opcoes": ["Bife", "Arroz", "Feijão", "Salada"] }
-  ]
+  "valoresMarmita": {
+    "Pequena": 15,
+    "Grande": 20
+  }
 };
 
 // Carrega do localStorage ou usa padrão
@@ -35,27 +34,22 @@ let cardapio = JSON.parse(localStorage.getItem('cardapioMarmitas')) || jsonPadra
 function carregarEditor() {
   const editorDiv = document.getElementById('editor');
   editorDiv.innerHTML = '';
-  
-  cardapio.marmitas.forEach((marmita, index) => {
+
+  for (let key in cardapio.valoresMarmita) {
     const div = document.createElement('div');
     div.classList.add('marmita');
-    
     div.innerHTML = `
-      <label>Título:</label>
-      <input type="text" value="${marmita.titulo}" onchange="cardapio.marmitas[${index}].titulo=this.value">
-      
-      <label>Opções (separadas por vírgula):</label>
-      <textarea onchange="cardapio.marmitas[${index}].opcoes=this.value.split(',').map(item => item.trim())">${marmita.opcoes.join(', ')}</textarea>
+      <label>${key}:</label>
+      <input type="number" value="${cardapio.valoresMarmita[key]}" onchange="cardapio.valoresMarmita['${key}']=parseFloat(this.value)">
     `;
-    
     editorDiv.appendChild(div);
-  });
+  }
 }
 
 // Função para salvar no localStorage
 function salvarLocalStorage() {
   localStorage.setItem('cardapioMarmitas', JSON.stringify(cardapio, null, 2));
-  alert('Alterações salvas no localStorage!');
+  alert('Valores salvos no localStorage!');
 }
 
 // Carrega o editor ao iniciar
