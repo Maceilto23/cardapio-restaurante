@@ -47,7 +47,7 @@
     { "nome": "Lunabel", "taxa": 2.00 },
     { "nome": "Lago Azul", "taxa": 4.00 },
     { "nome": "Alvorada", "taxa": 2.00 },
-    { "nome": "América do Sul", "taxa": 4.00 }
+    { "nome": "América do Sul", "taxa": 40.00 }
   ],
 
   "formasPagamento": ["Dinheiro", "Pix", "Cartão de Crédito"]
