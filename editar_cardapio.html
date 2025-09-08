@@ -1,156 +1,170 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Editar Cardápio JSON</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
-    h2 { margin-top: 30px; }
-    form { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-    label { display: block; margin: 8px 0 4px; font-weight: bold; }
-    input, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
-    button { margin-top: 10px; padding: 10px 15px; border: none; border-radius: 6px; background: #007bff; color: #fff; cursor: pointer; }
-    button:hover { background: #0056b3; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor Completo de Cardápio</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+  th { background: #eee; }
+  input { width: 100%; box-sizing: border-box; padding: 5px; }
+  button { padding: 8px 15px; margin-top: 10px; cursor: pointer; }
+</style>
 </head>
 <body>
-  <h1>Editor do Cardápio</h1>
 
-  <!-- Formulário Horário -->
-  <h2>Horário de Funcionamento</h2>
-  <form id="formHorario">
-    <label>Abertura:</label>
-    <input type="time" id="abertura">
-    <label>Fechamento:</label>
-    <input type="time" id="fechamento">
-    <button type="submit">Salvar Horário</button>
-  </form>
+<h1>Editor de Cardápio (Planilha)</h1>
 
-  <!-- Formulário Valores Marmita -->
-  <h2>Valores da Marmita</h2>
-  <form id="formValores">
-    <label>Pequena:</label>
-    <input type="number" id="marmitaPequena" step="0.01">
-    <label>Grande:</label>
-    <input type="number" id="marmitaGrande" step="0.01">
-    <button type="submit">Salvar Valores</button>
-  </form>
+<h2>Horário de Funcionamento</h2>
+<table>
+<tr>
+  <th>Abertura</th>
+  <th>Fechamento</th>
+</tr>
+<tr>
+  <td><input type="time" id="abertura"></td>
+  <td><input type="time" id="fechamento"></td>
+</tr>
+</table>
 
-  <!-- Formulário Cardápio -->
-  <h2>Cardápio</h2>
-  <form id="formCardapio">
-    <label>Dia da Semana:</label>
-    <select id="diaSemana">
-      <option>segunda-feira</option>
-      <option>terça-feira</option>
-      <option>quarta-feira</option>
-      <option>quinta-feira</option>
-      <option>sexta-feira</option>
-      <option>sábado</option>
-      <option>domingo</option>
-    </select>
+<h2>Valores Marmita</h2>
+<table>
+<tr>
+  <th>Pequena</th>
+  <th>Grande</th>
+</tr>
+<tr>
+  <td><input type="number" id="valorPequena"></td>
+  <td><input type="number" id="valorGrande"></td>
+</tr>
+</table>
 
-    <label>Carnes (separadas por vírgula):</label>
-    <textarea id="carnes"></textarea>
+<h2>Cardápio Semanal</h2>
+<table id="cardapioTable">
+<tr>
+  <th>Dia</th>
+  <th>Carnes (separadas por vírgula)</th>
+  <th>Acompanhamentos (separados por vírgula)</th>
+</tr>
+</table>
 
-    <label>Acompanhamentos (separados por vírgula):</label>
-    <textarea id="acompanhamentos"></textarea>
+<h2>Locais de Entrega</h2>
+<table id="locaisTable">
+<tr>
+  <th>Nome</th>
+  <th>Taxa</th>
+  <th>Ação</th>
+</tr>
+</table>
+<button onclick="addLocal()">Adicionar Local</button>
 
-    <button type="submit">Salvar Cardápio do Dia</button>
-  </form>
+<h2>Formas de Pagamento</h2>
+<input type="text" id="formasPagamento" placeholder="Separe por vírgula">
 
-  <!-- Formulário Locais e Pagamentos -->
-  <h2>Locais de Entrega</h2>
-  <form id="formLocais">
-    <label>Locais (formato: Nome=Taxa, separados por vírgula):</label>
-    <textarea id="locaisEntrega"></textarea>
-    <button type="submit">Salvar Locais</button>
-  </form>
+<br>
+<button onclick="salvarJSON()">Salvar Tudo</button>
 
-  <h2>Formas de Pagamento</h2>
-  <form id="formPagamentos">
-    <label>Opções (separadas por vírgula):</label>
-    <textarea id="formasPagamento"></textarea>
-    <button type="submit">Salvar Pagamentos</button>
-  </form>
+<script>
+let cardapioJSON = JSON.parse(localStorage.getItem('cardapioJSON')) || {
+  "horarioFuncionamento": { "abertura": "11:30", "fechamento": "14:00" },
+  "valoresMarmita": { "Pequena": 15, "Grande": 20 },
+  "cardapio": {
+    "segunda-feira": { "carnes": ["Costela com mandioca", "Frango ao molho", "Peito de frango grelhado"], "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Purê", "Farofa", "Verduras cozidas", "Salada"] },
+    "terça-feira": { "carnes": ["Churrasco", "Carne de porco frita", "Frango ao molho"], "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"] },
+    "quarta-feira": { "carnes": ["Churrasco", "Strogonoff de frango", "Frango ao molho"], "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata palha", "Batata temperada"] },
+    "quinta-feira": { "carnes": ["Churrasco", "Frango ao molho", "Fígado"], "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"] },
+    "sexta-feira": { "carnes": ["Churrasco", "Frango ao molho", "Coxa e sobrecoxa assada"], "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"] },
+    "sábado": { "carnes": ["Churrasco", "Feijoada", "Frango ao molho"], "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"] },
+    "domingo": { "carnes": ["Churrasco", "Frango ao molho", "Lasanha"], "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Maionese"] }
+  },
+  "locaisEntrega": [
+    { "nome": "Boa Vista 1", "taxa": 2.00 },
+    { "nome": "Boa Vista 2", "taxa": 4.00 }
+  ],
+  "formasPagamento": ["Dinheiro", "Pix", "Cartão de Crédito"]
+};
 
-  <script>
-    // Carregar JSON inicial
-    let dados = JSON.parse(localStorage.getItem("cardapio")) || {
-      horarioFuncionamento: { abertura: "11:30", fechamento: "14:00" },
-      valoresMarmita: { Pequena: 15, Grande: 20 },
-      cardapio: {},
-      locaisEntrega: [],
-      formasPagamento: []
-    };
+function preencherCampos() {
+  document.getElementById('abertura').value = cardapioJSON.horarioFuncionamento.abertura;
+  document.getElementById('fechamento').value = cardapioJSON.horarioFuncionamento.fechamento;
+  document.getElementById('valorPequena').value = cardapioJSON.valoresMarmita.Pequena;
+  document.getElementById('valorGrande').value = cardapioJSON.valoresMarmita.Grande;
+  
+  // Cardápio semanal
+  const cardapioTable = document.getElementById('cardapioTable');
+  cardapioTable.innerHTML = `<tr>
+    <th>Dia</th>
+    <th>Carnes (separadas por vírgula)</th>
+    <th>Acompanhamentos (separados por vírgula)</th>
+  </tr>`;
+  for (let dia in cardapioJSON.cardapio) {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${dia}</td>
+      <td><input type="text" value="${cardapioJSON.cardapio[dia].carnes.join(', ')}" data-dia="${dia}" data-tipo="carnes"></td>
+      <td><input type="text" value="${cardapioJSON.cardapio[dia].acompanhamentos.join(', ')}" data-dia="${dia}" data-tipo="acompanhamentos"></td>`;
+    cardapioTable.appendChild(row);
+  }
 
-    // Preencher formulários
-    document.getElementById("abertura").value = dados.horarioFuncionamento.abertura;
-    document.getElementById("fechamento").value = dados.horarioFuncionamento.fechamento;
+  // Locais de entrega
+  const locaisTable = document.getElementById('locaisTable');
+  locaisTable.innerHTML = `<tr>
+    <th>Nome</th>
+    <th>Taxa</th>
+    <th>Ação</th>
+  </tr>`;
+  cardapioJSON.locaisEntrega.forEach((local, idx) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td><input type="text" value="${local.nome}" data-idx="${idx}" data-campo="nome"></td>
+                     <td><input type="number" value="${local.taxa}" step="0.01" data-idx="${idx}" data-campo="taxa"></td>
+                     <td><button onclick="removerLocal(${idx})">Remover</button></td>`;
+    locaisTable.appendChild(row);
+  });
 
-    document.getElementById("marmitaPequena").value = dados.valoresMarmita.Pequena;
-    document.getElementById("marmitaGrande").value = dados.valoresMarmita.Grande;
+  document.getElementById('formasPagamento').value = cardapioJSON.formasPagamento.join(', ');
+}
 
-    document.getElementById("locaisEntrega").value = dados.locaisEntrega.map(l => `${l.nome}=${l.taxa}`).join(", ");
-    document.getElementById("formasPagamento").value = dados.formasPagamento.join(", ");
+function salvarJSON() {
+  cardapioJSON.horarioFuncionamento.abertura = document.getElementById('abertura').value;
+  cardapioJSON.horarioFuncionamento.fechamento = document.getElementById('fechamento').value;
+  cardapioJSON.valoresMarmita.Pequena = parseFloat(document.getElementById('valorPequena').value);
+  cardapioJSON.valoresMarmita.Grande = parseFloat(document.getElementById('valorGrande').value);
 
-    // Alterar dia do cardápio
-    const diaSemana = document.getElementById("diaSemana");
-    const carnes = document.getElementById("carnes");
-    const acompanhamentos = document.getElementById("acompanhamentos");
+  // Cardápio semanal
+  document.querySelectorAll('#cardapioTable input').forEach(input => {
+    const dia = input.dataset.dia;
+    const tipo = input.dataset.tipo;
+    cardapioJSON.cardapio[dia][tipo] = input.value.split(',').map(s => s.trim()).filter(s => s);
+  });
 
-    diaSemana.addEventListener("change", () => {
-      const dia = diaSemana.value;
-      carnes.value = dados.cardapio[dia]?.carnes.join(", ") || "";
-      acompanhamentos.value = dados.cardapio[dia]?.acompanhamentos.join(", ") || "";
-    });
-    diaSemana.dispatchEvent(new Event("change"));
+  // Locais de entrega
+  document.querySelectorAll('#locaisTable input').forEach(input => {
+    const idx = parseInt(input.dataset.idx);
+    const campo = input.dataset.campo;
+    if (campo === 'nome') cardapioJSON.locaisEntrega[idx].nome = input.value;
+    if (campo === 'taxa') cardapioJSON.locaisEntrega[idx].taxa = parseFloat(input.value);
+  });
 
-    // Salvando dados
-    document.getElementById("formHorario").onsubmit = e => {
-      e.preventDefault();
-      dados.horarioFuncionamento.abertura = document.getElementById("abertura").value;
-      dados.horarioFuncionamento.fechamento = document.getElementById("fechamento").value;
-      salvar();
-    };
+  // Formas de pagamento
+  cardapioJSON.formasPagamento = document.getElementById('formasPagamento').value.split(',').map(s => s.trim()).filter(s => s);
 
-    document.getElementById("formValores").onsubmit = e => {
-      e.preventDefault();
-      dados.valoresMarmita.Pequena = parseFloat(document.getElementById("marmitaPequena").value);
-      dados.valoresMarmita.Grande = parseFloat(document.getElementById("marmitaGrande").value);
-      salvar();
-    };
+  localStorage.setItem('cardapioJSON', JSON.stringify(cardapioJSON, null, 2));
+  alert('Alterações salvas com sucesso!');
+}
 
-    document.getElementById("formCardapio").onsubmit = e => {
-      e.preventDefault();
-      const dia = diaSemana.value;
-      dados.cardapio[dia] = {
-        carnes: carnes.value.split(",").map(s => s.trim()).filter(Boolean),
-        acompanhamentos: acompanhamentos.value.split(",").map(s => s.trim()).filter(Boolean)
-      };
-      salvar();
-    };
+function addLocal() {
+  cardapioJSON.locaisEntrega.push({ nome: "Novo Local", taxa: 0 });
+  preencherCampos();
+}
 
-    document.getElementById("formLocais").onsubmit = e => {
-      e.preventDefault();
-      dados.locaisEntrega = document.getElementById("locaisEntrega").value.split(",").map(s => {
-        let [nome, taxa] = s.split("=");
-        return { nome: nome.trim(), taxa: parseFloat(taxa) };
-      }).filter(l => l.nome);
-      salvar();
-    };
+function removerLocal(idx) {
+  cardapioJSON.locaisEntrega.splice(idx, 1);
+  preencherCampos();
+}
 
-    document.getElementById("formPagamentos").onsubmit = e => {
-      e.preventDefault();
-      dados.formasPagamento = document.getElementById("formasPagamento").value.split(",").map(s => s.trim()).filter(Boolean);
-      salvar();
-    };
+preencherCampos();
+</script>
 
-    function salvar() {
-      localStorage.setItem("cardapio", JSON.stringify(dados));
-      alert("Dados salvos com sucesso!");
-    }
-  </script>
 </body>
 </html>
