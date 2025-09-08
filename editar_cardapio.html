@@ -14,8 +14,7 @@ button { margin-top: 15px; padding: 10px 20px; cursor: pointer; }
 </head>
 <body>
 
-<h1>Editor de cardapio.json (LocalStorage)</h1>
-
+<h1>Editor de cardapio.json</h1>
 <form id="formCardapio">
 
 <h2>Horário de Funcionamento</h2>
@@ -39,36 +38,18 @@ button { margin-top: 15px; padding: 10px 20px; cursor: pointer; }
 <button type="button" onclick="salvarJSON()">Salvar Alterações</button>
 <button type="button" onclick="baixarJSON()">Baixar JSON</button>
 <p id="mensagem"></p>
+</form>
 
 <script>
-// JSON inicial
-let cardapioJSON = JSON.parse(localStorage.getItem('cardapioJSON')) || {
-  "horarioFuncionamento": { "abertura": "11:30", "fechamento": "14:00" },
-  "valoresMarmita": { "Pequena": 15, "Grande": 20 },
-  "cardapio": {
-    "segunda-feira": { "carnes": ["Costela com mandioca","Frango ao molho","Peito de frango grelhado"], "acompanhamentos": ["Arroz","Feijão","Macarrão alho e óleo","Purê","Farofa","Verduras cozidas","Salada"] },
-    "terça-feira": { "carnes": ["Churrasco","Carne de porco frita","Frango ao molho"], "acompanhamentos": ["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-    "quarta-feira": { "carnes": ["Churrasco","Strogonoff de frango","Frango ao molho"], "acompanhamentos": ["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata palha","Batata temperada"] },
-    "quinta-feira": { "carnes": ["Churrasco","Frango ao molho","Fígado"], "acompanhamentos": ["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-    "sexta-feira": { "carnes": ["Churrasco","Frango ao molho","Coxa e sobrecoxa assada"], "acompanhamentos": ["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-    "sábado": { "carnes": ["Churrasco","Feijoada","Frango ao molho"], "acompanhamentos": ["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Batata frita"] },
-    "domingo": { "carnes": ["Churrasco","Frango ao molho","Lasanha"], "acompanhamentos": ["Arroz","Feijão","Macarrão alho e óleo","Farofa","Verduras cozidas","Salada","Maionese"] }
-  },
-  "locaisEntrega": [
-    { "nome": "Boa Vista 1","taxa": 2.00 },
-    { "nome": "Boa Vista 2","taxa": 4.00 }
-  ],
-  "formasPagamento": ["Dinheiro","Pix","Cartão de Crédito"]
-};
+let cardapioJSON = {};
 
-// Preenche formulário
+// Função para preencher os campos do formulário
 function preencherCampos() {
   document.getElementById('abertura').value = cardapioJSON.horarioFuncionamento.abertura;
   document.getElementById('fechamento').value = cardapioJSON.horarioFuncionamento.fechamento;
   document.getElementById('valorPequena').value = cardapioJSON.valoresMarmita.Pequena;
   document.getElementById('valorGrande').value = cardapioJSON.valoresMarmita.Grande;
 
-  // Cardápio semanal
   const cardapioDias = document.getElementById('cardapioDias');
   cardapioDias.innerHTML = '';
   for (let dia in cardapioJSON.cardapio) {
@@ -79,7 +60,6 @@ function preencherCampos() {
     cardapioDias.appendChild(div);
   }
 
-  // Locais de entrega
   const locaisDiv = document.getElementById('locaisEntrega');
   locaisDiv.innerHTML = '';
   cardapioJSON.locaisEntrega.forEach((local, idx) => {
@@ -94,7 +74,18 @@ function preencherCampos() {
   document.getElementById('formasPagamento').value = cardapioJSON.formasPagamento.join(', ');
 }
 
-// Salvar alterações
+// Carregar cardapio.json do GitHub
+fetch('cardapio.json')
+  .then(response => response.json())
+  .then(data => {
+    cardapioJSON = data;
+    preencherCampos();
+  })
+  .catch(err => {
+    document.getElementById('mensagem').innerText = 'Erro ao carregar cardapio.json: ' + err;
+  });
+
+// Salvar alterações no LocalStorage
 function salvarJSON() {
   cardapioJSON.horarioFuncionamento.abertura = document.getElementById('abertura').value;
   cardapioJSON.horarioFuncionamento.fechamento = document.getElementById('fechamento').value;
@@ -142,9 +133,6 @@ function baixarJSON() {
   a.click();
   URL.revokeObjectURL(url);
 }
-
-// Inicializa
-preencherCampos();
 </script>
 
 </body>
