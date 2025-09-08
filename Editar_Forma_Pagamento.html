@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Editar Cardápio</title>
+<title>Editar Formas de Pagamento</title>
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -68,75 +68,71 @@
   /* Box central */
   .box {
     background: #fff;
-    max-width: 600px;
+    max-width: 500px;
     margin: 120px auto;
-    padding: 30px;
+    padding: 25px;
     border-radius: 15px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.2);
     animation: fadeIn 0.5s ease-in-out;
     color: #333;
   }
 
-  h1 {
-    text-align:center;
-    color:#007BFF;
-    margin-bottom:25px;
-  }
+  h2 { text-align:center; color:#007BFF; margin-bottom:25px; }
 
-  .dia-box {
-    margin-bottom:20px;
-    padding:15px;
-    background:#f9f9f9;
-    border-radius:8px;
-    box-shadow:0 2px 4px rgba(0,0,0,0.1);
+  .item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    align-items: center;
   }
-
-  label {
-    font-weight: bold;
-    display:block;
-    margin:10px 0 5px;
-  }
-
-  textarea {
-    width:100%;
-    min-height:70px;
-    border-radius:6px;
-    border:1px solid #ccc;
-    padding:8px;
-    font-family: monospace;
-    background:#fff;
-    resize: vertical;
+  .item input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    flex: 1;
+    font-size: 1rem;
     transition: 0.2s;
   }
-
-  textarea:focus {
-    outline: none;
+  .item input:focus {
     border-color: #007BFF;
+    outline: none;
     box-shadow: 0 0 6px rgba(0,123,255,0.2);
   }
-
-  button {
-    margin-top:15px;
-    padding:12px;
-    background:#28A745;
-    color:#fff;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-    width:100%;
-    font-weight:bold;
-    font-size:1.05rem;
+  .item button {
+    padding: 8px 12px;
+    background: #DC3545;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
     transition: all 0.2s;
   }
+  .item button:hover { background: #C82333; }
 
-  button:hover { background:#218838; }
-
-  @keyframes fadeIn {
-    from {opacity:0; transform:translateY(-10px);}
-    to {opacity:1; transform:translateY(0);}
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
   }
+  .actions button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+  .add-btn { background: #007BFF; color: #fff; }
+  .add-btn:hover { background: #0069D9; }
+  .save-btn { background: #28A745; color: #fff; }
+  .save-btn:hover { background: #218838; }
 
-  @media (max-width: 500px) { .side-menu { width:70%; } .box { margin:100px 15px; } }
+  @keyframes fadeIn { from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:translateY(0);} }
+
+  @media (max-width: 500px) { .side-menu { width: 70%; } .box { margin: 100px 15px; } }
 </style>
 </head>
 <body>
@@ -159,12 +155,14 @@
 
 <!-- Box central -->
 <div class="box">
-  <h1>Editar Cardápio Diário</h1>
-  <div id="editor"></div>
-  <button id="salvar">💾 Salvar Alterações</button>
+  <h2>Editar Formas de Pagamento</h2>
+  <div id="pagamentos"></div>
+  <div class="actions">
+    <button class="add-btn" onclick="adicionar()">+ Adicionar</button>
+    <button class="save-btn" onclick="salvar()">💾 Salvar</button>
+  </div>
 </div>
 
-<script src="cardapio.js"></script>
 <script>
   // Hamburger
   const hamburger = document.getElementById('hamburger');
@@ -196,49 +194,46 @@
     }
   });
 
-  // Cardápio
-  let cardapioDataLS = JSON.parse(localStorage.getItem("cardapioData"));
-  let data = cardapioDataLS || cardapioData;
+  // Formas de pagamento
+  let formas = JSON.parse(localStorage.getItem("cardapioData"))?.formasPagamento || [];
 
-  const editor = document.getElementById("editor");
-
-  for (let dia in data.cardapio) {
-    let box = document.createElement("div");
-    box.className = "dia-box";
-
-    let titulo = document.createElement("h2");
-    titulo.textContent = dia.charAt(0).toUpperCase() + dia.slice(1);
-
-    let labelCarnes = document.createElement("label");
-    labelCarnes.textContent = "Carnes:";
-    let textareaCarnes = document.createElement("textarea");
-    textareaCarnes.id = "carnes_" + dia;
-    textareaCarnes.value = (data.cardapio[dia].carnes || []).join(", ");
-
-    let labelAcomp = document.createElement("label");
-    labelAcomp.textContent = "Acompanhamentos:";
-    let textareaAcomp = document.createElement("textarea");
-    textareaAcomp.id = "acomp_" + dia;
-    textareaAcomp.value = (data.cardapio[dia].acompanhamentos || []).join(", ");
-
-    box.appendChild(titulo);
-    box.appendChild(labelCarnes);
-    box.appendChild(textareaCarnes);
-    box.appendChild(labelAcomp);
-    box.appendChild(textareaAcomp);
-
-    editor.appendChild(box);
+  function render() {
+    const div = document.getElementById("pagamentos");
+    div.innerHTML = "";
+    formas.forEach((f, i) => {
+      const item = document.createElement("div");
+      item.className = "item";
+      item.innerHTML = `
+        <input type="text" value="${f}" id="forma-${i}" oninput="atualizar(${i})">
+        <button onclick="remover(${i})">🗑️</button>
+      `;
+      div.appendChild(item);
+    });
   }
 
-  document.getElementById("salvar").addEventListener("click", ()=>{
-    for (let dia in data.cardapio) {
-      let carnes = document.getElementById("carnes_" + dia).value.split(",").map(x => x.trim()).filter(x => x);
-      let acomp = document.getElementById("acomp_" + dia).value.split(",").map(x => x.trim()).filter(x => x);
-      data.cardapio[dia] = { carnes, acompanhamentos: acomp };
-    }
+  function atualizar(i) {
+    formas[i] = document.getElementById(`forma-${i}`).value;
+  }
+
+  function adicionar() {
+    formas.push("");
+    render();
+  }
+
+  function remover(i) {
+    formas.splice(i, 1);
+    render();
+  }
+
+  function salvar() {
+    formas = formas.filter(Boolean);
+    const data = JSON.parse(localStorage.getItem("cardapioData")) || {};
+    data.formasPagamento = formas;
     localStorage.setItem("cardapioData", JSON.stringify(data));
-    alert("✅ Cardápio atualizado com sucesso!");
-  });
+    alert("✅ Formas de pagamento atualizadas!");
+  }
+
+  render();
 </script>
 </body>
 </html>
