@@ -80,24 +80,20 @@ label { display: block; margin-bottom: 6px; cursor: pointer; }
   <ul id="itensPedido"><li>Nenhum item selecionado</li></ul>
 </div>
 
-<div class="cupom" id="cupomPreview"></div>
-<button id="enviarWhats">Gerar PDF</button>
+<button id="enviarWhats">Enviar Pedido + PDF</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-document.getElementById("enviarWhats").addEventListener("click", ()=>{
-    // --- Aqui você pega os dados do usuário/formulário ---
+document.getElementById("enviarWhats").addEventListener("click", async ()=>{
+    // --- Captura os dados do cliente ---
     const nomeCliente = document.getElementById("nomeCliente").value || "Cliente";
     const endereco = document.getElementById("enderecoCliente").value || "Não informado";
     const localEntrega = document.getElementById("localEntrega").value || "Não informado";
     
     const marmitaEl = document.querySelector(".marmita-options input:checked");
-    if(!marmitaEl){
-        alert("Selecione a marmita!");
-        return;
-    }
+    if(!marmitaEl){ alert("Selecione a marmita!"); return; }
     const marmita = marmitaEl.value;
-    const valorMarmita = marmita.includes("Pequena") ? 15 : 20; // ajuste conforme lógica
+    const valorMarmita = marmita.includes("Pequena") ? 15 : 20;
 
     const adicionais = document.getElementById("adicionais").value.split(",").map(a=>a.trim()).filter(a=>a);
 
@@ -109,42 +105,22 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
     const pagamentoEl = document.querySelector("#formasPagamentoList li.selected");
     const pagamento = pagamentoEl ? pagamentoEl.textContent.trim() : "Não informado";
 
-    // --- Monta objeto JSON dinamicamente ---
     const pedidoJSON = {
         cliente: nomeCliente,
-        endereco: endereco,
-        localEntrega: localEntrega,
-        marmita: marmita,
-        valorMarmita: valorMarmita,
-        adicionais: adicionais,
+        endereco,
+        localEntrega,
+        marmita,
+        valorMarmita,
+        adicionais,
         itens: pedidoItens,
-        taxaEntrega: taxaEntrega,
-        pagamento: pagamento
+        taxaEntrega,
+        pagamento
     };
 
-    // --- Exibe na página antes de gerar PDF ---
-    const cupom = document.getElementById("cupomPreview");
-    cupom.innerHTML = `
-        <strong>Restaurante Colinas</strong><br><br>
-        Cliente: ${pedidoJSON.cliente}<br>
-        Endereço: ${pedidoJSON.endereco}<br>
-        Local de entrega: ${pedidoJSON.localEntrega}<br><br>
-        <strong>Itens do Pedido:</strong><br>
-        - Marmita: ${pedidoJSON.marmita} - R$${pedidoJSON.valorMarmita.toFixed(2)}<br>
-        ${pedidoJSON.itens.map(i=>`<div class="item">- ${i}</div>`).join('')}
-        ${pedidoJSON.adicionais.length ? pedidoJSON.adicionais.map(a=>`<div class="item">- Adicional: ${a}</div>`).join('') : ''}
-        <br>
-        Taxa de entrega: R$${pedidoJSON.taxaEntrega.toFixed(2)}<br>
-        Pagamento: ${pedidoJSON.pagamento}<br>
-        <br>
-        <strong>Obrigado pela preferência!</strong>
-    `;
-
-    // --- Gera PDF térmico ---
+    // --- Gera PDF em memória (Blob) ---
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({unit:"mm", format:[80,200]});
-    let y = 10;
-    const margem = 5;
+    let y=10; const margem=5;
 
     doc.setFont("courier","bold"); doc.setFontSize(12);
     doc.text("Restaurante Colinas", 40, y, {align:"center"}); y+=6;
@@ -156,20 +132,36 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
     doc.setFont("courier","bold"); doc.text("Itens do Pedido:", margem, y); y+=5;
     doc.setFont("courier","normal");
     doc.text(`- Marmita: ${pedidoJSON.marmita} .... R$${pedidoJSON.valorMarmita.toFixed(2)}`, margem+2, y); y+=5;
-
-    pedidoJSON.itens.forEach(item=>{
-        doc.text(`  - ${item}`, margem+4, y); y+=4;
-    });
-
-    pedidoJSON.adicionais.forEach(add=>{
-        doc.text(`  - Adicional: ${add}`, margem+4, y); y+=4;
-    });
+    pedidoJSON.itens.forEach(item=>{ doc.text(`  - ${item}`, margem+4, y); y+=4; });
+    pedidoJSON.adicionais.forEach(add=>{ doc.text(`  - Adicional: ${add}`, margem+4, y); y+=4; });
 
     y+=2; doc.setFont("courier","bold");
     doc.text(`Taxa de entrega: R$${pedidoJSON.taxaEntrega.toFixed(2)}`, margem, y); y+=5;
     doc.text(`Pagamento: ${pedidoJSON.pagamento}`, margem, y); y+=5;
     y+=5; doc.text("Obrigado pela preferência!", 40, y, {align:"center"});
 
-    doc.save(`pedido_${pedidoJSON.cliente}.pdf`);
+    // --- Converte PDF para Blob ---
+    const pdfBlob = doc.output("blob");
+    const pdfUrl = URL.createObjectURL(pdfBlob);
+
+    // --- Cria link temporário para download rápido ---
+    const a = document.createElement("a");
+    a.href = pdfUrl;
+    a.download = `pedido_${pedidoJSON.cliente}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // --- Abre WhatsApp Web com mensagem pronta ---
+    const numeroRestaurante = "5511999999999"; // Coloque aqui o número do restaurante
+    const mensagem = `Olá! Segue o pedido do cliente ${pedidoJSON.cliente}. Favor verificar o PDF gerado para impressão.`;
+    const url = `https://web.whatsapp.com/send?phone=${numeroRestaurante}&text=${encodeURIComponent(mensagem)}`;
+    window.open(url, "_blank");
+
+    // Observação: o PDF precisa ser anexado manualmente no WhatsApp Web,
+    // mas já será baixado automaticamente para facilitar.
 });
 </script>
+
+  </body>
+</html>
