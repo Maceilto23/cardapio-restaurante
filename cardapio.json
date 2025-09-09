@@ -154,7 +154,6 @@
     ],
     "formasPagamento": [
         "Dinheiro",
-        "Pix",
         "Cartão de Crédito",
         "Cartão de Débito"
     ]
