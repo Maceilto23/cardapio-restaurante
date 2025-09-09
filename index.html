@@ -205,7 +205,7 @@ fetch('cardapio.json')
         ${pedido.length?pedido.map(i=>`<li>✅ ${i}</li>`).join(""):"<li>Nenhum item selecionado</li>"}
         ${adicionais?`<li>📝 ${adicionais}</li>`:""}
         ${pagamentoSelecionado?`<li>💳 Pagamento: ${pagamentoSelecionado}</li>`:""}
-        <li>🚚 Taxa de Entrega: R$${taxaEntrega.toFixed(2)}</li>
+        <li>🏍️ Taxa de Entrega: R$${taxaEntrega.toFixed(2)}</li>
         <li>💰 Total: R$${total.toFixed(2)}</li>
       `;
     }
@@ -284,3 +284,4 @@ fetch('cardapio.json')
 </script>
 </body>
 </html>
+
