@@ -89,7 +89,7 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
     const local = document.getElementById("localEntrega").value;
     const marmitaEl = document.querySelector(".marmita-options input:checked");
     const pagamentoEl = document.querySelector("#formasPagamentoList li.selected");
-    
+
     if(!marmitaEl || !pagamentoEl){
         alert("Selecione a marmita e a forma de pagamento!");
         return;
@@ -123,27 +123,34 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
     doc.setFontSize(12);
     const linhaCliente = doc.splitTextToSize(`👤 Cliente: ${nomeCliente}`, larguraMax);
     linhaCliente.forEach(l => { doc.text(l, margem, y); y += 6; });
+
     const linhaEndereco = doc.splitTextToSize(`🏠 Endereço: ${endereco}`, larguraMax);
     linhaEndereco.forEach(l => { doc.text(l, margem, y); y += 6; });
+
     doc.text(`📍 Local de entrega: ${local}`, margem, y); y += 8;
 
     // Itens do pedido
     doc.setFont("helvetica","bold");
     doc.text("📝 Itens do Pedido:", margem, y); y += 6;
+
     doc.setFont("helvetica","normal");
-    doc.text(`- Marmita: ${marmita} - R$${valorMarmita}`, margem+2, y); y += 6;
+    doc.text(`- Marmita: ${marmita} .......... R$${valorMarmita}`, margem+2, y); y += 6;
+
     pedidoItens.forEach(item=>{
-        const linhas = doc.splitTextToSize(`- ${item}`, larguraMax);
+        const linhas = doc.splitTextToSize(`  - ${item}`, larguraMax-10);
         linhas.forEach(l=>{
             if(y > 280){ doc.addPage(); y=15; }
-            doc.text(l, margem+2, y); y += 6;
+            doc.text(l, margem+4, y); 
+            y += 6;
         });
     });
+
     if(adicionais){
-        const linhasAd = doc.splitTextToSize(`- 📝 Adicionais: ${adicionais}`, larguraMax);
+        const linhasAd = doc.splitTextToSize(`  - 📝 Adicionais: ${adicionais}`, larguraMax-10);
         linhasAd.forEach(l=>{
             if(y > 280){ doc.addPage(); y=15; }
-            doc.text(l, margem+2, y); y += 6;
+            doc.text(l, margem+4, y); 
+            y += 6;
         });
     }
 
@@ -151,14 +158,12 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
     doc.setFont("helvetica","bold");
     doc.text(`🏍️ Taxa de entrega: R$${taxaEntrega.toFixed(2)}`, margem, y); y += 6;
     doc.text(`💳 Pagamento: ${pagamentoEl.textContent}`, margem, y); y += 6;
-    doc.text(`💰 Total: R$${total.toFixed(2)}`, margem, y);
+    doc.text(`💰 Total: R$${total.toFixed(2)}`, margem, y); y += 10;
 
+    doc.setFont("helvetica","bold");
+    doc.text("Obrigado pela preferência!", 105, y, {align:"center"});
+
+    // Salvar PDF
     doc.save(`pedido_${nomeCliente}.pdf`);
 });
 </script>
-
-
-</body>
-</html>
-
-
