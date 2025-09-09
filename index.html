@@ -116,27 +116,36 @@ fetch('cardapio.json')
       marmitaOptions.appendChild(label);
     });
 
-    function criarLista(itens, container, tipo="normal") {
-      container.innerHTML = "";
-      itens.forEach(i=>{
-        const li = document.createElement("li");
-        li.setAttribute("data-item", i);
-        li.innerHTML = `<div class="checkbox-fake">X</div><span>${i}</span>`;
-        li.addEventListener("click", ()=>{
-          if(tipo==="carnes"){
-            const selecionadas = container.querySelectorAll("li.selected");
-            if(!li.classList.contains("selected") && selecionadas.length >= limiteCarnes) return;
-          }
-          li.classList.toggle("selected");
-          const item = li.getAttribute("data-item");
-          if(li.classList.contains("selected")){
-            if(!pedido.includes(item)) pedido.push(item);
-          } else pedido = pedido.filter(x=>x!==item);
-          atualizarPedido();
-        });
-        container.appendChild(li);
-      });
+    // Na parte de criarLista para os acompanhamentos:
+function criarLista(itens, container, tipo="normal") {
+  container.innerHTML = "";
+  itens.forEach(i=>{
+    const li = document.createElement("li");
+    li.setAttribute("data-item", i);
+    li.innerHTML = `<div class="checkbox-fake">X</div><span>${i}</span>`;
+
+    // Se for acompanhamentos, já marca por padrão
+    if(tipo !== "carnes") {
+      li.classList.add("selected");
+      if(!pedido.includes(i)) pedido.push(i); // adiciona ao pedido inicial
     }
+
+    li.addEventListener("click", ()=>{
+      if(tipo==="carnes"){
+        const selecionadas = container.querySelectorAll("li.selected");
+        if(!li.classList.contains("selected") && selecionadas.length >= limiteCarnes) return;
+      }
+      li.classList.toggle("selected");
+      const item = li.getAttribute("data-item");
+      if(li.classList.contains("selected")){
+        if(!pedido.includes(item)) pedido.push(item);
+      } else pedido = pedido.filter(x=>x!==item);
+      atualizarPedido();
+    });
+    container.appendChild(li);
+  });
+}
+
 
     function criarListaRefrigerantes(itens, container){
       container.innerHTML = "";
@@ -163,6 +172,7 @@ fetch('cardapio.json')
     }
 
     const hojeCardapio = cardapioFinal.cardapio[nomeDia.toLowerCase()] || { carnes: [], acompanhamentos: [] };
+    criarLista(hojeCardapio.acompanhamentos, document.getElementById("acompanhamentos"), "acompanhamentos");
     criarLista(hojeCardapio.carnes, document.getElementById("carnes"), "carnes");
     criarLista(hojeCardapio.acompanhamentos, document.getElementById("acompanhamentos"));
     criarListaRefrigerantes(
@@ -284,4 +294,5 @@ fetch('cardapio.json')
 </script>
 </body>
 </html>
+
 
