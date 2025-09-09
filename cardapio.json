@@ -38,14 +38,14 @@
     }
   },
   "refrigerantes": {
-    "REFRIGERANTES LATA": [
+    "Refri LATA": [
       {"nome": "Coca Cola", "preco": 5},
       {"nome": "Coca Cola Zero", "preco": 5},
       {"nome": "Fanta Laranja", "preco": 5},
       {"nome": "Fanta Uva", "preco": 5},
       {"nome": "Água Tônica", "preco": 5}
     ],
-    "REFRIGERANTE 2 LITROS": [
+    "Refri 2 LITROS": [
       {"nome": "Mineiro", "preco": 10}
     ]
   },
