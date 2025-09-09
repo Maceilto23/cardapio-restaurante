@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cardápio Interativo</title>
+<title>Cardápio Interativo Rápido</title>
 <style>
 * { box-sizing: border-box; margin:0; padding:0; }
 body { font-family: Arial, sans-serif; background: #f5f5f5; display: flex; flex-direction: column; align-items: center; padding: 10px; }
@@ -49,7 +49,7 @@ label { display: block; margin-bottom: 6px; cursor: pointer; }
     <h3>🍱 Escolha o tipo de Marmita</h3>
   </div>
 
-  <h3>🍖 Carnes</h3>
+  <h3>🍖 Carnes (máx. 2)</h3>
   <ul id="carnes"></ul>
 
   <h3>🥗 Acompanhamentos</h3>
@@ -82,7 +82,6 @@ label { display: block; margin-bottom: 6px; cursor: pointer; }
   <ul id="itensPedido"><li>Nenhum item selecionado</li></ul>
 </div>
 
-<script src="cardapio.js"></script>
 <script>
 const diasSemana = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
 const hojeDate = new Date();
@@ -97,6 +96,7 @@ let marmita = "", valorMarmita = 0;
 let pedido = [];
 let taxaEntrega = 0;
 let pagamentoSelecionado = "";
+let carnesSelecionadas = [];
 
 // --- Carregar cardápio editado do localStorage se existir ---
 let cardapioSalvo = JSON.parse(localStorage.getItem("cardapioData"));
@@ -121,6 +121,31 @@ Object.keys(cardapioFinal.valoresMarmita).forEach(key=>{
 
 // Carnes e acompanhamentos
 const hojeCardapio = cardapioFinal.cardapio[nomeDia.toLowerCase()] || { carnes: [], acompanhamentos: [] };
+function criarListaCarnes(itens, container){
+  container.innerHTML = "";
+  itens.forEach(i=>{
+    const li = document.createElement("li");
+    li.setAttribute("data-item", i);
+    li.innerHTML = `<div class="checkbox-fake">X</div><span>${i}</span>`;
+    li.addEventListener("click", ()=>{
+      if(li.classList.contains("selected")){
+        li.classList.remove("selected");
+        carnesSelecionadas = carnesSelecionadas.filter(x=>x!==i);
+      } else {
+        if(carnesSelecionadas.length < 2){
+          li.classList.add("selected");
+          carnesSelecionadas.push(i);
+        } else {
+          alert("Você só pode selecionar até 2 carnes.");
+        }
+      }
+      atualizarPedido();
+    });
+    container.appendChild(li);
+  });
+}
+criarListaCarnes(hojeCardapio.carnes, document.getElementById("carnes"));
+
 function criarLista(itens, container){
   container.innerHTML = "";
   itens.forEach(i=>{
@@ -138,7 +163,6 @@ function criarLista(itens, container){
     container.appendChild(li);
   });
 }
-criarLista(hojeCardapio.carnes, document.getElementById("carnes"));
 criarLista(hojeCardapio.acompanhamentos, document.getElementById("acompanhamentos"));
 
 // Refrigerantes
@@ -159,9 +183,7 @@ if(cardapioFinal.refrigerantes){
   });
 }
 refSelect.addEventListener("change", () => {
-  const valor = refSelect.selectedOptions[0]?.dataset.preco || 0;
   const nomeRef = refSelect.value;
-  // Remove refrigerantes antigos do pedido
   pedido = pedido.filter(i => !i.startsWith("🥤"));
   if(nomeRef) pedido.push(`🥤 ${nomeRef}`);
   atualizarPedido();
@@ -199,12 +221,17 @@ cardapioFinal.formasPagamento.forEach(f=>{
 // Atualizar pedido
 function atualizarPedido(){
   const adicionais = document.getElementById("adicionais").value;
-  const total = valorMarmita + taxaEntrega + (refSelect.selectedOptions[0]?.dataset.preco*1 || 0);
+  const totalCarnes = 0; // o valor das carnes está incluso na marmita
+  const totalRef = refSelect.selectedOptions[0]?.dataset.preco*1 || 0;
+  const total = valorMarmita + taxaEntrega + totalRef;
+
   const itensEl = document.getElementById("itensPedido");
   itensEl.innerHTML = `
     ${marmita?`<li>🍱 Marmita ${marmita} - R$${valorMarmita}</li>`:""}
-    ${pedido.length?pedido.map(i=>`<li>✅ ${i}</li>`:"<li>Nenhum item selecionado</li>"}
+    ${carnesSelecionadas.length?carnesSelecionadas.map(i=>`<li>🍖 ${i}</li>`).join(""):"<li>Nenhuma carne selecionada</li>"}
+    ${pedido.filter(i=>!carnesSelecionadas.includes(i) && !i.startsWith("🥤")).map(i=>`<li>✅ ${i}</li>`).join("")}
     ${adicionais?`<li>📝 ${adicionais}</li>`:""}
+    ${pedido.find(i=>i.startsWith("🥤"))?`<li>${pedido.find(i=>i.startsWith("🥤"))}</li>`:""}
     ${pagamentoSelecionado?`<li>💳 Pagamento: ${pagamentoSelecionado}</li>`:""}
     <li>🚚 Taxa de Entrega: R$${taxaEntrega.toFixed(2)}</li>
     <li>💰 Total: R$${total.toFixed(2)}</li>
@@ -220,13 +247,17 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
   }
   const nome = document.getElementById("nomeCliente").value || "Cliente";
   const endereco = document.getElementById("enderecoCliente").value || "Não informado";
-  const adicionais = document.getElementById("adicionais").value;
   const local = document.getElementById("localEntrega").value;
-  const total = valorMarmita + taxaEntrega + (refSelect.selectedOptions[0]?.dataset.preco*1 || 0);
+  const totalRef = refSelect.selectedOptions[0]?.dataset.preco*1 || 0;
+  const total = valorMarmita + taxaEntrega + totalRef;
 
   let msg = `Olá! Pedido de ${nome}%0AEndereço: ${endereco}%0ALocal de entrega: ${local}%0A%0AItens:%0A`;
   msg += `- Marmita ${marmita} - R$${valorMarmita}%0A`;
-  pedido.forEach(i=>msg+=`- ${i}%0A`);
+  carnesSelecionadas.forEach(i=>msg+=`- 🍖 ${i}%0A`);
+  pedido.filter(i=>!carnesSelecionadas.includes(i) && !i.startsWith("🥤")).forEach(i=>msg+=`- ${i}%0A`);
+  const refSel = pedido.find(i=>i.startsWith("🥤"));
+  if(refSel) msg+=`- ${refSel}%0A`;
+  const adicionais = document.getElementById("adicionais").value;
   if(adicionais) msg+=`- 📝 ${adicionais}%0A`;
   msg += `- 🚚 Taxa de Entrega: R$${taxaEntrega.toFixed(2)}%0A`;
   msg += `%0APagamento: ${pagamentoSelecionado}%0A💰 Total: R$${total.toFixed(2)}`;
@@ -237,6 +268,5 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
 
 atualizarPedido();
 </script>
-
 </body>
 </html>
