@@ -91,18 +91,16 @@ const mes = String(hojeDate.getMonth()+1).padStart(2,'0');
 const ano = hojeDate.getFullYear();
 document.getElementById("dataHoje").innerText = `${dia}/${mes}/${ano}`;
 
-// --- Carregar cardápio do JSON ---
 fetch('cardapio.json')
   .then(response => response.json())
   .then(cardapioFinal => {
-    // Horário de funcionamento
     document.getElementById("horarioFuncionamento").textContent = 
       `Horário: ${cardapioFinal.horarioFuncionamento.abertura} - ${cardapioFinal.horarioFuncionamento.fechamento}`;
 
-    // Marmitas
     const marmitaOptions = document.querySelector(".marmita-options");
     let marmita = "", valorMarmita = 0, limiteCarnes = 0;
     let pedido = [], taxaEntrega = 0, pagamentoSelecionado = "";
+    let refrigerantesSelecionados = [];
 
     Object.keys(cardapioFinal.valoresMarmita).forEach(key=>{
       const label = document.createElement("label");
@@ -140,12 +138,38 @@ fetch('cardapio.json')
       });
     }
 
+    function criarListaRefrigerantes(itens, container){
+      container.innerHTML = "";
+      itens.forEach(i=>{
+        const li = document.createElement("li");
+        li.setAttribute("data-item", i);
+        li.innerHTML = `<div class="checkbox-fake">X</div><span>${i}</span>`;
+        li.addEventListener("click", ()=>{
+          li.classList.toggle("selected");
+          const item = li.getAttribute("data-item");
+          const preco = parseFloat(item.split('R$')[1]) || 0;
+
+          if(li.classList.contains("selected")){
+            refrigerantesSelecionados.push({nome: item, preco});
+            if(!pedido.includes(item)) pedido.push(item);
+          } else {
+            refrigerantesSelecionados = refrigerantesSelecionados.filter(r => r.nome !== item);
+            pedido = pedido.filter(x=>x!==item);
+          }
+          atualizarPedido();
+        });
+        container.appendChild(li);
+      });
+    }
+
     const hojeCardapio = cardapioFinal.cardapio[nomeDia.toLowerCase()] || { carnes: [], acompanhamentos: [] };
     criarLista(hojeCardapio.carnes, document.getElementById("carnes"), "carnes");
     criarLista(hojeCardapio.acompanhamentos, document.getElementById("acompanhamentos"));
-    criarLista(Object.entries(cardapioFinal.refrigerantes).flatMap(([tipo, list]) => list.map(r=>`${tipo} - ${r.nome} R$${r.preco}`)), document.getElementById("refrigerantes"));
+    criarListaRefrigerantes(
+      Object.entries(cardapioFinal.refrigerantes).flatMap(([tipo, list]) => list.map(r=>`${tipo} - ${r.nome} R$${r.preco}`)),
+      document.getElementById("refrigerantes")
+    );
 
-    // Locais de entrega
     const localEl = document.getElementById("localEntrega");
     cardapioFinal.locaisEntrega.forEach((loc,i)=>{
       const opt = document.createElement("option");
@@ -157,7 +181,6 @@ fetch('cardapio.json')
     });
     localEl.addEventListener("change", ()=>{ taxaEntrega = parseFloat(localEl.selectedOptions[0].dataset.taxa); atualizarPedido(); });
 
-    // Formas de pagamento
     const formasEl = document.getElementById("formasPagamentoList");
     cardapioFinal.formasPagamento.forEach(f=>{
       const li = document.createElement("li");
@@ -171,84 +194,93 @@ fetch('cardapio.json')
       formasEl.appendChild(li);
     });
 
+    function atualizarPedido(){
+      const adicionais = document.getElementById("adicionais").value;
+      const totalRef = refrigerantesSelecionados.reduce((sum,r)=>sum+r.preco,0);
+      const total = valorMarmita + taxaEntrega + totalRef;
 
-document.getElementById("enviarWhats").addEventListener("click", ()=>{
-  if(!marmita || !pagamentoSelecionado){
-    alert("Selecione a marmita e a forma de pagamento!");
-    return;
-  }
+      const itensEl = document.getElementById("itensPedido");
+      itensEl.innerHTML = `
+        ${marmita?`<li>🍱 Marmita ${marmita} - R$${valorMarmita}</li>`:""}
+        ${pedido.length?pedido.map(i=>`<li>✅ ${i}</li>`).join(""):"<li>Nenhum item selecionado</li>"}
+        ${adicionais?`<li>📝 ${adicionais}</li>`:""}
+        ${pagamentoSelecionado?`<li>💳 Pagamento: ${pagamentoSelecionado}</li>`:""}
+        <li>🚚 Taxa de Entrega: R$${taxaEntrega.toFixed(2)}</li>
+        <li>💰 Total: R$${total.toFixed(2)}</li>
+      `;
+    }
 
-  const nome = document.getElementById("nomeCliente").value || "Cliente";
-  const endereco = document.getElementById("enderecoCliente").value || "Não informado";
-  const adicionais = document.getElementById("adicionais").value;
-  const local = document.getElementById("localEntrega").value;
-  const refSelecionado = document.querySelector("#refrigerantes li.selected")?.getAttribute("data-item");
-  const precoRef = refSelecionado ? parseFloat(refSelecionado.split('R$')[1]) : 0;
-  const total = valorMarmita + taxaEntrega + precoRef;
+    document.getElementById("enviarWhats").addEventListener("click", ()=>{
+      if(!marmita || !pagamentoSelecionado){
+        alert("Selecione a marmita e a forma de pagamento!");
+        return;
+      }
+      const nome = document.getElementById("nomeCliente").value || "Cliente";
+      const endereco = document.getElementById("enderecoCliente").value || "Não informado";
+      const adicionais = document.getElementById("adicionais").value;
+      const local = document.getElementById("localEntrega").value;
+      const totalRef = refrigerantesSelecionados.reduce((sum,r)=>sum+r.preco,0);
+      const total = valorMarmita + taxaEntrega + totalRef;
 
-  // Mensagem WhatsApp
-  let msg = `Olá! Pedido de ${nome}%0AEndereço: ${endereco}%0ALocal de entrega: ${local}%0A%0AItens:%0A`;
-  msg += `- Marmita ${marmita} - R$${valorMarmita}%0A`;
-  pedido.forEach(i => msg += `- ${i}%0A`);
-  if(refSelecionado) msg += `- 🥤 ${refSelecionado}%0A`;
-  if(adicionais) msg += `- 📝 ${adicionais}%0A`;
-  msg += `- 🚚 Taxa de Entrega: R$${taxaEntrega.toFixed(2)}%0A`;
-  msg += `%0APagamento: ${pagamentoSelecionado}%0A💰 Total: R$${total.toFixed(2)}`;
+      let msg = `Olá! Pedido de ${nome}%0AEndereço: ${endereco}%0ALocal de entrega: ${local}%0A%0AItens:%0A`;
+      msg += `- Marmita ${marmita} - R$${valorMarmita}%0A`;
+      pedido.forEach(i => msg += `- ${i}%0A`);
+      refrigerantesSelecionados.forEach(r => msg += `- 🥤 ${r.nome}%0A`);
+      if(adicionais) msg += `- 📝 ${adicionais}%0A`;
+      msg += `- 🚚 Taxa de Entrega: R$${taxaEntrega.toFixed(2)}%0A`;
+      msg += `%0APagamento: ${pagamentoSelecionado}%0A💰 Total: R$${total.toFixed(2)}`;
 
-  window.open(`https://wa.me/+556192633504?text=${msg}`, "_blank");
+      window.open(`https://wa.me/+556192633504?text=${msg}`, "_blank");
 
-  // Gerar PDF com logo e itens compactos
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+      // PDF
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const logoUrl = "https://seurestaurante.com.br/logo.png"; 
+      const img = new Image();
+      img.src = logoUrl;
+      img.onload = function() {
+        doc.addImage(img, 'PNG', 10, 5, 30, 30);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.setTextColor(255, 255, 255);
+        doc.setFillColor(255, 99, 71);
+        doc.rect(0, 0, 210, 20, "F");
+        doc.text(`🍱 Restaurante Colinas - Pedido`, 105, 14, {align: "center"});
 
-  // Logo do restaurante (supondo que você tenha um URL ou base64)
-  const logoUrl = "https://seurestaurante.com.br/logo.png"; // substitua pela URL ou base64
-  const img = new Image();
-  img.src = logoUrl;
-  img.onload = function() {
-    doc.addImage(img, 'PNG', 10, 5, 30, 30); // x, y, largura, altura
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.setFont("helvetica", "normal");
+        let y = 40;
+        doc.text(`👤 Cliente: ${nome}`, 10, y); y += 5;
+        doc.text(`🏠 Endereço: ${endereco}`, 10, y); y += 5;
+        doc.text(`📍 Local de entrega: ${local}`, 10, y); y += 8;
 
-    // Cabeçalho
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.setTextColor(255, 255, 255);
-    doc.setFillColor(255, 99, 71);
-    doc.rect(0, 0, 210, 20, "F");
-    doc.text(`🍱 Restaurante Colinas - Pedido`, 105, 14, {align: "center"});
+        doc.setFillColor(240, 240, 240);
+        const alturaItens = 6 + (pedido.length + refrigerantesSelecionados.length + 3) * 5;
+        doc.rect(10, y, 190, alturaItens, "F");
 
-    // Cliente e entrega
-    doc.setFontSize(12);
-    doc.setTextColor(0);
-    doc.setFont("helvetica", "normal");
-    let y = 40;
-    doc.text(`👤 Cliente: ${nome}`, 10, y); y += 5;
-    doc.text(`🏠 Endereço: ${endereco}`, 10, y); y += 5;
-    doc.text(`📍 Local de entrega: ${local}`, 10, y); y += 8;
+        let itemY = y + 5;
+        doc.setFont("helvetica", "bold");
+        doc.text(`📝 Itens do Pedido:`, 12, itemY); itemY += 5;
+        doc.setFont("helvetica", "normal");
+        doc.text(`- Marmita: ${marmita} - R$${valorMarmita}`, 14, itemY); itemY += 5;
+        pedido.forEach(i => { doc.text(`- ${i}`, 14, itemY); itemY += 5; });
+        refrigerantesSelecionados.forEach(r => { doc.text(`- 🥤 ${r.nome}`, 14, itemY); itemY += 5; });
+        if(adicionais) { doc.text(`- 📝 Adicionais: ${adicionais}`, 14, itemY); itemY += 5; }
 
-    // Caixa dos itens
-    doc.setFillColor(240, 240, 240);
-    const alturaItens = 6 + (pedido.length + 3) * 5; // compacta itens
-    doc.rect(10, y, 190, alturaItens, "F");
+        y += alturaItens + 2;
+        doc.setFillColor(255, 228, 181);
+        doc.rect(10, y, 190, 20, "F");
+        doc.setFont("helvetica", "bold");
+        doc.text(`🚚 Taxa de entrega: R$${taxaEntrega.toFixed(2)}`, 12, y + 6);
+        doc.text(`💳 Pagamento: ${pagamentoSelecionado}`, 12, y + 11);
+        doc.text(`💰 Total: R$${total.toFixed(2)}`, 12, y + 16);
 
-    let itemY = y + 5;
-    doc.setFont("helvetica", "bold");
-    doc.text(`📝 Itens do Pedido:`, 12, itemY); itemY += 5;
-    doc.setFont("helvetica", "normal");
-    doc.text(`- Marmita: ${marmita} - R$${valorMarmita}`, 14, itemY); itemY += 5;
-    pedido.forEach(i => { doc.text(`- ${i}`, 14, itemY); itemY += 5; });
-    if(refSelecionado) { doc.text(`- 🥤 Refrigerante: ${refSelecionado}`, 14, itemY); itemY += 5; }
-    if(adicionais) { doc.text(`- 📝 Adicionais: ${adicionais}`, 14, itemY); itemY += 5; }
+        doc.save(`pedido_${nome}.pdf`);
+      };
+    });
 
-    y += alturaItens + 2;
-
-    // Total e pagamento
-    doc.setFillColor(255, 228, 181);
-    doc.rect(10, y, 190, 20, "F");
-    doc.setFont("helvetica", "bold");
-    doc.text(`🚚 Taxa de entrega: R$${taxaEntrega.toFixed(2)}`, 12, y + 6);
-    doc.text(`💳 Pagamento: ${pagamentoSelecionado}`, 12, y + 11);
-    doc.text(`💰 Total: R$${total.toFixed(2)}`, 12, y + 16);
-
-    doc.save(`pedido_${nome}.pdf`);
-  };
-});
+  });
+</script>
+</body>
+</html>
