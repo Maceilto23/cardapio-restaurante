@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor Geral do Cardápio</title>
+<style>
+body { font-family: Arial, sans-serif; background:#f5f5f5; padding:20px; }
+h2 { text-align:center; color:#007BFF; margin-bottom:20px; }
+.container { max-width:800px; margin:0 auto; background:#fff; padding:20px; border-radius:12px; box-shadow:0 6px 15px rgba(0,0,0,0.2);}
+section { margin-bottom:20px; }
+label { display:block; font-weight:bold; margin-top:10px; margin-bottom:5px; }
+input, textarea { width:100%; padding:8px; border-radius:6px; border:1px solid #ccc; margin-bottom:5px; }
+textarea { height:50px; font-family:monospace; }
+button { padding:10px 15px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; margin-top:5px; }
+.add-btn { background:#007BFF; color:#fff; }
+.save-btn { background:#28A745; color:#fff; }
+.item-container { display:flex; gap:10px; margin-bottom:5px; align-items:center; }
+.item-container input { flex:1; }
+.item-container button { background:#DC3545; color:#fff; }
+.item-container button:hover { background:#C82333; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Editor Geral do Cardápio</h2>
+
+  <section>
+    <label>Horário de Funcionamento</label>
+    <input type="time" id="abertura"> até <input type="time" id="fechamento">
+  </section>
+
+  <section>
+    <label>Valores Marmita</label>
+    <div id="valoresMarmitaContainer"></div>
+    <button class="add-btn" onclick="addValorMarmita()">+ Adicionar Marmita</button>
+  </section>
+
+  <section>
+    <label>Cardápio Diário</label>
+    <div id="cardapioContainer"></div>
+  </section>
+
+  <section>
+    <label>Locais de Entrega</label>
+    <div id="locaisEntregaContainer"></div>
+    <button class="add-btn" onclick="addLocalEntrega()">+ Adicionar Local</button>
+  </section>
+
+  <section>
+    <label>Formas de Pagamento</label>
+    <div id="formasPagamentoContainer"></div>
+    <button class="add-btn" onclick="addFormaPagamento()">+ Adicionar Forma</button>
+  </section>
+
+  <button class="save-btn" onclick="gerarJSON()">💾 Gerar cardapio.json</button>
+</div>
+
+<script>
+const jsonURL = "https://maceilto23.github.io/cardapio-restaurante/cardapio.json";
+let cardapioData = {};
+
+// --- Funções de renderização ---
+function renderValoresMarmita(){
+  const container = document.getElementById("valoresMarmitaContainer");
+  container.innerHTML = "";
+  Object.entries(cardapioData.valoresMarmita || {}).forEach(([k,v], i)=>{
+    const div = document.createElement("div");
+    div.className = "item-container";
+    div.innerHTML = `<input type="text" value="${k}" placeholder="Nome da Marmita" onchange="updateValorMarmitaName(${i}, this.value)">
+                     <input type="number" value="${v}" placeholder="Preço" onchange="updateValorMarmitaPrice(${i}, this.value)">
+                     <button onclick="removeValorMarmita(${i})">🗑️</button>`;
+    container.appendChild(div);
+  });
+}
+
+function renderCardapio(){
+  const container = document.getElementById("cardapioContainer");
+  container.innerHTML = "";
+  Object.entries(cardapioData.cardapio || {}).forEach(([dia,obj], i)=>{
+    const div = document.createElement("div");
+    div.style.border="1px solid #ccc"; div.style.padding="10px"; div.style.marginBottom="10px"; div.style.borderRadius="6px";
+    div.innerHTML = `<strong>${dia}</strong><br>Carnes: <div id="carnes-${i}"></div>
+                     Acompanhamentos: <div id="acomp-${i}"></div>`;
+    container.appendChild(div);
+
+    // Carnes
+    const carnesDiv = document.getElementById(`carnes-${i}`);
+    obj.carnes.forEach((c,index)=>{
+      const cDiv = document.createElement("div");
+      cDiv.className="item-container";
+      cDiv.innerHTML = `<input type="text" value="${c}" onchange="updateCarne(${i},${index},this.value)">
+                        <button onclick="removeCarne(${i},${index})">🗑️</button>`;
+      carnesDiv.appendChild(cDiv);
+    });
+    const addC = document.createElement("button");
+    addC.className="add-btn"; addC.textContent="+ Adicionar Carne";
+    addC.onclick=()=>{ addCarne(i); };
+    carnesDiv.appendChild(addC);
+
+    // Acompanhamentos
+    const acompDiv = document.getElementById(`acomp-${i}`);
+    obj.acompanhamentos.forEach((a,index)=>{
+      const aDiv = document.createElement("div");
+      aDiv.className="item-container";
+      aDiv.innerHTML = `<input type="text" value="${a}" onchange="updateAcomp(${i},${index},this.value)">
+                        <button onclick="removeAcomp(${i},${index})">🗑️</button>`;
+      acompDiv.appendChild(aDiv);
+    });
+    const addA = document.createElement("button");
+    addA.className="add-btn"; addA.textContent="+ Adicionar Acompanhamento";
+    addA.onclick=()=>{ addAcomp(i); };
+    acompDiv.appendChild(addA);
+  });
+}
+
+function renderLocaisEntrega(){
+  const container = document.getElementById("locaisEntregaContainer");
+  container.innerHTML="";
+  (cardapioData.locaisEntrega||[]).forEach((l,i)=>{
+    const div = document.createElement("div");
+    div.className="item-container";
+    div.innerHTML=`<input type="text" value="${l.nome}" placeholder="Local" onchange="updateLocalNome(${i},this.value)">
+                   <input type="number" value="${l.taxa}" placeholder="Taxa" onchange="updateLocalTaxa(${i},this.value)">
+                   <button onclick="removeLocal(${i})">🗑️</button>`;
+    container.appendChild(div);
+  });
+}
+
+function renderFormasPagamento(){
+  const container = document.getElementById("formasPagamentoContainer");
+  container.innerHTML="";
+  (cardapioData.formasPagamento||[]).forEach((f,i)=>{
+    const div=document.createElement("div");
+    div.className="item-container";
+    div.innerHTML=`<input type="text" value="${f}" placeholder="Forma de pagamento" onchange="updateForma(${i},this.value)">
+                   <button onclick="removeForma(${i})">🗑️</button>`;
+    container.appendChild(div);
+  });
+}
+
+// --- Funções de atualização ---
+function updateValorMarmitaName(i,v){ const keys=Object.keys(cardapioData.valoresMarmita); const val=cardapioData.valoresMarmita[keys[i]]; delete cardapioData.valoresMarmita[keys[i]]; cardapioData.valoresMarmita[v]=val;}
+function updateValorMarmitaPrice(i,v){ const keys=Object.keys(cardapioData.valoresMarmita); cardapioData.valoresMarmita[keys[i]]=Number(v);}
+function addValorMarmita(){ cardapioData.valoresMarmita["Nova"]=0; renderValoresMarmita(); }
+function removeValorMarmita(i){ const keys=Object.keys(cardapioData.valoresMarmita); delete cardapioData.valoresMarmita[keys[i]]; renderValoresMarmita(); }
+
+function updateCarne(diaIndex,itemIndex,val){ const dia=Object.keys(cardapioData.cardapio)[diaIndex]; cardapioData.cardapio[dia].carnes[itemIndex]=val; }
+function removeCarne(diaIndex,itemIndex){ const dia=Object.keys(cardapioData.cardapio)[diaIndex]; cardapioData.cardapio[dia].carnes.splice(itemIndex,1); renderCardapio(); }
+function addCarne(diaIndex){ const dia=Object.keys(cardapioData.cardapio)[diaIndex]; cardapioData.cardapio[dia].carnes.push("Nova carne"); renderCardapio(); }
+
+function updateAcomp(diaIndex,itemIndex,val){ const dia=Object.keys(cardapioData.cardapio)[diaIndex]; cardapioData.cardapio[dia].acompanhamentos[itemIndex]=val; }
+function removeAcomp(diaIndex,itemIndex){ const dia=Object.keys(cardapioData.cardapio)[diaIndex]; cardapioData.cardapio[dia].acompanhamentos.splice(itemIndex,1); renderCardapio(); }
+function addAcomp(diaIndex){ const dia=Object.keys(cardapioData.cardapio)[diaIndex]; cardapioData.cardapio[dia].acompanhamentos.push("Novo acompanhamento"); renderCardapio(); }
+
+function updateLocalNome(i,v){ cardapioData.locaisEntrega[i].nome=v; }
+function updateLocalTaxa(i,v){ cardapioData.locaisEntrega[i].taxa=Number(v); }
+function addLocalEntrega(){ cardapioData.locaisEntrega.push({nome:"Novo local", taxa:0}); renderLocaisEntrega(); }
+function removeLocal(i){ cardapioData.locaisEntrega.splice(i,1); renderLocaisEntrega(); }
+
+function updateForma(i,v){ cardapioData.formasPagamento[i]=v; }
+function addFormaPagamento(){ cardapioData.formasPagamento.push("Nova"); renderFormasPagamento(); }
+function removeForma(i){ cardapioData.formasPagamento.splice(i,1); renderFormasPagamento(); }
+
+// --- Gerar JSON ---
+function gerarJSON(){
+  cardapioData.horarioFuncionamento.abertura=document.getElementById("abertura").value;
+  cardapioData.horarioFuncionamento.fechamento=document.getElementById("fechamento").value;
+  const blob=new Blob([JSON.stringify(cardapioData,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="cardapio.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// --- Carregar JSON existente ---
+fetch(jsonURL)
+  .then(res=>res.json())
+  .then(data=>{
+    cardapioData=data;
+    document.getElementById("abertura").value=data.horarioFuncionamento.abertura;
+    document.getElementById("fechamento").value=data.horarioFuncionamento.fechamento;
+    renderValoresMarmita();
+    renderCardapio();
+    renderLocaisEntrega();
+    renderFormasPagamento();
+  })
+  .catch(err=>alert("Erro ao carregar JSON: "+err));
+</script>
+
+</body>
+</html>
