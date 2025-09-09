@@ -86,7 +86,7 @@ document.getElementById("dataHoje").textContent = hoje.toLocaleDateString();
 async function carregarCardapio() {
     try {
         const res = await fetch("cardapio.json");
-        if (!res.ok) throw new Error("Erro ao carregar o cardápio");
+        if(!res.ok) throw new Error("Erro ao carregar o cardápio");
         const data = await res.json();
 
         // Horário de funcionamento
@@ -102,9 +102,15 @@ async function carregarCardapio() {
             marmitaContainer.appendChild(label);
         });
 
+        // Determina o dia da semana
+        const dias = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
+        const hoje = new Date();
+        const diaHoje = dias[hoje.getDay()];
+        const cardapioDia = data.cardapio[diaHoje];
+
         // Carnes
         const carnesEl = document.getElementById("carnes");
-        data.cardapio["carnes"].forEach(item=>{
+        cardapioDia.carnes.forEach(item=>{
             const li = document.createElement("li");
             li.textContent = item;
             li.addEventListener("click",()=>li.classList.toggle("selected"));
@@ -113,7 +119,7 @@ async function carregarCardapio() {
 
         // Acompanhamentos
         const acompEl = document.getElementById("acompanhamentos");
-        data.cardapio["acompanhamentos"].forEach(item=>{
+        cardapioDia.acompanhamentos.forEach(item=>{
             const li = document.createElement("li");
             li.textContent = item;
             li.addEventListener("click",()=>li.classList.toggle("selected"));
@@ -122,11 +128,14 @@ async function carregarCardapio() {
 
         // Refrigerantes
         const refriEl = document.getElementById("refrigerantes");
-        data.cardapio["refrigerantes"].forEach(item=>{
-            const li = document.createElement("li");
-            li.textContent = item;
-            li.addEventListener("click",()=>li.classList.toggle("selected"));
-            refriEl.appendChild(li);
+        Object.keys(data.refrigerantes).forEach(cat=>{
+            data.refrigerantes[cat].forEach(r=>{
+                const li = document.createElement("li");
+                li.textContent = `${r.nome} - R$${r.preco.toFixed(2)}`;
+                li.dataset.preco = r.preco;
+                li.addEventListener("click",()=>li.classList.toggle("selected"));
+                refriEl.appendChild(li);
+            });
         });
 
         // Locais de entrega
@@ -157,77 +166,8 @@ async function carregarCardapio() {
     }
 }
 
-// --- Executa ao carregar a página ---
 window.addEventListener("DOMContentLoaded", carregarCardapio);
-
-// --- Função para gerar PDF e enviar WhatsApp ---
-document.getElementById("enviarWhats").addEventListener("click", ()=>{
-    const nomeCliente = document.getElementById("nomeCliente").value || "Cliente";
-    const endereco = document.getElementById("enderecoCliente").value || "Não informado";
-    const localEntrega = document.getElementById("localEntrega").value || "Não informado";
-    const marmitaEl = document.querySelector(".marmita-options input:checked");
-    if(!marmitaEl){ alert("Selecione a marmita!"); return; }
-    const marmita = marmitaEl.value;
-    const valorMarmita = parseFloat(marmitaEl.value.includes("Pequena") ? 15 : 20);
-    const adicionais = document.getElementById("adicionais").value.split(",").map(a=>a.trim()).filter(a=>a);
-
-    const pedidoItens = [];
-    document.querySelectorAll("#carnes li.selected, #acompanhamentos li.selected, #refrigerantes li.selected")
-        .forEach(li=>pedidoItens.push(li.textContent.trim()));
-
-    const taxaEntrega = parseFloat(document.getElementById("localEntrega").selectedOptions[0]?.dataset.taxa || 0);
-    const pagamentoEl = document.querySelector("#formasPagamentoList li.selected");
-    const pagamento = pagamentoEl ? pagamentoEl.textContent.trim() : "Não informado";
-
-    const pedidoJSON = {
-        cliente: nomeCliente,
-        endereco,
-        localEntrega,
-        marmita,
-        valorMarmita,
-        adicionais,
-        itens: pedidoItens,
-        taxaEntrega,
-        pagamento
-    };
-
-    // --- Gera PDF ---
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({unit:"mm", format:[80,200]});
-    let y=10; const margem=5;
-
-    doc.setFont("courier","bold"); doc.setFontSize(12);
-    doc.text("Restaurante Colinas", 40, y, {align:"center"}); y+=6;
-    doc.setFont("courier","normal"); doc.setFontSize(10);
-    doc.text(`Cliente: ${pedidoJSON.cliente}`, margem, y); y+=5;
-    doc.text(`Endereço: ${pedidoJSON.endereco}`, margem, y); y+=5;
-    doc.text(`Local de entrega: ${pedidoJSON.localEntrega}`, margem, y); y+=7;
-    doc.setFont("courier","bold"); doc.text("Itens do Pedido:", margem, y); y+=5;
-    doc.setFont("courier","normal");
-    doc.text(`- Marmita: ${pedidoJSON.marmita} .... R$${pedidoJSON.valorMarmita.toFixed(2)}`, margem+2, y); y+=5;
-    pedidoJSON.itens.forEach(item=>{ doc.text(`  - ${item}`, margem+4, y); y+=4; });
-    pedidoJSON.adicionais.forEach(add=>{ doc.text(`  - Adicional: ${add}`, margem+4, y); y+=4; });
-    y+=2; doc.setFont("courier","bold");
-    doc.text(`Taxa de entrega: R$${pedidoJSON.taxaEntrega.toFixed(2)}`, margem, y); y+=5;
-    doc.text(`Pagamento: ${pedidoJSON.pagamento}`, margem, y); y+=5;
-    y+=5; doc.text("Obrigado pela preferência!", 40, y, {align:"center"});
-
-    const pdfBlob = doc.output("blob");
-    const pdfUrl = URL.createObjectURL(pdfBlob);
-    const a = document.createElement("a");
-    a.href = pdfUrl;
-    a.download = `pedido_${pedidoJSON.cliente}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    // WhatsApp Web
-    const numeroRestaurante = "5511999999999";
-    const mensagem = `Olá! Segue o pedido do cliente ${pedidoJSON.cliente}. Favor verificar o PDF gerado para impressão.`;
-    const url = `https://web.whatsapp.com/send?phone=${numeroRestaurante}&text=${encodeURIComponent(mensagem)}`;
-    window.open(url, "_blank");
-});
-</script>
 
 </body>
 </html>
+
