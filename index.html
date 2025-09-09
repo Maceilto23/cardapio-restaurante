@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardápio Interativo</title>
+<style>
+* { box-sizing: border-box; margin:0; padding:0; }
+body { font-family: Arial, sans-serif; background: #f5f5f5; display: flex; flex-direction: column; align-items: center; padding: 10px; }
+.cardapio { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 6px 15px rgba(0,0,0,0.2); max-width: 500px; width: 100%; margin-bottom: 20px; }
+.logo-container { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 20px; }
+.logo-container img { height: 60px; margin-right: 15px; border-radius: 8px; }
+.titulo-container h1 { font-size: 1.5rem; color: #007BFF; margin-bottom: 5px; }
+.titulo-container h2 { font-size: 1.1rem; color: #555; font-weight: normal; }
+.titulo-container h3 { font-size: 1rem; margin-bottom: 10px; color: #333; }
+ul { list-style: none; padding: 0; }
+li { margin: 5px 0; cursor: pointer; display: flex; align-items: center; padding: 6px 10px; border-radius: 8px; transition: background 0.2s; }
+li:hover { background: #f0f0f0; }
+.checkbox-fake { width: 22px; height: 22px; border: 2px solid #007BFF; display: flex; align-items: center; justify-content: center; margin-right: 10px; border-radius: 4px; font-weight: bold; color: #fff; background: #007BFF; opacity: 0; transition: opacity 0.2s, transform 0.2s; flex-shrink: 0; }
+li.selected .checkbox-fake { opacity: 1; transform: scale(1.1); }
+li span { flex: 1; }
+#adicionais, input[type="text"], select { width: 100%; padding: 8px; margin-top: 8px; border-radius: 6px; border: 1px solid #ccc; }
+#enviarWhats { margin-top: 12px; padding: 10px; background: #25D366; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; }
+label { display: block; margin-bottom: 6px; cursor: pointer; }
+.marmita-options label { display: block; margin-bottom: 8px; cursor: pointer; }
+.marmita-options input { margin-right: 8px; }
+@media (max-width: 600px) { 
+  .logo-container { flex-direction: column; align-items: center; text-align: center; } 
+  .logo-container img { margin-right: 0; margin-bottom: 8px; height: 50px; } 
+  .titulo-container h1 { font-size: 1.3rem; } 
+  .titulo-container h2 { font-size: 1rem; } 
+  #enviarWhats { font-size: 0.95rem; } 
+}
+</style>
+</head>
+<body>
+
+<div class="cardapio">
+  <div class="logo-container">
+    <img src="logo.png" alt="Logo Restaurante">
+    <div class="titulo-container">
+      <h1>Restaurante Colinas</h1>
+      <h2>🍽️ Cardápio de Hoje – <span id="diaSemana"></span>, <span id="dataHoje"></span></h2>
+      <h3 id="horarioFuncionamento">Horário: --:-- - --:--</h3>
+    </div>
+  </div>
+
+  <div class="marmita-options">
+    <h3>🍱 Escolha o tipo de Marmita</h3>
+  </div>
+
+  <h3>🍖 Carnes</h3>
+  <ul id="carnes"></ul>
+
+  <h3>🥗 Acompanhamentos</h3>
+  <ul id="acompanhamentos"></ul>
+
+  <h3>Adicionais:</h3>
+  <input type="text" id="adicionais" placeholder="Digite adicionais">
+
+  <div class="cliente-info">
+    <label for="nomeCliente">Nome do Cliente:</label>
+    <input type="text" id="nomeCliente" placeholder="Digite seu nome">
+    <label for="enderecoCliente">Endereço:</label>
+    <input type="text" id="enderecoCliente" placeholder="Digite o endereço de entrega">
+  </div>
+
+  <h3>📍 Local de Entrega</h3>
+  <select id="localEntrega"></select>
+
+  <h3>💳 Formas de Pagamento</h3>
+  <ul id="formasPagamentoList"></ul>
+
+  <button id="enviarWhats">Enviar via WhatsApp</button>
+
+  <h3>📋 Pedido Selecionado</h3>
+  <ul id="itensPedido"><li>Nenhum item selecionado</li></ul>
+</div>
+
+<script src="cardapio.js"></script>
+<script>
+const diasSemana = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+const hojeDate = new Date();
+const nomeDia = diasSemana[hojeDate.getDay()];
+document.getElementById("diaSemana").innerText = nomeDia;
+const dia = String(hojeDate.getDate()).padStart(2,'0');
+const mes = String(hojeDate.getMonth()+1).padStart(2,'0');
+const ano = hojeDate.getFullYear();
+document.getElementById("dataHoje").innerText = `${dia}/${mes}/${ano}`;
+
+let marmita = "", valorMarmita = 0;
+let pedido = [];
+let taxaEntrega = 0;
+let pagamentoSelecionado = "";
+
+// --- Carregar cardápio editado do localStorage se existir ---
+let cardapioSalvo = JSON.parse(localStorage.getItem("cardapioData"));
+let cardapioFinal = cardapioSalvo || window.cardapioData;
+
+// Atualizar horário
+document.getElementById("horarioFuncionamento").textContent = 
+  `Horário: ${cardapioFinal.horarioFuncionamento.abertura} - ${cardapioFinal.horarioFuncionamento.fechamento}`;
+
+// Marmitas
+const marmitaOptions = document.querySelector(".marmita-options");
+Object.keys(cardapioFinal.valoresMarmita).forEach(key=>{
+  const label = document.createElement("label");
+  label.innerHTML = `<input type="radio" name="marmita" value="${key}"> Marmita ${key} - R$${cardapioFinal.valoresMarmita[key]},00`;
+  label.querySelector('input').addEventListener("change", ()=>{
+    marmita = key;
+    valorMarmita = cardapioFinal.valoresMarmita[key];
+    atualizarPedido();
+  });
+  marmitaOptions.appendChild(label);
+});
+
+// Carnes e acompanhamentos
+const hojeCardapio = cardapioFinal.cardapio[nomeDia.toLowerCase()] || { carnes: [], acompanhamentos: [] };
+function criarLista(itens, container){
+  container.innerHTML = "";
+  itens.forEach(i=>{
+    const li = document.createElement("li");
+    li.setAttribute("data-item", i);
+    li.innerHTML = `<div class="checkbox-fake">X</div><span>${i}</span>`;
+    li.addEventListener("click", ()=>{
+      li.classList.toggle("selected");
+      const item = li.getAttribute("data-item");
+      if(li.classList.contains("selected")){
+        if(!pedido.includes(item)) pedido.push(item);
+      } else pedido = pedido.filter(x=>x!==item);
+      atualizarPedido();
+    });
+    container.appendChild(li);
+  });
+}
+criarLista(hojeCardapio.carnes, document.getElementById("carnes"));
+criarLista(hojeCardapio.acompanhamentos, document.getElementById("acompanhamentos"));
+
+// Locais de entrega
+const localEl = document.getElementById("localEntrega");
+cardapioFinal.locaisEntrega.forEach((loc,i)=>{
+  const opt = document.createElement("option");
+  opt.value = loc.nome;
+  opt.dataset.taxa = loc.taxa;
+  opt.textContent = `${loc.nome} - R$${loc.taxa.toFixed(2)}`;
+  if(i===0) taxaEntrega = loc.taxa;
+  localEl.appendChild(opt);
+});
+localEl.addEventListener("change", ()=>{
+  taxaEntrega = parseFloat(localEl.selectedOptions[0].dataset.taxa);
+  atualizarPedido();
+});
+
+// Formas de pagamento
+const formasEl = document.getElementById("formasPagamentoList");
+cardapioFinal.formasPagamento.forEach(f=>{
+  const li = document.createElement("li");
+  li.innerHTML = `<div class="checkbox-fake">X</div><span>${f}</span>`;
+  li.addEventListener("click", ()=>{
+    formasEl.querySelectorAll("li").forEach(l=>l.classList.remove("selected"));
+    li.classList.add("selected");
+    pagamentoSelecionado = f;
+    atualizarPedido();
+  });
+  formasEl.appendChild(li);
+});
+
+// Atualizar pedido
+function atualizarPedido(){
+  const adicionais = document.getElementById("adicionais").value;
+  const total = valorMarmita + taxaEntrega;
+  const itensEl = document.getElementById("itensPedido");
+  itensEl.innerHTML = `
+    ${marmita?`<li>🍱 Marmita ${marmita} - R$${valorMarmita}</li>`:""}
+    ${pedido.length?pedido.map(i=>`<li>✅ ${i}</li>`).join(""):"<li>Nenhum item selecionado</li>"}
+    ${adicionais?`<li>📝 ${adicionais}</li>`:""}
+    ${pagamentoSelecionado?`<li>💳 Pagamento: ${pagamentoSelecionado}</li>`:""}
+    <li>🚚 Taxa de Entrega: R$${taxaEntrega.toFixed(2)}</li>
+    <li>💰 Total: R$${total.toFixed(2)}</li>
+  `;
+}
+document.getElementById("adicionais").addEventListener("input", atualizarPedido);
+
+// Enviar WhatsApp
+document.getElementById("enviarWhats").addEventListener("click", ()=>{
+  if(!marmita || !pagamentoSelecionado){
+    alert("Selecione a marmita e a forma de pagamento!");
+    return;
+  }
+  const nome = document.getElementById("nomeCliente").value || "Cliente";
+  const endereco = document.getElementById("enderecoCliente").value || "Não informado";
+  const adicionais = document.getElementById("adicionais").value;
+  const local = document.getElementById("localEntrega").value;
+  const total = valorMarmita + taxaEntrega;
+
+  let msg = `Olá! Pedido de ${nome}%0AEndereço: ${endereco}%0ALocal de entrega: ${local}%0A%0AItens:%0A`;
+  msg += `- Marmita ${marmita} - R$${valorMarmita}%0A`;
+  pedido.forEach(i=>msg+=`- ${i}%0A`);
+  if(adicionais) msg+=`- 📝 ${adicionais}%0A`;
+  msg += `- 🚚 Taxa de Entrega: R$${taxaEntrega.toFixed(2)}%0A`;
+  msg += `%0APagamento: ${pagamentoSelecionado}%0A💰 Total: R$${total.toFixed(2)}`;
+
+  const url = `https://wa.me/+556192633504?text=${msg}`;
+  window.open(url,"_blank");
+});
+
+atualizarPedido();
+</script>
+</body>
+</html>

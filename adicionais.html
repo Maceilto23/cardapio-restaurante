@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editar Adicionais</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: linear-gradient(135deg,#007BFF,#00C851);
+  color: #333;
+  overflow-x: hidden;
+}
+.hamburger {
+  position: fixed; top:20px; left:20px;
+  width:30px; height:24px; cursor:pointer; z-index:1002;
+  display:flex; flex-direction:column; justify-content:space-between;
+}
+.hamburger div { background:#fff; height:3px; border-radius:2px; transition:0.3s; }
+.hamburger.active div:nth-child(1){transform:rotate(45deg) translate(5px,5px);}
+.hamburger.active div:nth-child(2){opacity:0;}
+.hamburger.active div:nth-child(3){transform:rotate(-45deg) translate(5px,-5px);}
+
+.overlay {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  background: rgba(0,0,0,0.5); opacity:0; pointer-events:none; transition:0.3s; z-index:1000;
+}
+.overlay.active { opacity:1; pointer-events:all; }
+
+.side-menu {
+  position: fixed; top:0; left:-300px; width:250px; height:100%;
+  background:#fff; color:#333; padding:60px 20px; box-shadow:4px 0 15px rgba(0,0,0,0.2);
+  transition:left 0.3s; z-index:1001; display:flex; flex-direction:column; gap:15px;
+  border-top-right-radius:15px; border-bottom-right-radius:15px;
+}
+.side-menu.active { left:0; }
+.side-menu a { display:block; padding:12px; font-weight:bold; text-align:center; text-decoration:none; border-radius:8px; transition:0.2s; color:#333; }
+.side-menu a:hover{ background: rgba(0,0,0,0.05); transform:scale(1.05); }
+
+.box {
+  background:#fff; max-width:500px; margin:120px auto; padding:25px; border-radius:15px; box-shadow:0 6px 20px rgba(0,0,0,0.2);
+}
+h2{text-align:center; color:#007BFF; margin-bottom:25px;}
+
+.item { display:flex; gap:10px; margin-bottom:12px; align-items:center; }
+.item input { padding:10px; border:1px solid #ccc; border-radius:8px; flex:1; font-size:1rem; }
+.item input:focus{ outline:none; border-color:#007BFF; box-shadow:0 0 6px rgba(0,123,255,0.2); }
+.item button { padding:8px 12px; background:#DC3545; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold; }
+.item button:hover{ background:#C82333; }
+
+.actions{ display:flex; gap:10px; margin-top:15px; }
+.actions button{ flex:1; padding:12px; border-radius:8px; border:none; cursor:pointer; font-weight:bold; font-size:1rem; }
+.add-btn{ background:#007BFF;color:#fff; }
+.add-btn:hover{ background:#0069D9; }
+.save-btn{ background:#28A745;color:#fff; }
+.save-btn:hover{ background:#218838; }
+</style>
+</head>
+<body>
+
+<div class="hamburger" id="hamburger"><div></div><div></div><div></div></div>
+<div class="overlay" id="overlay"></div>
+
+<div class="side-menu" id="sideMenu">
+  <a href="editar_horario.html" class="btn-time">⏰ Horário</a>
+  <a href="editar_cardapio.html" class="btn-edit">✏️ Cardápio</a>
+  <a href="editar_locais_entrega.html" class="btn-delivery">🚚 Locais</a>
+  <a href="editar_forma_pagamento.html" class="btn-payment">💳 Pagamento</a>
+  <a href="index.html" class="btn-view">📖 Ver Cardápio</a>
+</div>
+
+<div class="box">
+  <h2>Editar Adicionais</h2>
+  <div id="adicionais"></div>
+  <div class="actions">
+    <button class="add-btn" onclick="adicionar()">+ Adicionar</button>
+    <button class="save-btn" onclick="salvar()">💾 Salvar</button>
+  </div>
+</div>
+
+<script>
+const hamburger = document.getElementById('hamburger');
+const sideMenu = document.getElementById('sideMenu');
+const overlay = document.getElementById('overlay');
+hamburger.addEventListener('click', ()=>{ hamburger.classList.toggle('active'); sideMenu.classList.toggle('active'); overlay.classList.toggle('active'); });
+overlay.addEventListener('click', ()=>{ hamburger.classList.remove('active'); sideMenu.classList.remove('active'); overlay.classList.remove('active'); });
+
+let adicionais = JSON.parse(localStorage.getItem("cardapioData"))?.adicionais || [];
+
+function render(){
+  const div = document.getElementById("adicionais");
+  div.innerHTML="";
+  adicionais.forEach((a,i)=>{
+    const item=document.createElement("div");
+    item.className="item";
+    item.innerHTML=`
+      <input type="text" placeholder="Nome do adicional" value="${a.nome}" id="nome-${i}" oninput="atualizar(${i})">
+      <input type="number" placeholder="Preço" value="${a.preco}" id="preco-${i}" oninput="atualizar(${i})">
+      <button onclick="remover(${i})">🗑️</button>
+    `;
+    div.appendChild(item);
+  });
+}
+
+function atualizar(i){
+  adicionais[i].nome=document.getElementById(`nome-${i}`).value;
+  adicionais[i].preco=parseFloat(document.getElementById(`preco-${i}`).value)||0;
+}
+
+function adicionar(){
+  adicionais.push({nome:"", preco:0});
+  render();
+}
+
+function remover(i){
+  adicionais.splice(i,1);
+  render();
+}
+
+function salvar(){
+  const data=JSON.parse(localStorage.getItem("cardapioData"))||{};
+  data.adicionais = adicionais.filter(a=>a.nome);
+  localStorage.setItem("cardapioData", JSON.stringify(data));
+  alert("✅ Adicionais atualizados!");
+}
+
+render();
+</script>
+</body>
+</html>
