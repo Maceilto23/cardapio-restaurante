@@ -173,46 +173,85 @@ cardapioFinal.formasPagamento.forEach(f=>{
   formasEl.appendChild(li);
 });
 
-// Atualizar pedido
+
+
+<!-- Adicione antes do fechamento do </body> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
 function atualizarPedido(){
   const adicionais = document.getElementById("adicionais").value;
-  const total = valorMarmita + taxaEntrega;
+  const refSelecionado = document.getElementById("refrigerantes").value;
+  let precoRef = 0;
+  if(refSelecionado){
+    precoRef = parseFloat(refSelecionado.split('R$')[1]);
+  }
+  const total = valorMarmita + taxaEntrega + precoRef;
+
   const itensEl = document.getElementById("itensPedido");
   itensEl.innerHTML = `
     ${marmita?`<li>🍱 Marmita ${marmita} - R$${valorMarmita}</li>`:""}
     ${pedido.length?pedido.map(i=>`<li>✅ ${i}</li>`).join(""):"<li>Nenhum item selecionado</li>"}
+    ${refSelecionado?`<li>🥤 ${refSelecionado}</li>`:""}
     ${adicionais?`<li>📝 ${adicionais}</li>`:""}
     ${pagamentoSelecionado?`<li>💳 Pagamento: ${pagamentoSelecionado}</li>`:""}
     <li>🚚 Taxa de Entrega: R$${taxaEntrega.toFixed(2)}</li>
     <li>💰 Total: R$${total.toFixed(2)}</li>
   `;
 }
-document.getElementById("adicionais").addEventListener("input", atualizarPedido);
 
-// Enviar WhatsApp
+document.getElementById("adicionais").addEventListener("input", atualizarPedido);
+document.getElementById("refrigerantes").addEventListener("change", atualizarPedido);
+
 document.getElementById("enviarWhats").addEventListener("click", ()=>{
   if(!marmita || !pagamentoSelecionado){
     alert("Selecione a marmita e a forma de pagamento!");
     return;
   }
+
   const nome = document.getElementById("nomeCliente").value || "Cliente";
   const endereco = document.getElementById("enderecoCliente").value || "Não informado";
   const adicionais = document.getElementById("adicionais").value;
   const local = document.getElementById("localEntrega").value;
-  const total = valorMarmita + taxaEntrega;
+  const refSelecionado = document.getElementById("refrigerantes").value;
+  const precoRef = refSelecionado?parseFloat(refSelecionado.split('R$')[1]):0;
+  const total = valorMarmita + taxaEntrega + precoRef;
 
+  // Mensagem WhatsApp
   let msg = `Olá! Pedido de ${nome}%0AEndereço: ${endereco}%0ALocal de entrega: ${local}%0A%0AItens:%0A`;
   msg += `- Marmita ${marmita} - R$${valorMarmita}%0A`;
   pedido.forEach(i=>msg+=`- ${i}%0A`);
+  if(refSelecionado) msg+=`- 🥤 ${refSelecionado}%0A`;
   if(adicionais) msg+=`- 📝 ${adicionais}%0A`;
   msg += `- 🚚 Taxa de Entrega: R$${taxaEntrega.toFixed(2)}%0A`;
   msg += `%0APagamento: ${pagamentoSelecionado}%0A💰 Total: R$${total.toFixed(2)}`;
 
-  const url = `https://wa.me/+556192633504?text=${msg}`;
-  window.open(url,"_blank");
-});
+  window.open(`https://wa.me/+556192633504?text=${msg}`,"_blank");
 
-atualizarPedido();
+  // Gerar PDF
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(14);
+  doc.text(`Restaurante Colinas - Pedido`, 10, 20);
+  doc.setFontSize(12);
+  doc.text(`Cliente: ${nome}`, 10, 30);
+  doc.text(`Endereço: ${endereco}`, 10, 38);
+  doc.text(`Local de entrega: ${local}`, 10, 46);
+  let y=55;
+  doc.text(`Itens:`,10,y); y+=8;
+  doc.text(`Marmita: ${marmita} - R$${valorMarmita}`,10,y); y+=8;
+  pedido.forEach(i=>{
+    doc.text(i,12,y);
+    y+=8;
+  });
+  if(refSelecionado){
+    doc.text(`Refrigerante: ${refSelecionado}`,12,y); y+=8;
+  }
+  if(adicionais){
+    doc.text(`Adicionais: ${adicionais}`,12,y); y+=8;
+  }
+  doc.text(`Taxa de entrega: R$${taxaEntrega.toFixed(2)}`,10,y); y+=8;
+  doc.text(`Pagamento: ${pagamentoSelecionado}`,10,y); y+=8;
+  doc.text(`Total: R$${total.toFixed(2)}`,10,y); y+=8;
+  doc.save(`pedido_${nome}.pdf`);
+});
 </script>
-</body>
-</html>
