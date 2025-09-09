@@ -183,77 +183,72 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
   const adicionais = document.getElementById("adicionais").value;
   const local = document.getElementById("localEntrega").value;
   const refSelecionado = document.querySelector("#refrigerantes li.selected")?.getAttribute("data-item");
-  const precoRef = refSelecionado?parseFloat(refSelecionado.split('R$')[1]):0;
+  const precoRef = refSelecionado ? parseFloat(refSelecionado.split('R$')[1]) : 0;
   const total = valorMarmita + taxaEntrega + precoRef;
 
-  // Mensagem para WhatsApp
+  // Mensagem WhatsApp
   let msg = `Olá! Pedido de ${nome}%0AEndereço: ${endereco}%0ALocal de entrega: ${local}%0A%0AItens:%0A`;
   msg += `- Marmita ${marmita} - R$${valorMarmita}%0A`;
-  pedido.forEach(i=>msg+=`- ${i}%0A`);
-  if(refSelecionado) msg+=`- 🥤 ${refSelecionado}%0A`;
-  if(adicionais) msg+=`- 📝 ${adicionais}%0A`;
+  pedido.forEach(i => msg += `- ${i}%0A`);
+  if(refSelecionado) msg += `- 🥤 ${refSelecionado}%0A`;
+  if(adicionais) msg += `- 📝 ${adicionais}%0A`;
   msg += `- 🚚 Taxa de Entrega: R$${taxaEntrega.toFixed(2)}%0A`;
   msg += `%0APagamento: ${pagamentoSelecionado}%0A💰 Total: R$${total.toFixed(2)}`;
 
   window.open(`https://wa.me/+556192633504?text=${msg}`, "_blank");
 
-  // Gerar PDF moderno
+  // Gerar PDF com logo e itens compactos
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
-  // Cabeçalho
-  doc.setFillColor(255, 99, 71); // laranja
-  doc.rect(0, 0, 210, 20, "F");
-  doc.setFontSize(18);
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.text(`🍱 Restaurante Colinas - Pedido`, 105, 14, {align: "center"});
+  // Logo do restaurante (supondo que você tenha um URL ou base64)
+  const logoUrl = "https://seurestaurante.com.br/logo.png"; // substitua pela URL ou base64
+  const img = new Image();
+  img.src = logoUrl;
+  img.onload = function() {
+    doc.addImage(img, 'PNG', 10, 5, 30, 30); // x, y, largura, altura
 
-  // Cliente e entrega
-  doc.setFontSize(12);
-  doc.setTextColor(0);
-  doc.setFont("helvetica", "normal");
-  let y = 30;
-  doc.text(`👤 Cliente: ${nome}`, 10, y); y+=6;
-  doc.text(`🏠 Endereço: ${endereco}`, 10, y); y+=6;
-  doc.text(`📍 Local de entrega: ${local}`, 10, y); y+=10;
+    // Cabeçalho
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.setFillColor(255, 99, 71);
+    doc.rect(0, 0, 210, 20, "F");
+    doc.text(`🍱 Restaurante Colinas - Pedido`, 105, 14, {align: "center"});
 
-  // Itens em caixa
-  doc.setDrawColor(0);
-  doc.setFillColor(240, 240, 240);
-  doc.rect(10, y, 190, 8 + pedido.length*8 + 24, "F");
-  
-  let itemY = y + 6;
-  doc.setFont("helvetica", "bold");
-  doc.text(`📝 Itens do Pedido:`, 12, itemY); itemY+=8;
-  doc.setFont("helvetica", "normal");
-  doc.text(`- Marmita: ${marmita} - R$${valorMarmita}`, 14, itemY); itemY+=8;
-  pedido.forEach(i=>{
-    doc.text(`- ${i}`, 14, itemY); itemY+=8;
-  });
-  if(refSelecionado){
-    doc.text(`- 🥤 Refrigerante: ${refSelecionado}`, 14, itemY); itemY+=8;
-  }
-  if(adicionais){
-    doc.text(`- 📝 Adicionais: ${adicionais}`, 14, itemY); itemY+=8;
-  }
-  y += 8 + pedido.length*8 + 24;
+    // Cliente e entrega
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    doc.setFont("helvetica", "normal");
+    let y = 40;
+    doc.text(`👤 Cliente: ${nome}`, 10, y); y += 5;
+    doc.text(`🏠 Endereço: ${endereco}`, 10, y); y += 5;
+    doc.text(`📍 Local de entrega: ${local}`, 10, y); y += 8;
 
-  // Total e pagamento
-  doc.setFillColor(255, 228, 181); // amarelo claro
-  doc.rect(10, y, 190, 24, "F");
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(0);
-  doc.text(`🚚 Taxa de entrega: R$${taxaEntrega.toFixed(2)}`, 12, y+8);
-  doc.text(`💳 Pagamento: ${pagamentoSelecionado}`, 12, y+14);
-  doc.text(`💰 Total: R$${total.toFixed(2)}`, 12, y+20);
+    // Caixa dos itens
+    doc.setFillColor(240, 240, 240);
+    const alturaItens = 6 + (pedido.length + 3) * 5; // compacta itens
+    doc.rect(10, y, 190, alturaItens, "F");
 
-  doc.save(`pedido_${nome}.pdf`);
+    let itemY = y + 5;
+    doc.setFont("helvetica", "bold");
+    doc.text(`📝 Itens do Pedido:`, 12, itemY); itemY += 5;
+    doc.setFont("helvetica", "normal");
+    doc.text(`- Marmita: ${marmita} - R$${valorMarmita}`, 14, itemY); itemY += 5;
+    pedido.forEach(i => { doc.text(`- ${i}`, 14, itemY); itemY += 5; });
+    if(refSelecionado) { doc.text(`- 🥤 Refrigerante: ${refSelecionado}`, 14, itemY); itemY += 5; }
+    if(adicionais) { doc.text(`- 📝 Adicionais: ${adicionais}`, 14, itemY); itemY += 5; }
+
+    y += alturaItens + 2;
+
+    // Total e pagamento
+    doc.setFillColor(255, 228, 181);
+    doc.rect(10, y, 190, 20, "F");
+    doc.setFont("helvetica", "bold");
+    doc.text(`🚚 Taxa de entrega: R$${taxaEntrega.toFixed(2)}`, 12, y + 6);
+    doc.text(`💳 Pagamento: ${pagamentoSelecionado}`, 12, y + 11);
+    doc.text(`💰 Total: R$${total.toFixed(2)}`, 12, y + 16);
+
+    doc.save(`pedido_${nome}.pdf`);
+  };
 });
-
-
-
-
-
-
-        
