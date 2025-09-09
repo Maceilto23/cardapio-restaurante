@@ -80,90 +80,96 @@ label { display: block; margin-bottom: 6px; cursor: pointer; }
   <ul id="itensPedido"><li>Nenhum item selecionado</li></ul>
 </div>
 
+<div class="cupom" id="cupomPreview"></div>
+<button id="enviarWhats">Gerar PDF</button>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 document.getElementById("enviarWhats").addEventListener("click", ()=>{
+    // --- Aqui você pega os dados do usuário/formulário ---
     const nomeCliente = document.getElementById("nomeCliente").value || "Cliente";
     const endereco = document.getElementById("enderecoCliente").value || "Não informado";
-    const adicionais = document.getElementById("adicionais").value;
-    const local = document.getElementById("localEntrega").value;
+    const localEntrega = document.getElementById("localEntrega").value || "Não informado";
+    
     const marmitaEl = document.querySelector(".marmita-options input:checked");
-    const pagamentoEl = document.querySelector("#formasPagamentoList li.selected");
-
-    if(!marmitaEl || !pagamentoEl){
-        alert("Selecione a marmita e a forma de pagamento!");
+    if(!marmitaEl){
+        alert("Selecione a marmita!");
         return;
     }
-
     const marmita = marmitaEl.value;
-    const valorMarmita = parseFloat(marmitaEl.value.includes("Pequena") ? 15 : 20); // ajuste conforme JSON
-    const taxaEntrega = parseFloat(document.getElementById("localEntrega").selectedOptions[0].dataset.taxa || 0);
+    const valorMarmita = marmita.includes("Pequena") ? 15 : 20; // ajuste conforme lógica
+
+    const adicionais = document.getElementById("adicionais").value.split(",").map(a=>a.trim()).filter(a=>a);
 
     const pedidoItens = [];
-    document.querySelectorAll("#carnes li.selected, #acompanhamentos li.selected, #refrigerantes li.selected").forEach(li=>{
-        pedidoItens.push(li.textContent.trim());
-    });
+    document.querySelectorAll("#carnes li.selected, #acompanhamentos li.selected, #refrigerantes li.selected")
+        .forEach(li=>pedidoItens.push(li.textContent.trim()));
 
-    const total = valorMarmita + taxaEntrega;
+    const taxaEntrega = parseFloat(document.getElementById("localEntrega").selectedOptions[0]?.dataset.taxa || 0);
+    const pagamentoEl = document.querySelector("#formasPagamentoList li.selected");
+    const pagamento = pagamentoEl ? pagamentoEl.textContent.trim() : "Não informado";
 
-    // --- Gerar PDF ---
+    // --- Monta objeto JSON dinamicamente ---
+    const pedidoJSON = {
+        cliente: nomeCliente,
+        endereco: endereco,
+        localEntrega: localEntrega,
+        marmita: marmita,
+        valorMarmita: valorMarmita,
+        adicionais: adicionais,
+        itens: pedidoItens,
+        taxaEntrega: taxaEntrega,
+        pagamento: pagamento
+    };
+
+    // --- Exibe na página antes de gerar PDF ---
+    const cupom = document.getElementById("cupomPreview");
+    cupom.innerHTML = `
+        <strong>Restaurante Colinas</strong><br><br>
+        Cliente: ${pedidoJSON.cliente}<br>
+        Endereço: ${pedidoJSON.endereco}<br>
+        Local de entrega: ${pedidoJSON.localEntrega}<br><br>
+        <strong>Itens do Pedido:</strong><br>
+        - Marmita: ${pedidoJSON.marmita} - R$${pedidoJSON.valorMarmita.toFixed(2)}<br>
+        ${pedidoJSON.itens.map(i=>`<div class="item">- ${i}</div>`).join('')}
+        ${pedidoJSON.adicionais.length ? pedidoJSON.adicionais.map(a=>`<div class="item">- Adicional: ${a}</div>`).join('') : ''}
+        <br>
+        Taxa de entrega: R$${pedidoJSON.taxaEntrega.toFixed(2)}<br>
+        Pagamento: ${pedidoJSON.pagamento}<br>
+        <br>
+        <strong>Obrigado pela preferência!</strong>
+    `;
+
+    // --- Gera PDF térmico ---
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    let y = 15;
-    const margem = 10;
-    const larguraMax = 190;
+    const doc = new jsPDF({unit:"mm", format:[80,200]});
+    let y = 10;
+    const margem = 5;
 
-    // Título Restaurante
-    doc.setFont("helvetica","bold");
-    doc.setFontSize(16);
-    doc.text("🍱 Restaurante Colinas", 105, y, {align:"center"});
-    y += 10;
+    doc.setFont("courier","bold"); doc.setFontSize(12);
+    doc.text("Restaurante Colinas", 40, y, {align:"center"}); y+=6;
+    doc.setFont("courier","normal"); doc.setFontSize(10);
+    doc.text(`Cliente: ${pedidoJSON.cliente}`, margem, y); y+=5;
+    doc.text(`Endereço: ${pedidoJSON.endereco}`, margem, y); y+=5;
+    doc.text(`Local de entrega: ${pedidoJSON.localEntrega}`, margem, y); y+=7;
 
-    doc.setFont("helvetica","normal");
-    doc.setFontSize(12);
-    const linhaCliente = doc.splitTextToSize(`👤 Cliente: ${nomeCliente}`, larguraMax);
-    linhaCliente.forEach(l => { doc.text(l, margem, y); y += 6; });
+    doc.setFont("courier","bold"); doc.text("Itens do Pedido:", margem, y); y+=5;
+    doc.setFont("courier","normal");
+    doc.text(`- Marmita: ${pedidoJSON.marmita} .... R$${pedidoJSON.valorMarmita.toFixed(2)}`, margem+2, y); y+=5;
 
-    const linhaEndereco = doc.splitTextToSize(`🏠 Endereço: ${endereco}`, larguraMax);
-    linhaEndereco.forEach(l => { doc.text(l, margem, y); y += 6; });
-
-    doc.text(`📍 Local de entrega: ${local}`, margem, y); y += 8;
-
-    // Itens do pedido
-    doc.setFont("helvetica","bold");
-    doc.text("📝 Itens do Pedido:", margem, y); y += 6;
-
-    doc.setFont("helvetica","normal");
-    doc.text(`- Marmita: ${marmita} .......... R$${valorMarmita}`, margem+2, y); y += 6;
-
-    pedidoItens.forEach(item=>{
-        const linhas = doc.splitTextToSize(`  - ${item}`, larguraMax-10);
-        linhas.forEach(l=>{
-            if(y > 280){ doc.addPage(); y=15; }
-            doc.text(l, margem+4, y); 
-            y += 6;
-        });
+    pedidoJSON.itens.forEach(item=>{
+        doc.text(`  - ${item}`, margem+4, y); y+=4;
     });
 
-    if(adicionais){
-        const linhasAd = doc.splitTextToSize(`  - 📝 Adicionais: ${adicionais}`, larguraMax-10);
-        linhasAd.forEach(l=>{
-            if(y > 280){ doc.addPage(); y=15; }
-            doc.text(l, margem+4, y); 
-            y += 6;
-        });
-    }
+    pedidoJSON.adicionais.forEach(add=>{
+        doc.text(`  - Adicional: ${add}`, margem+4, y); y+=4;
+    });
 
-    y += 4;
-    doc.setFont("helvetica","bold");
-    doc.text(`🏍️ Taxa de entrega: R$${taxaEntrega.toFixed(2)}`, margem, y); y += 6;
-    doc.text(`💳 Pagamento: ${pagamentoEl.textContent}`, margem, y); y += 6;
-    doc.text(`💰 Total: R$${total.toFixed(2)}`, margem, y); y += 10;
+    y+=2; doc.setFont("courier","bold");
+    doc.text(`Taxa de entrega: R$${pedidoJSON.taxaEntrega.toFixed(2)}`, margem, y); y+=5;
+    doc.text(`Pagamento: ${pedidoJSON.pagamento}`, margem, y); y+=5;
+    y+=5; doc.text("Obrigado pela preferência!", 40, y, {align:"center"});
 
-    doc.setFont("helvetica","bold");
-    doc.text("Obrigado pela preferência!", 105, y, {align:"center"});
-
-    // Salvar PDF
-    doc.save(`pedido_${nomeCliente}.pdf`);
+    doc.save(`pedido_${pedidoJSON.cliente}.pdf`);
 });
 </script>
