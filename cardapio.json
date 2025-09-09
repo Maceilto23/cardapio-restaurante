@@ -1,4 +1,4 @@
-window.cardapioData = {
+{
   "horarioFuncionamento": {
     "abertura": "11:30",
     "fechamento": "14:00"
@@ -8,8 +8,12 @@ window.cardapioData = {
     "02 Opções de Carne": 20
   },
   "cardapio": {
+    "domingo": {
+      "carnes": ["Frango ao molho", "Churrasco", "Lasanha"],
+      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Salada"]
+    },
     "segunda-feira": {
-      "carnes": ["Costela com mandioca", "Frango ao molho", "Peito de frango grelhado"],
+      "carnes": ["Frango ao molho", "Costela com mandioca", "Peito de frango grelhado"],
       "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Purê", "Farofa", "Verduras cozidas", "Salada"]
     },
     "terça-feira": {
@@ -31,26 +35,18 @@ window.cardapioData = {
     "sábado": {
       "carnes": ["Churrasco", "Feijoada", "Frango ao molho"],
       "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Batata frita"]
-    },
-    "domingo": {
-      "carnes": ["Churrasco", "Frango ao molho", "Lasanha"],
-      "acompanhamentos": ["Arroz", "Feijão", "Macarrão alho e óleo", "Farofa", "Verduras cozidas", "Salada", "Maionese"]
     }
   },
   "refrigerantes": {
     "REFRIGERANTES LATA": [
       {"nome": "Coca Cola", "preco": 5},
       {"nome": "Coca Cola Zero", "preco": 5},
-      {"nome": "Mineiro", "preco": 5},
       {"nome": "Fanta Laranja", "preco": 5},
       {"nome": "Fanta Uva", "preco": 5},
       {"nome": "Água Tônica", "preco": 5}
     ],
     "REFRIGERANTE 2 LITROS": [
       {"nome": "Mineiro", "preco": 10}
-    ],
-    "REFRIGERANTE 1,5 L": [
-      {"nome": "Mineiro", "preco": 8}
     ]
   },
   "locaisEntrega": [
@@ -63,4 +59,4 @@ window.cardapioData = {
     {"nome": "América do Sul", "taxa": 40}
   ],
   "formasPagamento": ["Dinheiro", "Pix", "Cartão de Crédito", "Cartão de Débito"]
-};
+}
