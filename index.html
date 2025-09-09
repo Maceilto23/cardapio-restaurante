@@ -80,10 +80,7 @@ label { display: block; margin-bottom: 6px; cursor: pointer; }
   <ul id="itensPedido"><li>Nenhum item selecionado</li></ul>
 </div>
 
-<!-- Cardápio JSON -->
-<script src="cardapio.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <script>
 const diasSemana = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
 const hojeDate = new Date();
@@ -94,12 +91,10 @@ const mes = String(hojeDate.getMonth()+1).padStart(2,'0');
 const ano = hojeDate.getFullYear();
 document.getElementById("dataHoje").innerText = `${dia}/${mes}/${ano}`;
 
-// --- Função para carregar JSON do cardápio ---
+// --- Carregar cardápio do JSON ---
 fetch('cardapio.json')
   .then(response => response.json())
-  .then(data => {
-    const cardapioFinal = data;
-
+  .then(cardapioFinal => {
     // Horário de funcionamento
     document.getElementById("horarioFuncionamento").textContent = 
       `Horário: ${cardapioFinal.horarioFuncionamento.abertura} - ${cardapioFinal.horarioFuncionamento.fechamento}`;
@@ -116,7 +111,6 @@ fetch('cardapio.json')
         marmita = key;
         valorMarmita = cardapioFinal.valoresMarmita[key];
         limiteCarnes = key.includes("01") ? 1 : 2;
-        // Deseleciona carnes ao mudar marmita
         document.querySelectorAll("#carnes li").forEach(li=>li.classList.remove("selected"));
         pedido = pedido.filter(item => !cardapioFinal.cardapio[nomeDia.toLowerCase()].carnes.includes(item));
         atualizarPedido();
@@ -124,7 +118,6 @@ fetch('cardapio.json')
       marmitaOptions.appendChild(label);
     });
 
-    // Função para criar listas
     function criarLista(itens, container, tipo="normal") {
       container.innerHTML = "";
       itens.forEach(i=>{
@@ -147,16 +140,10 @@ fetch('cardapio.json')
       });
     }
 
-    // Carnes e acompanhamentos
     const hojeCardapio = cardapioFinal.cardapio[nomeDia.toLowerCase()] || { carnes: [], acompanhamentos: [] };
     criarLista(hojeCardapio.carnes, document.getElementById("carnes"), "carnes");
     criarLista(hojeCardapio.acompanhamentos, document.getElementById("acompanhamentos"));
-
-    // Refrigerantes
-    criarLista(Object.entries(cardapioFinal.refrigerantes)
-      .flatMap(([tipo, list]) => list.map(r=>`${tipo} - ${r.nome} R$${r.preco}`)), 
-      document.getElementById("refrigerantes")
-    );
+    criarLista(Object.entries(cardapioFinal.refrigerantes).flatMap(([tipo, list]) => list.map(r=>`${tipo} - ${r.nome} R$${r.preco}`)), document.getElementById("refrigerantes"));
 
     // Locais de entrega
     const localEl = document.getElementById("localEntrega");
@@ -187,11 +174,9 @@ fetch('cardapio.json')
     // Atualizar Pedido
     function atualizarPedido(){
       const adicionais = document.getElementById("adicionais").value;
-      const refSelecionado = document.getElementById("refrigerantes").querySelector("li.selected")?.getAttribute("data-item");
+      const refSelecionado = document.querySelector("#refrigerantes li.selected")?.getAttribute("data-item");
       let precoRef = 0;
-      if(refSelecionado){
-        precoRef = parseFloat(refSelecionado.split('R$')[1]);
-      }
+      if(refSelecionado) precoRef = parseFloat(refSelecionado.split('R$')[1]);
       const total = valorMarmita + taxaEntrega + precoRef;
       const itensEl = document.getElementById("itensPedido");
       itensEl.innerHTML = `
@@ -207,6 +192,58 @@ fetch('cardapio.json')
 
     document.getElementById("adicionais").addEventListener("input", atualizarPedido);
 
+    document.getElementById("enviarWhats").addEventListener("click", ()=>{
+      if(!marmita || !pagamentoSelecionado){
+        alert("Selecione a marmita e a forma de pagamento!");
+        return;
+      }
+      const nome = document.getElementById("nomeCliente").value || "Cliente";
+      const endereco = document.getElementById("enderecoCliente").value || "Não informado";
+      const adicionais = document.getElementById("adicionais").value;
+      const local = document.getElementById("localEntrega").value;
+      const refSelecionado = document.querySelector("#refrigerantes li.selected")?.getAttribute("data-item");
+      const precoRef = refSelecionado?parseFloat(refSelecionado.split('R$')[1]):0;
+      const total = valorMarmita + taxaEntrega + precoRef;
+
+      let msg = `Olá! Pedido de ${nome}%0AEndereço: ${endereco}%0ALocal de entrega: ${local}%0A%0AItens:%0A`;
+      msg += `- Marmita ${marmita} - R$${valorMarmita}%0A`;
+      pedido.forEach(i=>msg+=`- ${i}%0A`);
+      if(refSelecionado) msg+=`- 🥤 ${refSelecionado}%0A`;
+      if(adicionais) msg+=`- 📝 ${adicionais}%0A`;
+      msg += `- 🚚 Taxa de Entrega: R$${taxaEntrega.toFixed(2)}%0A`;
+      msg += `%0APagamento: ${pagamentoSelecionado}%0A💰 Total: R$${total.toFixed(2)}`;
+
+      window.open(`https://wa.me/+556192633504?text=${msg}`,"_blank");
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(14);
+      doc.text(`Restaurante Colinas - Pedido`, 10, 20);
+      doc.setFontSize(12);
+      doc.text(`Cliente: ${nome}`, 10, 30);
+      doc.text(`Endereço: ${endereco}`, 10, 38);
+      doc.text(`Local de entrega: ${local}`, 10, 46);
+      let y=55;
+      doc.text(`Itens:`,10,y); y+=8;
+      doc.text(`Marmita: ${marmita} - R$${valorMarmita}`,10,y); y+=8;
+      pedido.forEach(i=>{
+        doc.text(i,12,y);
+        y+=8;
+      });
+      if(refSelecionado){
+        doc.text(`Refrigerante: ${refSelecionado}`,12,y); y+=8;
+      }
+      if(adicionais){
+        doc.text(`Adicionais: ${adicionais}`,12,y); y+=8;
+      }
+      doc.text(`Taxa de entrega: R$${taxaEntrega.toFixed(2)}`,10,y); y+=8;
+      doc.text(`Pagamento: ${pagamentoSelecionado}`,10,y); y+=8;
+      doc.text(`Total: R$${total.toFixed(2)}`,10,y); y+=8;
+      doc.save(`pedido_${nome}.pdf`);
+    });
+
   })
   .catch(err => console.error("Erro ao carregar cardápio:", err));
 </script>
+</body>
+</html>
