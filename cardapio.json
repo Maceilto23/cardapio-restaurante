@@ -5,7 +5,9 @@
   },
   "valoresMarmita": {
     "01 Opção de Carne": 15,
-    "02 Opções de Carne": 20
+    "02 Opção de Carne": 20,
+    "01 Porção pequena de Carne": 25,
+    "02 Porção Grande  de Carne": 40
   },
   "cardapio": {
     "domingo": {
