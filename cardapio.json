@@ -122,6 +122,22 @@
             ]
         }
     },
+    "refrigerantes": {
+        "lata": {
+            "Coca Cola": 5,
+            "Coca Cola Zero": 5,
+            "Mineiro": 5,
+            "Fanta Laranja": 5,
+            "Fanta Uva": 5,
+            "Água Tônica": 5
+        },
+        "1.5L": {
+            "Mineiro": 8
+        },
+        "2L": {
+            "Mineiro": 10
+        }
+    },
     "locaisEntrega": [
         {
             "nome": "Boa Vista 1",
