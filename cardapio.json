@@ -1,161 +1,140 @@
 {
-    "horarioFuncionamento": {
-        "abertura": "11:30",
-        "fechamento": "14:00"
+  "horarioFuncionamento": {
+    "abertura": "11:30",
+    "fechamento": "14:00"
+  },
+  "valoresMarmita": {
+    "Pequena - 01 Opção de Carne": 15,
+    "Grande - 02 Opção de Carne": 20
+  },
+  "cardapio": {
+    "segunda-feira": {
+      "carnes": [
+        "Costela com mandioca",
+        "Frango ao molho",
+        "Peito de frango grelhado"
+      ],
+      "acompanhamentos": [
+        "Arroz",
+        "Feijão",
+        "Macarrão alho e óleo",
+        "Purê",
+        "Farofa",
+        "Verduras cozidas",
+        "Salada"
+      ]
     },
-    "valoresMarmita": {
-        "Pequena- 01 Opção de Carne": 15,
-        "Grande-02 Opção de Carne": 20
+    "terça-feira": {
+      "carnes": [
+        "Churrasco",
+        "Carne de porco frita",
+        "Frango ao molho"
+      ],
+      "acompanhamentos": [
+        "Arroz",
+        "Feijão",
+        "Macarrão alho e óleo",
+        "Farofa",
+        "Verduras cozidas",
+        "Salada",
+        "Batata frita"
+      ]
     },
-    "cardapio": {
-        "segunda-feira": {
-            "carnes": [
-                "Costela com mandioca",
-                "Frango ao molho",
-                "Peito de frango grelhado"
-            ],
-            "acompanhamentos": [
-                "Arroz",
-                "Feijão",
-                "Macarrão alho e óleo",
-                "Purê",
-                "Farofa",
-                "Verduras cozidas",
-                "Salada"
-            ]
-        },
-        "terça-feira": {
-            "carnes": [
-                "Churrasco",
-                "Carne de porco frita",
-                "Frango ao molho"
-            ],
-            "acompanhamentos": [
-                "Arroz",
-                "Feijão",
-                "Macarrão alho e óleo",
-                "Farofa",
-                "Verduras cozidas",
-                "Salada",
-                "Batata frita"
-            ]
-        },
-        "quarta-feira": {
-            "carnes": [
-                "Churrasco",
-                "Strogonoff de frango",
-                "Frango ao molho"
-            ],
-            "acompanhamentos": [
-                "Arroz",
-                "Feijão",
-                "Macarrão alho e óleo",
-                "Farofa",
-                "Verduras cozidas",
-                "Salada",
-                "Batata palha",
-                "Batata temperada"
-            ]
-        },
-        "quinta-feira": {
-            "carnes": [
-                "Churrasco",
-                "Frango ao molho",
-                "Fígado"
-            ],
-            "acompanhamentos": [
-                "Arroz",
-                "Feijão",
-                "Macarrão alho e óleo",
-                "Farofa",
-                "Verduras cozidas",
-                "Salada",
-                "Batata frita"
-            ]
-        },
-        "sexta-feira": {
-            "carnes": [
-                "Churrasco",
-                "Frango ao molho",
-                "Coxa e sobrecoxa assada"
-            ],
-            "acompanhamentos": [
-                "Arroz",
-                "Feijão",
-                "Macarrão alho e óleo",
-                "Farofa",
-                "Verduras cozidas",
-                "Salada",
-                "Batata frita"
-            ]
-        },
-        "sábado": {
-            "carnes": [
-                "Churrasco",
-                "Feijoada",
-                "Frango ao molho"
-            ],
-            "acompanhamentos": [
-                "Arroz",
-                "Feijão",
-                "Macarrão alho e óleo",
-                "Farofa",
-                "Verduras cozidas",
-                "Salada",
-                "Batata frita"
-            ]
-        },
-        "domingo": {
-            "carnes": [
-                "Churrasco",
-                "Frango ao molho",
-                "Lasanha"
-            ],
-            "acompanhamentos": [
-                "Arroz",
-                "Feijão",
-                "Macarrão alho e óleo",
-                "Farofa",
-                "Verduras cozidas",
-                "Salada",
-                "Maionese"
-            ]
-        }
+    "quarta-feira": {
+      "carnes": [
+        "Churrasco",
+        "Strogonoff de frango",
+        "Frango ao molho"
+      ],
+      "acompanhamentos": [
+        "Arroz",
+        "Feijão",
+        "Macarrão alho e óleo",
+        "Farofa",
+        "Verduras cozidas",
+        "Salada",
+        "Batata palha",
+        "Batata temperada"
+      ]
     },
-    "locaisEntrega": [
-        {
-            "nome": "Boa Vista 1",
-            "taxa": 2
-        },
-        {
-            "nome": "Boa Vista 2",
-            "taxa": 4
-        },
-        {
-            "nome": "Mont Serrat",
-            "taxa": 2
-        },
-        {
-            "nome": "Lunabel",
-            "taxa": 2
-        },
-        {
-            "nome": "Lago Azul",
-            "taxa": 4
-        },
-        {
-            "nome": "Alvorada",
-            "taxa": 2
-        },
-        {
-            "nome": "América do Sul",
-            "taxa": 40
-        }
-    ],
-    "formasPagamento": [
-        "Dinheiro",
-        "Pix"
-        "Cartão de Crédito",
-        "Cartão de Débito"
-    ]
+    "quinta-feira": {
+      "carnes": [
+        "Churrasco",
+        "Frango ao molho",
+        "Fígado"
+      ],
+      "acompanhamentos": [
+        "Arroz",
+        "Feijão",
+        "Macarrão alho e óleo",
+        "Farofa",
+        "Verduras cozidas",
+        "Salada",
+        "Batata frita"
+      ]
+    },
+    "sexta-feira": {
+      "carnes": [
+        "Churrasco",
+        "Frango ao molho",
+        "Coxa e sobrecoxa assada"
+      ],
+      "acompanhamentos": [
+        "Arroz",
+        "Feijão",
+        "Macarrão alho e óleo",
+        "Farofa",
+        "Verduras cozidas",
+        "Salada",
+        "Batata frita"
+      ]
+    },
+    "sábado": {
+      "carnes": [
+        "Churrasco",
+        "Feijoada",
+        "Frango ao molho"
+      ],
+      "acompanhamentos": [
+        "Arroz",
+        "Feijão",
+        "Macarrão alho e óleo",
+        "Farofa",
+        "Verduras cozidas",
+        "Salada",
+        "Batata frita"
+      ]
+    },
+    "domingo": {
+      "carnes": [
+        "Churrasco",
+        "Frango ao molho",
+        "Lasanha"
+      ],
+      "acompanhamentos": [
+        "Arroz",
+        "Feijão",
+        "Macarrão alho e óleo",
+        "Farofa",
+        "Verduras cozidas",
+        "Salada",
+        "Maionese"
+      ]
+    }
+  },
+  "locaisEntrega": [
+    { "nome": "Boa Vista 1", "taxa": 2 },
+    { "nome": "Boa Vista 2", "taxa": 4 },
+    { "nome": "Mont Serrat", "taxa": 2 },
+    { "nome": "Lunabel", "taxa": 2 },
+    { "nome": "Lago Azul", "taxa": 4 },
+    { "nome": "Alvorada", "taxa": 2 },
+    { "nome": "América do Sul", "taxa": 40 }
+  ],
+  "formasPagamento": [
+    "Dinheiro",
+    "Pix",
+    "Cartão de Crédito",
+    "Cartão de Débito"
+  ]
 }
