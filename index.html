@@ -24,7 +24,7 @@ li span { flex: 1; }
 label { display: block; margin-bottom: 6px; cursor: pointer; }
 .marmita-options label { display: block; margin-bottom: 8px; cursor: pointer; }
 .marmita-options input { margin-right: 8px; }
-@media (max-width: 600px) { 
+@media (max-width: 600px){ 
   .logo-container { flex-direction: column; align-items: center; text-align: center; } 
   .logo-container img { margin-right: 0; margin-bottom: 8px; height: 50px; } 
   .titulo-container h1 { font-size: 1.3rem; } 
@@ -77,7 +77,6 @@ label { display: block; margin-bottom: 6px; cursor: pointer; }
   <ul id="itensPedido"><li>Nenhum item selecionado</li></ul>
 </div>
 
-<script src="cardapio.js"></script>
 <script>
 const diasSemana = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
 const hojeDate = new Date();
@@ -93,77 +92,85 @@ let pedido = [];
 let taxaEntrega = 0;
 let pagamentoSelecionado = "";
 
-// --- Carregar cardápio editado do localStorage se existir ---
-let cardapioSalvo = JSON.parse(localStorage.getItem("cardapioData"));
-let cardapioFinal = cardapioSalvo || window.cardapioData;
+// --- Carregar cardápio diretamente do JSON público ---
+const jsonURL = "https://maceilto23.github.io/cardapio-restaurante/cardapio.json"; // Substitua pela URL real
 
-// Atualizar horário
-document.getElementById("horarioFuncionamento").textContent = 
-  `Horário: ${cardapioFinal.horarioFuncionamento.abertura} - ${cardapioFinal.horarioFuncionamento.fechamento}`;
+fetch(jsonURL)
+  .then(res => res.json())
+  .then(cardapioFinal => {
+    // Atualizar horário
+    document.getElementById("horarioFuncionamento").textContent = 
+      `Horário: ${cardapioFinal.horarioFuncionamento.abertura} - ${cardapioFinal.horarioFuncionamento.fechamento}`;
 
-// Marmitas
-const marmitaOptions = document.querySelector(".marmita-options");
-Object.keys(cardapioFinal.valoresMarmita).forEach(key=>{
-  const label = document.createElement("label");
-  label.innerHTML = `<input type="radio" name="marmita" value="${key}"> Marmita ${key} - R$${cardapioFinal.valoresMarmita[key]},00`;
-  label.querySelector('input').addEventListener("change", ()=>{
-    marmita = key;
-    valorMarmita = cardapioFinal.valoresMarmita[key];
-    atualizarPedido();
-  });
-  marmitaOptions.appendChild(label);
-});
+    // Marmitas
+    const marmitaOptions = document.querySelector(".marmita-options");
+    Object.keys(cardapioFinal.valoresMarmita).forEach(key=>{
+      const label = document.createElement("label");
+      label.innerHTML = `<input type="radio" name="marmita" value="${key}"> Marmita ${key} - R$${cardapioFinal.valoresMarmita[key]},00`;
+      label.querySelector('input').addEventListener("change", ()=>{
+        marmita = key;
+        valorMarmita = cardapioFinal.valoresMarmita[key];
+        atualizarPedido();
+      });
+      marmitaOptions.appendChild(label);
+    });
 
-// Carnes e acompanhamentos
-const hojeCardapio = cardapioFinal.cardapio[nomeDia.toLowerCase()] || { carnes: [], acompanhamentos: [] };
-function criarLista(itens, container){
-  container.innerHTML = "";
-  itens.forEach(i=>{
-    const li = document.createElement("li");
-    li.setAttribute("data-item", i);
-    li.innerHTML = `<div class="checkbox-fake">X</div><span>${i}</span>`;
-    li.addEventListener("click", ()=>{
-      li.classList.toggle("selected");
-      const item = li.getAttribute("data-item");
-      if(li.classList.contains("selected")){
-        if(!pedido.includes(item)) pedido.push(item);
-      } else pedido = pedido.filter(x=>x!==item);
+    // Carnes e acompanhamentos
+    const hojeCardapio = cardapioFinal.cardapio[nomeDia.toLowerCase()] || { carnes: [], acompanhamentos: [] };
+    function criarLista(itens, container){
+      container.innerHTML = "";
+      itens.forEach(i=>{
+        const li = document.createElement("li");
+        li.setAttribute("data-item", i);
+        li.innerHTML = `<div class="checkbox-fake">X</div><span>${i}</span>`;
+        li.addEventListener("click", ()=>{
+          li.classList.toggle("selected");
+          const item = li.getAttribute("data-item");
+          if(li.classList.contains("selected")){
+            if(!pedido.includes(item)) pedido.push(item);
+          } else pedido = pedido.filter(x=>x!==item);
+          atualizarPedido();
+        });
+        container.appendChild(li);
+      });
+    }
+    criarLista(hojeCardapio.carnes, document.getElementById("carnes"));
+    criarLista(hojeCardapio.acompanhamentos, document.getElementById("acompanhamentos"));
+
+    // Locais de entrega
+    const localEl = document.getElementById("localEntrega");
+    cardapioFinal.locaisEntrega.forEach((loc,i)=>{
+      const opt = document.createElement("option");
+      opt.value = loc.nome;
+      opt.dataset.taxa = loc.taxa;
+      opt.textContent = `${loc.nome} - R$${loc.taxa.toFixed(2)}`;
+      if(i===0) taxaEntrega = loc.taxa;
+      localEl.appendChild(opt);
+    });
+    localEl.addEventListener("change", ()=>{
+      taxaEntrega = parseFloat(localEl.selectedOptions[0].dataset.taxa);
       atualizarPedido();
     });
-    container.appendChild(li);
-  });
-}
-criarLista(hojeCardapio.carnes, document.getElementById("carnes"));
-criarLista(hojeCardapio.acompanhamentos, document.getElementById("acompanhamentos"));
 
-// Locais de entrega
-const localEl = document.getElementById("localEntrega");
-cardapioFinal.locaisEntrega.forEach((loc,i)=>{
-  const opt = document.createElement("option");
-  opt.value = loc.nome;
-  opt.dataset.taxa = loc.taxa;
-  opt.textContent = `${loc.nome} - R$${loc.taxa.toFixed(2)}`;
-  if(i===0) taxaEntrega = loc.taxa;
-  localEl.appendChild(opt);
-});
-localEl.addEventListener("change", ()=>{
-  taxaEntrega = parseFloat(localEl.selectedOptions[0].dataset.taxa);
-  atualizarPedido();
-});
+    // Formas de pagamento
+    const formasEl = document.getElementById("formasPagamentoList");
+    cardapioFinal.formasPagamento.forEach(f=>{
+      const li = document.createElement("li");
+      li.innerHTML = `<div class="checkbox-fake">X</div><span>${f}</span>`;
+      li.addEventListener("click", ()=>{
+        formasEl.querySelectorAll("li").forEach(l=>l.classList.remove("selected"));
+        li.classList.add("selected");
+        pagamentoSelecionado = f;
+        atualizarPedido();
+      });
+      formasEl.appendChild(li);
+    });
 
-// Formas de pagamento
-const formasEl = document.getElementById("formasPagamentoList");
-cardapioFinal.formasPagamento.forEach(f=>{
-  const li = document.createElement("li");
-  li.innerHTML = `<div class="checkbox-fake">X</div><span>${f}</span>`;
-  li.addEventListener("click", ()=>{
-    formasEl.querySelectorAll("li").forEach(l=>l.classList.remove("selected"));
-    li.classList.add("selected");
-    pagamentoSelecionado = f;
     atualizarPedido();
+  })
+  .catch(err=>{
+    alert("Erro ao carregar o cardápio: "+err);
   });
-  formasEl.appendChild(li);
-});
 
 // Atualizar pedido
 function atualizarPedido(){
@@ -179,6 +186,7 @@ function atualizarPedido(){
     <li>💰 Total: R$${total.toFixed(2)}</li>
   `;
 }
+
 document.getElementById("adicionais").addEventListener("input", atualizarPedido);
 
 // Enviar WhatsApp
@@ -203,8 +211,6 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
   const url = `https://wa.me/+556192633504?text=${msg}`;
   window.open(url,"_blank");
 });
-
-atualizarPedido();
 </script>
 </body>
 </html>
