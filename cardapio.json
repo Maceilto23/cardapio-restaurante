@@ -4,10 +4,10 @@
     "fechamento": "14:00"
   },
   "valoresMarmita": {
-    "01 Opção de Carne": 15,
-    "02 Opção de Carne": 20,
-    "01 Porção pequena de Carne": 25,
-    "02 Porção Grande  de Carne": 40
+    "Marmita 1 Carne": 15,
+    "Marmita 2 Carnes": 20,
+    "Porção Pequena de Carne": 25,
+    "Porção Grande de Carne": 40
   },
   "cardapio": {
     "domingo": {
@@ -40,25 +40,25 @@
     }
   },
   "refrigerantes": {
-    "Refri LATA": [
-      {"nome": "Coca Cola", "preco": 5},
-      {"nome": "Coca Cola Zero", "preco": 5},
-      {"nome": "Fanta Laranja", "preco": 5},
-      {"nome": "Fanta Uva", "preco": 5},
-      {"nome": "Água Tônica", "preco": 5}
+    "Lata": [
+      { "nome": "Coca Cola", "preco": 5 },
+      { "nome": "Coca Cola Zero", "preco": 5 },
+      { "nome": "Fanta Laranja", "preco": 5 },
+      { "nome": "Fanta Uva", "preco": 5 },
+      { "nome": "Água Tônica", "preco": 5 }
     ],
-    "Refri 2 LITROS": [
-      {"nome": "Mineiro", "preco": 10}
+    "2 Litros": [
+      { "nome": "Mineiro", "preco": 10 }
     ]
   },
   "locaisEntrega": [
-    {"nome": "Boa Vista 1", "taxa": 2},
-    {"nome": "Boa Vista 2", "taxa": 4},
-    {"nome": "Mont Serrat", "taxa": 2},
-    {"nome": "Lunabel", "taxa": 2},
-    {"nome": "Lago Azul", "taxa": 4},
-    {"nome": "Alvorada", "taxa": 2},
-    {"nome": "América do Sul", "taxa": 40}
+    { "nome": "Boa Vista 1", "taxa": 2 },
+    { "nome": "Boa Vista 2", "taxa": 4 },
+    { "nome": "Mont Serrat", "taxa": 2 },
+    { "nome": "Lunabel", "taxa": 2 },
+    { "nome": "Lago Azul", "taxa": 4 },
+    { "nome": "Alvorada", "taxa": 2 },
+    { "nome": "América do Sul", "taxa": 40 }
   ],
   "formasPagamento": ["Dinheiro", "Pix", "Cartão de Crédito", "Cartão de Débito"]
 }
