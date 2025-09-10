@@ -240,7 +240,6 @@ fetch('cardapio.json?t=' + new Date().getTime())
     const minutos = agora.getMinutes();
     const agoraMinutos = horas * 60 + minutos;
 
-    // Horário de funcionamento
     const [horaAbertura, minAbertura] = cardapioFinal.horarioFuncionamento.abertura.split(":").map(Number);
     const [horaFechamento, minFechamento] = cardapioFinal.horarioFuncionamento.fechamento.split(":").map(Number);
     const aberturaMinutos = horaAbertura * 60 + minAbertura;
@@ -260,50 +259,57 @@ fetch('cardapio.json?t=' + new Date().getTime())
     const totalRef = refrigerantesSelecionados.reduce((sum,r)=>sum+r.preco,0);
     const total = valorMarmita + taxaEntrega + totalRef;
 
-    // ---------- Montar mensagem WhatsApp bonita ----------
-    let msg = `Olá! Pedido de ${nome}\n`;
-    msg += `Endereço: ${endereco}\n`;
-    msg += `Local: ${local}\n\n`;
-    msg += `Itens:\n`;
-    if(marmita) msg += `- Marmita ${marmita} - R$${valorMarmita}\n`;
-    pedido.forEach(i => msg += `- ${i}\n`);
-    refrigerantesSelecionados.forEach(r => msg += `- 🥤 ${r.nome}\n`);
-    if(adicionais) msg += `- 📝 ${adicionais}\n`;
-    msg += `- Pagamento: ${pagamento}\n`;
-    msg += `- Taxa de Entrega: R$${taxaEntrega.toFixed(2)}\n`;
-    msg += `💰 Total: R$${total.toFixed(2)}`;
-
-    // ---------- Gerar PDF do pedido ----------
+    // ---------- Gerar PDF ----------
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     doc.setFontSize(16);
-    doc.text("Restaurante Colinas", 10, 10);
+    doc.text("🍽️ Restaurante Colinas", 10, 10);
     doc.setFontSize(12);
-    doc.text(`Cliente: ${nome}`, 10, 20);
-    doc.text(`Endereço: ${endereco}`, 10, 27);
-    doc.text(`Local de entrega: ${local}`, 10, 34);
-    doc.text("Itens do Pedido:", 10, 41);
+    doc.text(`👤 Cliente: ${nome}`, 10, 20);
+    doc.text(`📍 Endereço: ${endereco}`, 10, 27);
+    doc.text(`🏠 Local de entrega: ${local}`, 10, 34);
+    doc.text("📋 Itens do Pedido:", 10, 41);
 
     let y = 48;
-    if(marmita){ doc.text(`- Marmita ${marmita} - R$${valorMarmita}`, 12, y); y+=7; }
-    pedido.forEach(i => { doc.text(`- ${i}`, 12, y); y+=7; });
-    refrigerantesSelecionados.forEach(r => { doc.text(`- 🥤 ${r.nome}`, 12, y); y+=7; });
-    if(adicionais){ doc.text(`- 📝 Adicionais: ${adicionais}`, 12, y); y+=7; }
-    doc.text(`- Pagamento: ${pagamento}`, 12, y); y+=7;
-    doc.text(`- Taxa de Entrega: R$${taxaEntrega.toFixed(2)}`, 12, y); y+=7;
+    if(marmita){ doc.text(`🍱 Marmita ${marmita} - R$${valorMarmita}`, 12, y); y+=7; }
+    pedido.forEach(i => { doc.text(`✅ ${i}`, 12, y); y+=7; });
+    refrigerantesSelecionados.forEach(r => { doc.text(`🥤 ${r.nome} - R$${r.preco}`, 12, y); y+=7; });
+    if(adicionais){ doc.text(`📝 Adicionais: ${adicionais}`, 12, y); y+=7; }
+    doc.text(`💳 Pagamento: ${pagamento}`, 12, y); y+=7;
+    doc.text(`🏍️ Taxa de Entrega: R$${taxaEntrega.toFixed(2)}`, 12, y); y+=7;
     doc.text(`💰 Total: R$${total.toFixed(2)}`, 12, y);
 
-    // Abre PDF em nova aba para download/visualização
-    doc.output('dataurlnewwindow');
+    // Criar link temporário do PDF
+    const pdfBlob = doc.output('blob');
+    const pdfURL = URL.createObjectURL(pdfBlob);
+
+    // ---------- Montar mensagem WhatsApp com link do PDF ----------
+    let msg = `Olá! Pedido de ${nome}\n`;
+    msg += `Endereço: ${endereco}\n`;
+    msg += `Local: ${local}\n\n`;
+    msg += `Itens do Pedido:\n`;
+    if(marmita) msg += `- 🍱 Marmita ${marmita} - R$${valorMarmita}\n`;
+    pedido.forEach(i => msg += `- ✅ ${i}\n`);
+    refrigerantesSelecionados.forEach(r => msg += `- 🥤 ${r.nome} - R$${r.preco}\n`);
+    if(adicionais) msg += `- 📝 ${adicionais}\n`;
+    msg += `- 💳 Pagamento: ${pagamento}\n`;
+    msg += `- 🏍️ Taxa de Entrega: R$${taxaEntrega.toFixed(2)}\n`;
+    msg += `💰 Total: R$${total.toFixed(2)}\n\n`;
+    msg += `📄 Veja o pedido completo em PDF: ${pdfURL}`;
 
     // Abrir WhatsApp com mensagem
     window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
+
+    // Abrir PDF em nova aba para download/visualização
+    window.open(pdfURL, "_blank");
 });
+
 
 
   });
 </script>
 </body>
 </html>
+
 
 
