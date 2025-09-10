@@ -52,13 +52,13 @@
     ]
   },
   "locaisEntrega": [
+    { "nome": "Alvorada", "taxa": 2 },
+    { "nome": "América do Sul", "taxa": 4 },
     { "nome": "Boa Vista 1", "taxa": 2 },
     { "nome": "Boa Vista 2", "taxa": 4 },
-    { "nome": "Mont Serrat", "taxa": 2 },
-    { "nome": "Lunabel", "taxa": 2 },
     { "nome": "Lago Azul", "taxa": 4 },
-    { "nome": "Alvorada", "taxa": 2 },
-    { "nome": "América do Sul", "taxa": 40 }
+    { "nome": "Lunabel", "taxa": 2 },
+    { "nome": "Mont Serrat", "taxa": 2 }
   ],
   "formasPagamento": ["Dinheiro", "Pix", "Cartão de Crédito", "Cartão de Débito"]
 }
