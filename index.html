@@ -91,7 +91,7 @@ const mes = String(hojeDate.getMonth()+1).padStart(2,'0');
 const ano = hojeDate.getFullYear();
 document.getElementById("dataHoje").innerText = `${dia}/${mes}/${ano}`;
 
-fetch('cardapio.json')
+fetch('cardapio.json?t=' + new Date().getTime())
   .then(response => response.json())
   .then(cardapioFinal => {
     document.getElementById("horarioFuncionamento").textContent = 
@@ -298,3 +298,4 @@ fetch('cardapio.json')
 </script>
 </body>
 </html>
+
