@@ -234,68 +234,76 @@ fetch('cardapio.json?t=' + new Date().getTime())
     }
 
     // --------- Aqui está a correção do botão ---------
-    document.getElementById("enviarWhats").addEventListener("click", () => {
-        // TODO: toda a lógica do envio WhatsApp e PDF permanece igual
-        const agora = new Date();
-        const horas = agora.getHours();
-        const minutos = agora.getMinutes();
-        const agoraMinutos = horas * 60 + minutos;
+   document.getElementById("enviarWhats").addEventListener("click", () => {
+    const agora = new Date();
+    const horas = agora.getHours();
+    const minutos = agora.getMinutes();
+    const agoraMinutos = horas * 60 + minutos;
 
-        const [horaAbertura, minAbertura] = cardapioFinal.horarioFuncionamento.abertura.split(":").map(Number);
-        const [horaFechamento, minFechamento] = cardapioFinal.horarioFuncionamento.fechamento.split(":").map(Number);
-        const aberturaMinutos = horaAbertura * 60 + minAbertura;
-        const fechamentoMinutos = horaFechamento * 60 + minFechamento;
+    // Horário de funcionamento
+    const [horaAbertura, minAbertura] = cardapioFinal.horarioFuncionamento.abertura.split(":").map(Number);
+    const [horaFechamento, minFechamento] = cardapioFinal.horarioFuncionamento.fechamento.split(":").map(Number);
+    const aberturaMinutos = horaAbertura * 60 + minAbertura;
+    const fechamentoMinutos = horaFechamento * 60 + minFechamento;
 
-        if (agoraMinutos < aberturaMinutos || agoraMinutos > fechamentoMinutos) {
-            alert(`Desculpe! Pedidos só podem ser feitos entre ${cardapioFinal.horarioFuncionamento.abertura} e ${cardapioFinal.horarioFuncionamento.fechamento}.`);
-            return;
-        }
+    if (agoraMinutos < aberturaMinutos || agoraMinutos > fechamentoMinutos) {
+        alert(`Desculpe! Pedidos só podem ser feitos entre ${cardapioFinal.horarioFuncionamento.abertura} e ${cardapioFinal.horarioFuncionamento.fechamento}.`);
+        return;
+    }
 
-        const nome = document.getElementById("nomeCliente").value || "Cliente";
-        const endereco = document.getElementById("enderecoCliente").value || "Não informado";
-        const adicionais = document.getElementById("adicionais").value || "";
-        const local = document.getElementById("localEntrega").value;
-        const pagamento = pagamentoSelecionado || "Não definido";
-        const totalRef = refrigerantesSelecionados.reduce((sum,r)=>sum+r.preco,0);
-        const total = valorMarmita + taxaEntrega + totalRef;
+    const nome = document.getElementById("nomeCliente").value || "Cliente";
+    const endereco = document.getElementById("enderecoCliente").value || "Não informado";
+    const adicionais = document.getElementById("adicionais").value || "";
+    const local = document.getElementById("localEntrega").value;
+    const pagamento = pagamentoSelecionado || "Não definido";
 
-        let msg = `Olá! Pedido de ${nome}%0AEndereço: ${endereco}%0ALocal: ${local}%0A%0AItens:%0A`;
-        if (marmita) msg += `- Marmita ${marmita} - R$${valorMarmita}%0A`;
-        pedido.forEach(i=>msg+=`- ${i}%0A`);
-        refrigerantesSelecionados.forEach(r=>msg+=`- 🥤 ${r.nome}%0A`);
-        if (adicionais) msg += `- 📝 ${adicionais}%0A`;
-        msg += `- Pagamento: ${pagamento}%0A`;
-        msg += `- Taxa de Entrega: R$${taxaEntrega.toFixed(2)}%0A`;
-        msg += `💰 Total: R$${total.toFixed(2)}`;
+    const totalRef = refrigerantesSelecionados.reduce((sum,r)=>sum+r.preco,0);
+    const total = valorMarmita + taxaEntrega + totalRef;
 
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.setFontSize(16);
-        doc.text("Restaurante Colinas", 10, 10);
-        doc.setFontSize(12);
-        doc.text(`Cliente: ${nome}`, 10, 20);
-        doc.text(`Endereço: ${endereco}`, 10, 27);
-        doc.text(`Local de entrega: ${local}`, 10, 34);
-        doc.text("Itens do Pedido:", 10, 41);
+    // ---------- Montar mensagem WhatsApp bonita ----------
+    let msg = `Olá! Pedido de ${nome}\n`;
+    msg += `Endereço: ${endereco}\n`;
+    msg += `Local: ${local}\n\n`;
+    msg += `Itens:\n`;
+    if(marmita) msg += `- Marmita ${marmita} - R$${valorMarmita}\n`;
+    pedido.forEach(i => msg += `- ${i}\n`);
+    refrigerantesSelecionados.forEach(r => msg += `- 🥤 ${r.nome}\n`);
+    if(adicionais) msg += `- 📝 ${adicionais}\n`;
+    msg += `- Pagamento: ${pagamento}\n`;
+    msg += `- Taxa de Entrega: R$${taxaEntrega.toFixed(2)}\n`;
+    msg += `💰 Total: R$${total.toFixed(2)}`;
 
-        let y = 48;
-        if (marmita) { doc.text(`- Marmita ${marmita} - R$${valorMarmita}`, 12, y); y += 7; }
-        pedido.forEach(i => { doc.text(`- ${i}`, 12, y); y += 7; });
-        refrigerantesSelecionados.forEach(r => { doc.text(`- 🥤 ${r.nome}`, 12, y); y += 7; });
-        if (adicionais) { doc.text(`- 📝 ${adicionais}`, 12, y); y += 7; }
-        doc.text(`- Pagamento: ${pagamento}`, 12, y); y += 7;
-        doc.text(`- Taxa de Entrega: R$${taxaEntrega.toFixed(2)}`, 12, y); y += 7;
-        doc.text(`💰 Total: R$${total.toFixed(2)}`, 12, y);
+    // ---------- Gerar PDF do pedido ----------
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Restaurante Colinas", 10, 10);
+    doc.setFontSize(12);
+    doc.text(`Cliente: ${nome}`, 10, 20);
+    doc.text(`Endereço: ${endereco}`, 10, 27);
+    doc.text(`Local de entrega: ${local}`, 10, 34);
+    doc.text("Itens do Pedido:", 10, 41);
 
-        const pdfBlob = doc.output('blob');
-        const pdfURL = URL.createObjectURL(pdfBlob);
+    let y = 48;
+    if(marmita){ doc.text(`- Marmita ${marmita} - R$${valorMarmita}`, 12, y); y+=7; }
+    pedido.forEach(i => { doc.text(`- ${i}`, 12, y); y+=7; });
+    refrigerantesSelecionados.forEach(r => { doc.text(`- 🥤 ${r.nome}`, 12, y); y+=7; });
+    if(adicionais){ doc.text(`- 📝 Adicionais: ${adicionais}`, 12, y); y+=7; }
+    doc.text(`- Pagamento: ${pagamento}`, 12, y); y+=7;
+    doc.text(`- Taxa de Entrega: R$${taxaEntrega.toFixed(2)}`, 12, y); y+=7;
+    doc.text(`💰 Total: R$${total.toFixed(2)}`, 12, y);
 
-        window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
-        window.open(pdfURL, "_blank");
-    });
+    // Abre PDF em nova aba para download/visualização
+    doc.output('dataurlnewwindow');
+
+    // Abrir WhatsApp com mensagem
+    window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
+});
+
 
   });
 </script>
 </body>
 </html>
+
 
