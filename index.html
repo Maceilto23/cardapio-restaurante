@@ -259,7 +259,7 @@ fetch('cardapio.json?t=' + new Date().getTime())
     const totalRef = refrigerantesSelecionados.reduce((sum,r)=>sum+r.preco,0);
     const total = valorMarmita + taxaEntrega + totalRef;
 
-    // ---------- Montar mensagem WhatsApp ----------
+    // ---------- Montar mensagem WhatsApp com emojis ----------
     let msg = `🍽️ *Pedido de ${nome}*\n`;
     msg += `📍 Endereço: ${endereco}\n`;
     msg += `🏠 Local: ${local}\n\n`;
@@ -275,27 +275,27 @@ fetch('cardapio.json?t=' + new Date().getTime())
     // Abrir WhatsApp com a mensagem
     window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
 
-    // ---------- Gerar PDF ----------
+    // ---------- Gerar PDF sem emojis ----------
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     doc.setFontSize(16);
-    doc.text("🍽️ Restaurante Colinas", 10, 10);
+    doc.text("Restaurante Colinas", 10, 10);
     doc.setFontSize(12);
-    doc.text(`👤 Cliente: ${nome}`, 10, 20);
-    doc.text(`📍 Endereço: ${endereco}`, 10, 27);
-    doc.text(`🏠 Local de entrega: ${local}`, 10, 34);
-    doc.text("📋 Itens do Pedido:", 10, 41);
+    doc.text(`Cliente: ${nome}`, 10, 20);
+    doc.text(`Endereço: ${endereco}`, 10, 27);
+    doc.text(`Local de entrega: ${local}`, 10, 34);
+    doc.text("Itens do Pedido:", 10, 41);
 
     let y = 48;
-    if(marmita){ doc.text(`🍱 Marmita ${marmita} - R$${valorMarmita}`, 12, y); y+=7; }
-    pedido.forEach(i => { doc.text(`✅ ${i}`, 12, y); y+=7; });
-    refrigerantesSelecionados.forEach(r => { doc.text(`🥤 ${r.nome} - R$${r.preco}`, 12, y); y+=7; });
-    if(adicionais){ doc.text(`📝 Adicionais: ${adicionais}`, 12, y); y+=7; }
-    doc.text(`💳 Pagamento: ${pagamento}`, 12, y); y+=7;
-    doc.text(`🏍️ Taxa de Entrega: R$${taxaEntrega.toFixed(2)}`, 12, y); y+=7;
-    doc.text(`💰 Total: R$${total.toFixed(2)}`, 12, y);
+    if(marmita){ doc.text(`Marmita ${marmita} - R$${valorMarmita}`, 12, y); y+=7; }
+    pedido.forEach(i => { doc.text(`${i}`, 12, y); y+=7; });
+    refrigerantesSelecionados.forEach(r => { doc.text(`${r.nome} - R$${r.preco}`, 12, y); y+=7; });
+    if(adicionais){ doc.text(`Adicionais: ${adicionais}`, 12, y); y+=7; }
+    doc.text(`Pagamento: ${pagamento}`, 12, y); y+=7;
+    doc.text(`Taxa de Entrega: R$${taxaEntrega.toFixed(2)}`, 12, y); y+=7;
+    doc.text(`Total: R$${total.toFixed(2)}`, 12, y);
 
-    // Abrir PDF em nova aba para cliente baixar/enviar
+    // Abrir PDF em nova aba
     const pdfBlob = doc.output('blob');
     const pdfURL = URL.createObjectURL(pdfBlob);
     window.open(pdfURL, "_blank");
@@ -304,10 +304,12 @@ fetch('cardapio.json?t=' + new Date().getTime())
 
 
 
+
   });
 </script>
 </body>
 </html>
+
 
 
 
