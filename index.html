@@ -194,6 +194,10 @@ fetch('cardapio.json')
     }
 
     const hojeCardapio = cardapioFinal.cardapio[nomeDia.toLowerCase()] || { carnes: [], acompanhamentos: [] };
+    // Ordenar alfabeticamente
+    hojeCardapio.carnes.sort((a,b) => a.localeCompare(b));
+    hojeCardapio.acompanhamentos.sort((a,b) => a.localeCompare(b));
+    
     criarLista(hojeCardapio.acompanhamentos, document.getElementById("acompanhamentos"), "acompanhamentos");
     criarLista(hojeCardapio.carnes, document.getElementById("carnes"), "carnes");
     criarListaRefrigerantes(
@@ -241,6 +245,60 @@ fetch('cardapio.json')
       `;
     }
   });
-</script>
-</body>
-</html>
+
+// Botão enviar WhatsApp
+document.getElementById("enviarWhats").addEventListener("click", ()=>{
+  const nome = document.getElementById("nomeCliente").value || "Cliente";
+  const endereco = document.getElementById("enderecoCliente").value || "Não informado";
+  const adicionais = document.getElementById("adicionais").value || "";
+  const local = document.getElementById("localEntrega").value;
+  const totalRef = refrigerantesSelecionados.reduce((sum,r)=>sum+r.preco,0);
+  const total = valorMarmita + taxaEntrega + totalRef;
+
+  // Montar mensagem para WhatsApp
+let msg = `Olá! Pedido de ${nome}%0AEndereço: ${endereco}%0ALocal de entrega: ${local}%0A%0AItens:%0A`;
+msg += `${marmita?`- Marmita ${marmita} - R$${valorMarmita}%0A`:""}`;
+pedido.forEach(i => msg += `- ${i}%0A`);
+refrigerantesSelecionados.forEach(r => msg += `- 🥤 ${r.nome}%0A`);
+if(adicionais) msg += `- 📝 ${adicionais}%0A`;
+msg += `- 🏍️ Taxa de Entrega: R$${taxaEntrega.toFixed(2)}%0A`;
+msg += `💰 Total: R$${total.toFixed(2)}`;
+
+// Abrir WhatsApp com encodeURIComponent
+window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
+
+// Gerar página HTML para impressão
+const popup = window.open("", "Pedido", "width=400,height=600");
+popup.document.write(`
+  <html>
+  <head>
+    <title>Pedido - Restaurante Colinas</title>
+    <style>
+      body { font-family: Arial; padding: 20px; }
+      h1 { color: #007BFF; }
+      ul { list-style: none; padding: 0; }
+      li { margin-bottom: 5px; }
+    </style>
+  </head>
+  <body>
+    <h1>Restaurante Colinas</h1>
+    <h2>Pedido para entrega</h2>
+    <p><strong>Cliente:</strong> ${nome}</p>
+    <p><strong>Endereço:</strong> ${endereco}</p>
+    <p><strong>Local de Entrega:</strong> ${local}</p>
+    <p><strong>Itens do Pedido:</strong></p>
+    <ul>
+      ${marmita?`<li>🍱 Marmita ${marmita} - R$${valorMarmita}</li>`:""}
+      ${pedido.map(i=>`<li>${i}</li>`).join('')}
+      ${refrigerantesSelecionados.map(r=>`<li>🥤 ${r.nome}</li>`).join('')}
+      ${adicionais ? `<li>📝 Adicionais: ${adicionais}</li>` : ''}
+    </ul>
+    <p><strong>Taxa de Entrega:</strong> R$${taxaEntrega.toFixed(2)}</p>
+    <p><strong>Total:</strong> R$${total.toFixed(2)}</p>
+    <script>window.print();</script>
+  </body>
+  </html>
+`);
+
+
+
