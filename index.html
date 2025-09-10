@@ -276,39 +276,61 @@ fetch('cardapio.json?t=' + new Date().getTime())
     window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
 
     // ---------- Gerar PDF sem emojis ----------
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text("Restaurante Colinas", 10, 10);
-    doc.setFontSize(12);
-    doc.text(`Cliente: ${nome}`, 10, 20);
-    doc.text(`Endereço: ${endereco}`, 10, 27);
-    doc.text(`Local de entrega: ${local}`, 10, 34);
-    doc.text("Itens do Pedido:", 10, 41);
+    // ---------- Gerar PDF sem emojis, mas com formatação melhor ----------
+const { jsPDF } = window.jspdf;
+const doc = new jsPDF();
 
-    let y = 48;
-    if(marmita){ doc.text(`Marmita ${marmita} - R$${valorMarmita}`, 12, y); y+=7; }
-    pedido.forEach(i => { doc.text(`${i}`, 12, y); y+=7; });
-    refrigerantesSelecionados.forEach(r => { doc.text(`${r.nome} - R$${r.preco}`, 12, y); y+=7; });
-    if(adicionais){ doc.text(`Adicionais: ${adicionais}`, 12, y); y+=7; }
-    doc.text(`Pagamento: ${pagamento}`, 12, y); y+=7;
-    doc.text(`Taxa de Entrega: R$${taxaEntrega.toFixed(2)}`, 12, y); y+=7;
-    doc.text(`Total: R$${total.toFixed(2)}`, 12, y);
+// Cabeçalho
+doc.setFontSize(18);
+doc.setFont("helvetica", "bold");
+doc.text("Restaurante Colinas", 10, 15);
+doc.setFontSize(12);
+doc.setFont("helvetica", "normal");
 
-    // Abrir PDF em nova aba
-    const pdfBlob = doc.output('blob');
-    const pdfURL = URL.createObjectURL(pdfBlob);
-    window.open(pdfURL, "_blank");
+// Dados do cliente
+doc.text(`Cliente: ${nome}`, 10, 25);
+doc.text(`Endereço: ${endereco}`, 10, 32);
+doc.text(`Local de entrega: ${local}`, 10, 39);
+
+// Separador
+doc.setLineWidth(0.5);
+doc.line(10, 44, 200, 44);
+
+// Itens do pedido
+doc.setFont("helvetica", "bold");
+doc.text("Itens do Pedido:", 10, 50);
+doc.setFont("helvetica", "normal");
+
+let y = 57;
+if(marmita){ doc.text(`Marmita ${marmita} - R$${valorMarmita}`, 12, y); y+=7; }
+pedido.forEach(i => { doc.text(`${i}`, 12, y); y+=7; });
+refrigerantesSelecionados.forEach(r => { doc.text(`${r.nome} - R$${r.preco}`, 12, y); y+=7; });
+if(adicionais){ doc.text(`Adicionais: ${adicionais}`, 12, y); y+=7; }
+
+// Separador antes do total
+doc.line(10, y, 200, y); y += 5;
+
+// Pagamento e taxa
+doc.text(`Pagamento: ${pagamento}`, 10, y); y+=7;
+doc.text(`Taxa de Entrega: R$${taxaEntrega.toFixed(2)}`, 10, y); y+=7;
+
+// Total destacado
+doc.setFont("helvetica", "bold");
+doc.setFontSize(14);
+doc.text(`TOTAL: R$${total.toFixed(2)}`, 10, y);
+
+// Abrir PDF em nova aba
+const pdfBlob = doc.output('blob');
+const pdfURL = URL.createObjectURL(pdfBlob);
+window.open(pdfURL, "_blank");
+
 });
-
-
-
-
 
   });
 </script>
 </body>
 </html>
+
 
 
 
