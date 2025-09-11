@@ -63,7 +63,7 @@
 // ===== CONFIGURAÇÃO =====
 const USER = 'SEU_USUARIO_GITHUB';
 const REPO = 'SEU_REPOSITORIO';
-const FILE_PATH = 'cardapio.json'; // caminho relativo
+const FILE_PATH = 'cardapio.json'; // JSON na mesma pasta
 const TOKEN = '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';
 
 let SHA; // SHA do arquivo para envio
@@ -80,33 +80,28 @@ async function carregar() {
     document.getElementById('abertura').value = cardapio.horarioFuncionamento.abertura;
     document.getElementById('fechamento').value = cardapio.horarioFuncionamento.fechamento;
 
-    // Valores Marmita
     const valoresDiv = document.getElementById('valoresMarmita');
     valoresDiv.innerHTML = '';
     for (let key in cardapio.valoresMarmita) {
       addValorMarmita(key, cardapio.valoresMarmita[key]);
     }
 
-    // Cardápio diário
     const diasDiv = document.getElementById('cardapioDias');
     diasDiv.innerHTML = '';
     for (let dia in cardapio.cardapio) {
       addDiaCardapio(dia, cardapio.cardapio[dia]);
     }
 
-    // Refrigerantes
     const refDiv = document.getElementById('refrigerantes');
     refDiv.innerHTML = '';
     for (let tipo in cardapio.refrigerantes) {
       cardapio.refrigerantes[tipo].forEach(r => addRefrigerante(tipo, r.nome, r.preco));
     }
 
-    // Locais de entrega
     const locaisDiv = document.getElementById('locaisEntrega');
     locaisDiv.innerHTML = '';
     cardapio.locaisEntrega.forEach(l => addLocal(l.nome, l.taxa));
 
-    // Formas de pagamento
     const formasDiv = document.getElementById('formasPagamento');
     formasDiv.innerHTML = '';
     cardapio.formasPagamento.forEach(f => addForma(f));
