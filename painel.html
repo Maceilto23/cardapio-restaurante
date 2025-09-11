@@ -59,20 +59,21 @@ button:hover { background:#218838; }
     <button onclick="addForma()">Adicionar Forma</button>
   </div>
 
-  <button onclick="salvar()">💾 Salvar Alterações</button>
+  <button onclick="salvar()">💾 Salvar no GitHub</button>
+  <button onclick="baixarJSON()">⬇️ Baixar JSON</button>
 </div>
 
 <script>
+// ===== UTF-8 BASE64 =====
+function toBase64UTF8(str){ return btoa(unescape(encodeURIComponent(str))); }
+function fromBase64UTF8(str){ return decodeURIComponent(escape(atob(str))); }
+
 // ===== CONFIGURAÇÃO =====
 const USER = 'Maceilto23';
 const REPO = 'cardapio-restaurante';
 const FILE_PATH = 'cardapio.json';
 const TOKEN = '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';
-let SHA; // SHA do arquivo atual
-
-// ===== BASE64 UTF-8 =====
-function toBase64UTF8(str) { return btoa(unescape(encodeURIComponent(str))); }
-function fromBase64UTF8(str) { return decodeURIComponent(escape(atob(str))); }
+let SHA;
 
 // ===== FUNÇÕES DE CAMPOS =====
 function addValorMarmita(nome='', preco=''){
@@ -123,81 +124,49 @@ function addForma(valor=''){
   document.getElementById('formasPagamento').appendChild(div);
 }
 
-// ===== CARREGAR CARDÁPIO DO GITHUB =====
+// ===== CARREGAR CARDÁPIO =====
 async function carregar(){
-  try {
-    const res = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${FILE_PATH}`);
-    if(!res.ok) throw new Error('Erro ao carregar arquivo do GitHub');
-    const data = await res.json();
-    SHA = data.sha;
-    const cardapio = JSON.parse(fromBase64UTF8(data.content));
+  try{
+    const res=await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${FILE_PATH}`);
+    if(!res.ok) throw new Error('Arquivo não encontrado no GitHub');
+    const data=await res.json();
+    SHA=data.sha;
+    const cardapio=JSON.parse(fromBase64UTF8(data.content));
 
-    document.getElementById('abertura').value = cardapio.horarioFuncionamento?.abertura || '';
-    document.getElementById('fechamento').value = cardapio.horarioFuncionamento?.fechamento || '';
+    document.getElementById('abertura').value=cardapio.horarioFuncionamento?.abertura||'';
+    document.getElementById('fechamento').value=cardapio.horarioFuncionamento?.fechamento||'';
 
-    const valoresDiv=document.getElementById('valoresMarmita'); valoresDiv.innerHTML='';
-    for(let key in cardapio.valoresMarmita) addValorMarmita(key, cardapio.valoresMarmita[key]);
+    document.getElementById('valoresMarmita').innerHTML='';
+    for(let k in cardapio.valoresMarmita) addValorMarmita(k,cardapio.valoresMarmita[k]);
 
-    const diasDiv=document.getElementById('cardapioDias'); diasDiv.innerHTML='';
-    for(let dia in cardapio.cardapio) addDiaCardapio(dia, cardapio.cardapio[dia]);
+    document.getElementById('cardapioDias').innerHTML='';
+    for(let dia in cardapio.cardapio) addDiaCardapio(dia,cardapio.cardapio[dia]);
 
-    const refDiv=document.getElementById('refrigerantes'); refDiv.innerHTML='';
+    document.getElementById('refrigerantes').innerHTML='';
     for(let tipo in cardapio.refrigerantes) cardapio.refrigerantes[tipo].forEach(r=>addRefrigerante(tipo,r.nome,r.preco));
 
-    const locaisDiv=document.getElementById('locaisEntrega'); locaisDiv.innerHTML='';
+    document.getElementById('locaisEntrega').innerHTML='';
     cardapio.locaisEntrega?.forEach(l=>addLocal(l.nome,l.taxa));
 
-    const formasDiv=document.getElementById('formasPagamento'); formasDiv.innerHTML='';
+    document.getElementById('formasPagamento').innerHTML='';
     cardapio.formasPagamento?.forEach(f=>addForma(f));
 
     document.getElementById('painel').style.display='block';
     document.getElementById('status').textContent='✅ Cardápio carregado';
-  } catch(e){
+  }catch(e){
     document.getElementById('status').textContent='❌ '+e.message;
     console.error(e);
   }
 }
 
-// ===== SALVAR CARDÁPIO NO GITHUB =====
+// ===== SALVAR JSON =====
 async function salvar(){
-  const cardapio = {
-    horarioFuncionamento:{
-      abertura:document.getElementById('abertura').value,
-      fechamento:document.getElementById('fechamento').value
-    },
-    valoresMarmita:{}, cardapio:{}, refrigerantes:{ "Lata": [], "2 Litros": [] },
-    locaisEntrega:[], formasPagamento:[]
-  };
+  const cardapio=gerarCardapio();
 
-  document.querySelectorAll('#valoresMarmita .list-item').forEach(div=>{
-    const inputs=div.querySelectorAll('input'); if(inputs[0].value) cardapio.valoresMarmita[inputs[0].value]=Number(inputs[1].value);
-  });
-
-  document.querySelectorAll('#cardapioDias .day-section').forEach(div=>{
-    const dia=div.querySelector('h3').textContent;
-    cardapio.cardapio[dia]={carnes:[],acompanhamentos:[]};
-    div.querySelectorAll('.carnes input').forEach(i=>{if(i.value) cardapio.cardapio[dia].carnes.push(i.value);});
-    div.querySelectorAll('.acompanhamentos input').forEach(i=>{if(i.value) cardapio.cardapio[dia].acompanhamentos.push(i.value);});
-  });
-
-  document.querySelectorAll('#refrigerantes .list-item').forEach(div=>{
-    const tipo=div.dataset.tipo; const inputs=div.querySelectorAll('input');
-    if(inputs[0].value) cardapio.refrigerantes[tipo].push({nome:inputs[0].value,preco:Number(inputs[1].value)});
-  });
-
-  document.querySelectorAll('#locaisEntrega .list-item').forEach(div=>{
-    const inputs=div.querySelectorAll('input'); if(inputs[0].value) cardapio.locaisEntrega.push({nome:inputs[0].value,taxa:Number(inputs[1].value)});
-  });
-
-  document.querySelectorAll('#formasPagamento .list-item input').forEach(i=>{if(i.value) cardapio.formasPagamento.push(i.value);});
-
-  try {
-    const res = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${FILE_PATH}`,{
+  try{
+    const res=await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${FILE_PATH}`,{
       method:'PUT',
-      headers:{
-        'Authorization':'token '+TOKEN,
-        'Content-Type':'application/json'
-      },
+      headers:{'Authorization':'token '+TOKEN,'Content-Type':'application/json'},
       body:JSON.stringify({
         message:'Atualizando cardápio via painel',
         content:toBase64UTF8(JSON.stringify(cardapio,null,2)),
@@ -205,18 +174,56 @@ async function salvar(){
         branch:'main'
       })
     });
-    const data = await res.json();
+    const data=await res.json();
     if(data.content){ SHA=data.content.sha; alert('✅ Cardápio salvo no GitHub!'); }
-    else alert('❌ Erro ao salvar: '+(data.message||'Desconhecido'));
-  } catch(e){
-    alert('❌ Erro ao salvar: '+e.message);
-    console.error(e);
-  }
+    else alert('❌ Erro: '+(data.message||'Desconhecido'));
+  }catch(e){ alert('❌ Erro: '+e.message); console.error(e); }
+}
+
+// ===== GERAR CARDÁPIO =====
+function gerarCardapio(){
+  const cardapio={
+    horarioFuncionamento:{abertura:document.getElementById('abertura').value,fechamento:document.getElementById('fechamento').value},
+    valoresMarmita:{}, cardapio:{}, refrigerantes:{Lata:[], '2 Litros':[]}, locaisEntrega:[], formasPagamento:[]
+  };
+
+  document.querySelectorAll('#valoresMarmita .list-item').forEach(d=>{
+    const inputs=d.querySelectorAll('input'); if(inputs[0].value) cardapio.valoresMarmita[inputs[0].value]=Number(inputs[1].value);
+  });
+
+  document.querySelectorAll('#cardapioDias .day-section').forEach(d=>{
+    const dia=d.querySelector('h3').textContent;
+    cardapio.cardapio[dia]={carnes:[],acompanhamentos:[]};
+    d.querySelectorAll('.carnes input').forEach(i=>{if(i.value) cardapio.cardapio[dia].carnes.push(i.value);});
+    d.querySelectorAll('.acompanhamentos input').forEach(i=>{if(i.value) cardapio.cardapio[dia].acompanhamentos.push(i.value);});
+  });
+
+  document.querySelectorAll('#refrigerantes .list-item').forEach(d=>{
+    const tipo=d.dataset.tipo; const inputs=d.querySelectorAll('input');
+    if(inputs[0].value) cardapio.refrigerantes[tipo].push({nome:inputs[0].value,preco:Number(inputs[1].value)});
+  });
+
+  document.querySelectorAll('#locaisEntrega .list-item').forEach(d=>{
+    const inputs=d.querySelectorAll('input'); if(inputs[0].value) cardapio.locaisEntrega.push({nome:inputs[0].value,taxa:Number(inputs[1].value)});
+  });
+
+  document.querySelectorAll('#formasPagamento .list-item input').forEach(i=>{if(i.value) cardapio.formasPagamento.push(i.value);});
+
+  return cardapio;
+}
+
+// ===== BAIXAR JSON =====
+function baixarJSON(){
+  const cardapio=gerarCardapio();
+  const blob=new Blob([JSON.stringify(cardapio,null,2)],{type:'application/json'});
+  const link=document.createElement('a');
+  link.href=URL.createObjectURL(blob);
+  link.download='cardapio.json';
+  link.click();
 }
 
 // ===== INICIAR =====
 carregar();
 </script>
-
 </body>
 </html>
