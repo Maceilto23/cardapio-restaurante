@@ -8,7 +8,6 @@
   h1, h2 { color: #333; }
   label { display: block; margin-top: 10px; font-weight: bold; }
   input[type=text], input[type=number] { width: 300px; padding: 5px; margin-top: 5px; }
-  textarea { width: 100%; padding: 5px; margin-top: 5px; }
   button { padding: 10px 20px; margin-top: 20px; background: #28a745; color: white; border: none; cursor: pointer; }
   button:hover { background: #218838; }
   .day-section, .section { border: 1px solid #ccc; padding: 10px; margin-top: 15px; border-radius: 5px; background: #fff; }
@@ -61,16 +60,19 @@
 <div id="status"></div>
 
 <script>
-const USER = 'SEU_USUARIO_GITHUB'; 
+// ===== CONFIGURAÇÃO =====
+const USER = 'SEU_USUARIO_GITHUB';
 const REPO = 'SEU_REPOSITORIO';
-const FILE_PATH = 'cardapio.json';
+const FILE_PATH = 'cardapio.json'; // caminho relativo
 const TOKEN = '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';
 
 let SHA; // SHA do arquivo para envio
 
+// ===== CARREGAR O CARDÁPIO =====
 async function carregar() {
   try {
     const res = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${FILE_PATH}`);
+    if (!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`);
     const data = await res.json();
     SHA = data.sha;
     const cardapio = JSON.parse(atob(data.content));
@@ -109,13 +111,14 @@ async function carregar() {
     formasDiv.innerHTML = '';
     cardapio.formasPagamento.forEach(f => addForma(f));
 
+    document.getElementById('status').textContent = '✅ Cardápio carregado com sucesso!';
   } catch(e) {
-    document.getElementById('status').textContent = '❌ Erro ao carregar o cardápio';
+    document.getElementById('status').textContent = '❌ Erro ao carregar o cardápio: ' + e.message;
+    console.error(e);
   }
 }
 
-// ===== Funções de adicionar campos =====
-
+// ===== FUNÇÕES DE CAMPOS =====
 function addValorMarmita(nome = '', preco = '') {
   const div = document.createElement('div');
   div.className = 'list-item';
@@ -130,7 +133,8 @@ function addValorMarmita(nome = '', preco = '') {
 function addDiaCardapio(dia, dados) {
   const div = document.createElement('div');
   div.className = 'day-section';
-  div.innerHTML = `<h3>${dia}</h3><strong>Carnes:</strong><div class="carnes"></div><button onclick="addItem(this.parentNode.querySelector('.carnes'))">Adicionar Carne</button>
+  div.innerHTML = `<h3>${dia}</h3>
+                   <strong>Carnes:</strong><div class="carnes"></div><button onclick="addItem(this.parentNode.querySelector('.carnes'))">Adicionar Carne</button>
                    <strong>Acompanhamentos:</strong><div class="acompanhamentos"></div><button onclick="addItem(this.parentNode.querySelector('.acompanhamentos'))">Adicionar Acompanhamento</button>`;
   document.getElementById('cardapioDias').appendChild(div);
 
@@ -171,7 +175,6 @@ function addForma(valor='') {
 }
 
 // ===== SALVAR =====
-
 async function salvar() {
   const cardapio = {
     horarioFuncionamento: {
@@ -185,13 +188,11 @@ async function salvar() {
     formasPagamento: []
   };
 
-  // Valores Marmita
   document.querySelectorAll('#valoresMarmita .list-item').forEach(div => {
     const inputs = div.querySelectorAll('input');
     if(inputs[0].value) cardapio.valoresMarmita[inputs[0].value] = Number(inputs[1].value);
   });
 
-  // Cardápio diário
   document.querySelectorAll('#cardapioDias .day-section').forEach(div => {
     const dia = div.querySelector('h3').textContent;
     cardapio.cardapio[dia] = { carnes: [], acompanhamentos: [] };
@@ -199,22 +200,19 @@ async function salvar() {
     div.querySelectorAll('.acompanhamentos input').forEach(i => { if(i.value) cardapio.cardapio[dia].acompanhamentos.push(i.value); });
   });
 
-  // Refrigerantes
   document.querySelectorAll('#refrigerantes .list-item').forEach(div => {
+    const tipo = div.dataset.tipo;
     const inputs = div.querySelectorAll('input');
-    if(inputs[0].value) cardapio.refrigerantes[div.dataset.tipo].push({nome: inputs[0].value, preco: Number(inputs[1].value)});
+    if(inputs[0].value) cardapio.refrigerantes[tipo].push({ nome: inputs[0].value, preco: Number(inputs[1].value) });
   });
 
-  // Locais de entrega
   document.querySelectorAll('#locaisEntrega .list-item').forEach(div => {
     const inputs = div.querySelectorAll('input');
-    if(inputs[0].value) cardapio.locaisEntrega.push({nome: inputs[0].value, taxa: Number(inputs[1].value)});
+    if(inputs[0].value) cardapio.locaisEntrega.push({ nome: inputs[0].value, taxa: Number(inputs[1].value) });
   });
 
-  // Formas de pagamento
   document.querySelectorAll('#formasPagamento .list-item input').forEach(i => { if(i.value) cardapio.formasPagamento.push(i.value); });
 
-  // Envia para GitHub
   try {
     const res = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${FILE_PATH}`, {
       method: 'PUT',
@@ -223,7 +221,7 @@ async function salvar() {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        message: 'Atualização do cardápio via painel amigável',
+        message: "Atualização do cardápio via painel",
         content: btoa(JSON.stringify(cardapio, null, 2)),
         sha: SHA
       })
@@ -231,12 +229,13 @@ async function salvar() {
     const result = await res.json();
     if(res.ok) {
       SHA = result.content.sha;
-      document.getElementById('status').textContent = '✅ Alterações salvas!';
+      document.getElementById('status').textContent = '✅ Alterações salvas com sucesso!';
     } else {
       document.getElementById('status').textContent = '❌ ' + result.message;
     }
   } catch(e) {
-    document.getElementById('status').textContent = '❌ Erro ao salvar';
+    document.getElementById('status').textContent = '❌ Erro ao salvar: ' + e.message;
+    console.error(e);
   }
 }
 
