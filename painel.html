@@ -2,19 +2,24 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel do Cardápio Local</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel do Cardápio Local - Mobile</title>
 <style>
-body { font-family: Arial; margin: 20px; background: #f9f9f9; }
-h1,h2 { color: #333; }
+body { font-family: Arial, sans-serif; margin: 10px; background: #f9f9f9; }
+h1,h2,h3 { color: #333; margin-bottom: 5px; }
 label { display: block; margin-top: 10px; font-weight: bold; }
-input[type=text],input[type=number] { width:300px; padding:5px; margin-top:5px; }
-button { padding:10px 20px; margin-top:20px; background:#28a745;color:white;border:none;cursor:pointer; }
+input[type=text], input[type=number] { width: 100%; padding:8px; margin-top:5px; font-size: 16px; }
+button { padding:10px; margin-top:10px; background:#28a745; color:white; border:none; cursor:pointer; font-size:16px; border-radius:5px; }
 button:hover { background:#218838; }
-.day-section,.section { border:1px solid #ccc; padding:10px; margin-top:15px; border-radius:5px; background:#fff; }
-.list-item { display:flex; gap:10px; margin-top:5px; }
-.list-item input { flex:1; }
-.remove-btn { background:red;color:white;border:none;cursor:pointer;padding:3px 8px; }
-#status { margin-bottom:15px; }
+.day-section, .section { border:1px solid #ccc; padding:10px; margin-top:15px; border-radius:5px; background:#fff; }
+.list-item { display:flex; flex-direction: column; gap:5px; margin-top:5px; }
+.list-item input { flex:1; font-size: 16px; }
+.list-item button { width: fit-content; align-self: flex-start; background:red; color:white; border:none; cursor:pointer; padding:5px 10px; font-size:14px; border-radius:3px; }
+#status { margin-bottom:15px; font-size: 16px; }
+@media(min-width:600px){
+  .list-item { flex-direction: row; align-items: center; }
+  .list-item button { margin-left:10px; align-self: auto; }
+}
 </style>
 </head>
 <body>
@@ -25,8 +30,8 @@ button:hover { background:#218838; }
 <div id="painel">
   <div class="section">
     <h2>Horário de Funcionamento</h2>
-    <label>Abertura: <input type="text" id="abertura"></label>
-    <label>Fechamento: <input type="text" id="fechamento"></label>
+    <label>Abertura: <input type="text" id="abertura" placeholder="Ex: 11:30"></label>
+    <label>Fechamento: <input type="text" id="fechamento" placeholder="Ex: 14:00"></label>
   </div>
 
   <div class="section">
@@ -38,6 +43,7 @@ button:hover { background:#218838; }
   <div class="section">
     <h2>Cardápio Diário</h2>
     <div id="cardapioDias"></div>
+    <button onclick="addDiaCardapio('Novo Dia')">Adicionar Dia</button>
   </div>
 
   <div class="section">
@@ -68,15 +74,17 @@ function addValorMarmita(nome='', preco=''){
   const div=document.createElement('div'); div.className='list-item';
   div.innerHTML=`<input type="text" placeholder="Nome da opção" value="${nome}">
                  <input type="number" placeholder="Preço" value="${preco}">
-                 <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+                 <button onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('valoresMarmita').appendChild(div);
 }
 
 function addDiaCardapio(dia='Dia', dados={carnes:[], acompanhamentos:[]}){
   const div=document.createElement('div'); div.className='day-section';
   div.innerHTML=`<h3>${dia}</h3>
-                 <strong>Carnes:</strong><div class="carnes"></div><button onclick="addItem(this.parentNode.querySelector('.carnes'))">Adicionar Carne</button>
-                 <strong>Acompanhamentos:</strong><div class="acompanhamentos"></div><button onclick="addItem(this.parentNode.querySelector('.acompanhamentos'))">Adicionar Acompanhamento</button>`;
+                 <strong>Carnes:</strong><div class="carnes"></div>
+                 <button onclick="addItem(this.parentNode.querySelector('.carnes'))">Adicionar Carne</button>
+                 <strong>Acompanhamentos:</strong><div class="acompanhamentos"></div>
+                 <button onclick="addItem(this.parentNode.querySelector('.acompanhamentos'))">Adicionar Acompanhamento</button>`;
   document.getElementById('cardapioDias').appendChild(div);
   dados.carnes.forEach(c=>addItem(div.querySelector('.carnes'),c));
   dados.acompanhamentos.forEach(a=>addItem(div.querySelector('.acompanhamentos'),a));
@@ -84,7 +92,7 @@ function addDiaCardapio(dia='Dia', dados={carnes:[], acompanhamentos:[]}){
 
 function addItem(container,value=''){
   const div=document.createElement('div'); div.className='list-item';
-  div.innerHTML=`<input type="text" value="${value}"><button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+  div.innerHTML=`<input type="text" value="${value}"><button onclick="this.parentNode.remove()">X</button>`;
   container.appendChild(div);
 }
 
@@ -93,7 +101,7 @@ function addRefrigerante(tipo,nome='',preco=''){
   container.innerHTML=`<strong>${tipo}:</strong>
                        <input type="text" placeholder="Nome" value="${nome}">
                        <input type="number" placeholder="Preço" value="${preco}">
-                       <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+                       <button onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('refrigerantes').appendChild(container);
 }
 
@@ -101,14 +109,14 @@ function addLocal(nome='',taxa=''){
   const div=document.createElement('div'); div.className='list-item';
   div.innerHTML=`<input type="text" placeholder="Local" value="${nome}">
                  <input type="number" placeholder="Taxa" value="${taxa}">
-                 <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+                 <button onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('locaisEntrega').appendChild(div);
 }
 
 function addForma(valor=''){
   const div=document.createElement('div'); div.className='list-item';
   div.innerHTML=`<input type="text" placeholder="Forma de pagamento" value="${valor}">
-                 <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+                 <button onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('formasPagamento').appendChild(div);
 }
 
@@ -119,11 +127,7 @@ function gerarCardapio(){
       abertura:document.getElementById('abertura').value,
       fechamento:document.getElementById('fechamento').value
     },
-    valoresMarmita:{}, 
-    cardapio:{}, 
-    refrigerantes:{Lata:[], '2 Litros':[]}, 
-    locaisEntrega:[], 
-    formasPagamento:[]
+    valoresMarmita:{}, cardapio:{}, refrigerantes:{Lata:[], '2 Litros':[]}, locaisEntrega:[], formasPagamento:[]
   };
 
   document.querySelectorAll('#valoresMarmita .list-item').forEach(d=>{
