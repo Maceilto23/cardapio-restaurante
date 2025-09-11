@@ -75,7 +75,8 @@ async function carregar() {
     if (!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`);
     const data = await res.json();
     SHA = data.sha;
-    const cardapio = JSON.parse(atob(data.content));
+    const cardapio = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+
 
     document.getElementById('abertura').value = cardapio.horarioFuncionamento.abertura;
     document.getElementById('fechamento').value = cardapio.horarioFuncionamento.fechamento;
@@ -240,3 +241,4 @@ carregar();
 
 </body>
 </html>
+
