@@ -2,36 +2,31 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel do Cardápio Local - Mobile</title>
+<title>Painel do Cardápio GitHub</title>
 <style>
-body { font-family: Arial, sans-serif; margin: 10px; background: #f9f9f9; }
-h1,h2,h3 { color: #333; margin-bottom: 5px; }
+body { font-family: Arial; margin: 20px; background: #f9f9f9; }
+h1,h2,h3 { color: #333; }
 label { display: block; margin-top: 10px; font-weight: bold; }
-input[type=text], input[type=number] { width: 100%; padding:8px; margin-top:5px; font-size: 16px; }
-button { padding:10px; margin-top:10px; background:#28a745; color:white; border:none; cursor:pointer; font-size:16px; border-radius:5px; }
+input[type=text], input[type=number] { width: 300px; padding:5px; margin-top:5px; }
+button { padding:10px 20px; margin-top:20px; background:#28a745;color:white;border:none;cursor:pointer; }
 button:hover { background:#218838; }
 .day-section, .section { border:1px solid #ccc; padding:10px; margin-top:15px; border-radius:5px; background:#fff; }
-.list-item { display:flex; flex-direction: column; gap:5px; margin-top:5px; }
-.list-item input { flex:1; font-size: 16px; }
-.list-item button { width: fit-content; align-self: flex-start; background:red; color:white; border:none; cursor:pointer; padding:5px 10px; font-size:14px; border-radius:3px; }
-#status { margin-bottom:15px; font-size: 16px; }
-@media(min-width:600px){
-  .list-item { flex-direction: row; align-items: center; }
-  .list-item button { margin-left:10px; align-self: auto; }
-}
+.list-item { display:flex; gap:10px; margin-top:5px; }
+.list-item input { flex:1; }
+.remove-btn { background:red;color:white;border:none;cursor:pointer;padding:3px 8px; }
+#status { margin-bottom:15px; }
 </style>
 </head>
 <body>
 
-<h1>Painel do Cardápio Local</h1>
-<div id="status">🔄 Pronto para edição</div>
+<h1>Painel do Cardápio GitHub</h1>
+<div id="status">🔄 Carregando...</div>
 
-<div id="painel">
+<div id="painel" style="display:none;">
   <div class="section">
     <h2>Horário de Funcionamento</h2>
-    <label>Abertura: <input type="text" id="abertura" placeholder="Ex: 11:30"></label>
-    <label>Fechamento: <input type="text" id="fechamento" placeholder="Ex: 14:00"></label>
+    <label>Abertura: <input type="text" id="abertura"></label>
+    <label>Fechamento: <input type="text" id="fechamento"></label>
   </div>
 
   <div class="section">
@@ -43,7 +38,6 @@ button:hover { background:#218838; }
   <div class="section">
     <h2>Cardápio Diário</h2>
     <div id="cardapioDias"></div>
-    <button onclick="addDiaCardapio('Novo Dia')">Adicionar Dia</button>
   </div>
 
   <div class="section">
@@ -65,7 +59,7 @@ button:hover { background:#218838; }
     <button onclick="addForma()">Adicionar Forma</button>
   </div>
 
-  <button onclick="baixarJSON()">💾 Salvar/Download JSON</button>
+  <button onclick="baixarJSON()">💾 Baixar cardápio.json</button>
 </div>
 
 <script>
@@ -74,17 +68,15 @@ function addValorMarmita(nome='', preco=''){
   const div=document.createElement('div'); div.className='list-item';
   div.innerHTML=`<input type="text" placeholder="Nome da opção" value="${nome}">
                  <input type="number" placeholder="Preço" value="${preco}">
-                 <button onclick="this.parentNode.remove()">X</button>`;
+                 <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('valoresMarmita').appendChild(div);
 }
 
-function addDiaCardapio(dia='Dia', dados={carnes:[], acompanhamentos:[]}){
+function addDiaCardapio(dia,dados={carnes:[],acompanhamentos:[]}){
   const div=document.createElement('div'); div.className='day-section';
   div.innerHTML=`<h3>${dia}</h3>
-                 <strong>Carnes:</strong><div class="carnes"></div>
-                 <button onclick="addItem(this.parentNode.querySelector('.carnes'))">Adicionar Carne</button>
-                 <strong>Acompanhamentos:</strong><div class="acompanhamentos"></div>
-                 <button onclick="addItem(this.parentNode.querySelector('.acompanhamentos'))">Adicionar Acompanhamento</button>`;
+                 <strong>Carnes:</strong><div class="carnes"></div><button onclick="addItem(this.parentNode.querySelector('.carnes'))">Adicionar Carne</button>
+                 <strong>Acompanhamentos:</strong><div class="acompanhamentos"></div><button onclick="addItem(this.parentNode.querySelector('.acompanhamentos'))">Adicionar Acompanhamento</button>`;
   document.getElementById('cardapioDias').appendChild(div);
   dados.carnes.forEach(c=>addItem(div.querySelector('.carnes'),c));
   dados.acompanhamentos.forEach(a=>addItem(div.querySelector('.acompanhamentos'),a));
@@ -92,7 +84,7 @@ function addDiaCardapio(dia='Dia', dados={carnes:[], acompanhamentos:[]}){
 
 function addItem(container,value=''){
   const div=document.createElement('div'); div.className='list-item';
-  div.innerHTML=`<input type="text" value="${value}"><button onclick="this.parentNode.remove()">X</button>`;
+  div.innerHTML=`<input type="text" value="${value}"><button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
   container.appendChild(div);
 }
 
@@ -101,7 +93,7 @@ function addRefrigerante(tipo,nome='',preco=''){
   container.innerHTML=`<strong>${tipo}:</strong>
                        <input type="text" placeholder="Nome" value="${nome}">
                        <input type="number" placeholder="Preço" value="${preco}">
-                       <button onclick="this.parentNode.remove()">X</button>`;
+                       <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('refrigerantes').appendChild(container);
 }
 
@@ -109,67 +101,94 @@ function addLocal(nome='',taxa=''){
   const div=document.createElement('div'); div.className='list-item';
   div.innerHTML=`<input type="text" placeholder="Local" value="${nome}">
                  <input type="number" placeholder="Taxa" value="${taxa}">
-                 <button onclick="this.parentNode.remove()">X</button>`;
+                 <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('locaisEntrega').appendChild(div);
 }
 
 function addForma(valor=''){
   const div=document.createElement('div'); div.className='list-item';
   div.innerHTML=`<input type="text" placeholder="Forma de pagamento" value="${valor}">
-                 <button onclick="this.parentNode.remove()">X</button>`;
+                 <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('formasPagamento').appendChild(div);
 }
 
-// ===== GERAR CARDÁPIO =====
-function gerarCardapio(){
-  const cardapio={
+// ===== CARREGAR CARDÁPIO DO GITHUB =====
+async function carregar(){
+  try {
+    const res = await fetch('https://raw.githubusercontent.com/Maceilto23/cardapio-restaurante/main/cardapio.json');
+    if(!res.ok) throw new Error('Erro ao carregar arquivo do GitHub');
+    const cardapio = await res.json();
+
+    document.getElementById('abertura').value = cardapio.horarioFuncionamento?.abertura || '';
+    document.getElementById('fechamento').value = cardapio.horarioFuncionamento?.fechamento || '';
+
+    const valoresDiv=document.getElementById('valoresMarmita'); valoresDiv.innerHTML='';
+    for(let key in cardapio.valoresMarmita) addValorMarmita(key, cardapio.valoresMarmita[key]);
+
+    const diasDiv=document.getElementById('cardapioDias'); diasDiv.innerHTML='';
+    for(let dia in cardapio.cardapio) addDiaCardapio(dia, cardapio.cardapio[dia]);
+
+    const refDiv=document.getElementById('refrigerantes'); refDiv.innerHTML='';
+    for(let tipo in cardapio.refrigerantes) cardapio.refrigerantes[tipo].forEach(r=>addRefrigerante(tipo,r.nome,r.preco));
+
+    const locaisDiv=document.getElementById('locaisEntrega'); locaisDiv.innerHTML='';
+    cardapio.locaisEntrega?.forEach(l=>addLocal(l.nome,l.taxa));
+
+    const formasDiv=document.getElementById('formasPagamento'); formasDiv.innerHTML='';
+    cardapio.formasPagamento?.forEach(f=>addForma(f));
+
+    document.getElementById('painel').style.display='block';
+    document.getElementById('status').textContent='✅ Cardápio carregado';
+  } catch(e){
+    document.getElementById('status').textContent='❌ '+e.message;
+    console.error(e);
+  }
+}
+
+// ===== BAIXAR JSON =====
+function baixarJSON(){
+  const cardapio = {
     horarioFuncionamento:{
       abertura:document.getElementById('abertura').value,
       fechamento:document.getElementById('fechamento').value
     },
-    valoresMarmita:{}, cardapio:{}, refrigerantes:{Lata:[], '2 Litros':[]}, locaisEntrega:[], formasPagamento:[]
+    valoresMarmita:{}, cardapio:{}, refrigerantes:{ "Lata": [], "2 Litros": [] },
+    locaisEntrega:[], formasPagamento:[]
   };
 
-  document.querySelectorAll('#valoresMarmita .list-item').forEach(d=>{
-    const inputs=d.querySelectorAll('input'); 
-    if(inputs[0].value) cardapio.valoresMarmita[inputs[0].value]=Number(inputs[1].value);
+  document.querySelectorAll('#valoresMarmita .list-item').forEach(div=>{
+    const inputs=div.querySelectorAll('input'); 
+    if(inputs[0].value) cardapio.valoresMarmita[inputs[0].value] = Number(inputs[1].value);
   });
 
-  document.querySelectorAll('#cardapioDias .day-section').forEach(d=>{
-    const dia=d.querySelector('h3').textContent;
+  document.querySelectorAll('#cardapioDias .day-section').forEach(div=>{
+    const dia=div.querySelector('h3').textContent;
     cardapio.cardapio[dia]={carnes:[],acompanhamentos:[]};
-    d.querySelectorAll('.carnes input').forEach(i=>{if(i.value) cardapio.cardapio[dia].carnes.push(i.value);});
-    d.querySelectorAll('.acompanhamentos input').forEach(i=>{if(i.value) cardapio.cardapio[dia].acompanhamentos.push(i.value);});
+    div.querySelectorAll('.carnes input').forEach(i=>{if(i.value) cardapio.cardapio[dia].carnes.push(i.value);});
+    div.querySelectorAll('.acompanhamentos input').forEach(i=>{if(i.value) cardapio.cardapio[dia].acompanhamentos.push(i.value);});
   });
 
-  document.querySelectorAll('#refrigerantes .list-item').forEach(d=>{
-    const tipo=d.dataset.tipo; const inputs=d.querySelectorAll('input');
+  document.querySelectorAll('#refrigerantes .list-item').forEach(div=>{
+    const tipo=div.dataset.tipo; const inputs=div.querySelectorAll('input');
     if(inputs[0].value) cardapio.refrigerantes[tipo].push({nome:inputs[0].value, preco:Number(inputs[1].value)});
   });
 
-  document.querySelectorAll('#locaisEntrega .list-item').forEach(d=>{
-    const inputs=d.querySelectorAll('input'); 
+  document.querySelectorAll('#locaisEntrega .list-item').forEach(div=>{
+    const inputs=div.querySelectorAll('input'); 
     if(inputs[0].value) cardapio.locaisEntrega.push({nome:inputs[0].value,taxa:Number(inputs[1].value)});
   });
 
   document.querySelectorAll('#formasPagamento .list-item input').forEach(i=>{if(i.value) cardapio.formasPagamento.push(i.value);});
 
-  return cardapio;
-}
-
-// ===== BAIXAR JSON =====
-function baixarJSON(){
-  const cardapio = gerarCardapio();
-  const blob = new Blob([JSON.stringify(cardapio, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(cardapio,null,2)], {type:"application/json"});
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = 'cardapio.json';
+  link.download = "cardapio.json";
   link.click();
-  alert('✅ Arquivo cardapio.json gerado e pronto para upload manual no GitHub!');
 }
 
-// ===== INICIAR COM UM DIA PADRÃO =====
-addDiaCardapio('Segunda-feira');
+// ===== INICIAR =====
+carregar();
 </script>
 
 </body>
