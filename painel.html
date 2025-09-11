@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel Amigável do Cardápio</title>
+<title>Painel do Cardápio - GitHub</title>
 <style>
   body { font-family: Arial; margin: 20px; background: #f9f9f9; }
   h1, h2 { color: #333; }
@@ -14,17 +14,16 @@
   .list-item { display: flex; gap: 10px; margin-top: 5px; }
   .list-item input { flex: 1; }
   .remove-btn { background: red; color: white; border: none; cursor: pointer; padding: 3px 8px; }
+  #status { margin-bottom: 15px; }
 </style>
 </head>
 <body>
 
-<h1>Painel Amigável do Cardápio</h1>
-
-<!-- Login GitHub -->
-<button id="loginBtn" onclick="loginGitHub()">🔑 Login GitHub</button>
-<div id="status"></div>
+<h1>Painel do Cardápio</h1>
+<div id="status">🔄 Carregando...</div>
 
 <div id="painel" style="display:none;">
+
   <div class="section">
     <h2>Horário de Funcionamento</h2>
     <label>Abertura: <input type="text" id="abertura"></label>
@@ -65,44 +64,36 @@
 </div>
 
 <script>
-// ===== CONFIGURAÇÃO =====
-const USER = 'Maceilto23';
-const REPO = 'cardapio-restaurante';
-const FILE_PATH = 'cardapio.json';
-let SHA;
-let access_token = null;
+const API_URL = 'http://localhost:3000'; // backend Express local
+const TOKEN = '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'; // token pessoal GitHub
 
-// ===== LOGIN via GitHub OAuth =====
-function loginGitHub() {
-  const clientId = '20325731'; // substitua pelo seu Client ID
-  const redirectUri = window.location.href;
-  const scope = 'repo';
-  window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
-}
+let currentUser = null;
 
-// ===== Verifica código OAuth na URL =====
-async function checkOAuth() {
-  const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
-  if(!code) return;
-
-  // Aqui você precisaria de um proxy para trocar code por token
-  // Exemplo: fetch('https://meuproxy.com/exchange_token?code=' + code)
-  // Para fins de teste, vamos exibir aviso:
-  document.getElementById('status').textContent = '⚠️ Token OAuth precisa ser obtido via backend/proxy';
+// ===== PEGAR USUÁRIO LOGADO =====
+async function getGitHubUser() {
+  try {
+    const res = await fetch('https://api.github.com/user', {
+      headers: { 'Authorization': `token ${TOKEN}` }
+    });
+    if(!res.ok) throw new Error('Não foi possível obter usuário GitHub');
+    const data = await res.json();
+    currentUser = data.login;
+    document.getElementById('status').textContent = `Olá, ${currentUser}! 🔄 Carregando cardápio...`;
+  } catch(e) {
+    document.getElementById('status').textContent = '❌ ' + e.message;
+    console.error(e);
+  }
 }
 
 // ===== CARREGAR CARDÁPIO =====
 async function carregar() {
   try {
-    const res = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${FILE_PATH}`);
-    if (!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`);
-    const data = await res.json();
-    SHA = data.sha;
-    const cardapio = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+    const res = await fetch(`${API_URL}/cardapio`);
+    if(!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`);
+    const cardapio = await res.json();
 
-    document.getElementById('abertura').value = cardapio.horarioFuncionamento.abertura;
-    document.getElementById('fechamento').value = cardapio.horarioFuncionamento.fechamento;
+    document.getElementById('abertura').value = cardapio.horarioFuncionamento.abertura || '';
+    document.getElementById('fechamento').value = cardapio.horarioFuncionamento.fechamento || '';
 
     const valoresDiv = document.getElementById('valoresMarmita');
     valoresDiv.innerHTML = '';
@@ -114,7 +105,8 @@ async function carregar() {
 
     const refDiv = document.getElementById('refrigerantes');
     refDiv.innerHTML = '';
-    for (let tipo in cardapio.refrigerantes) cardapio.refrigerantes[tipo].forEach(r => addRefrigerante(tipo, r.nome, r.preco));
+    for (let tipo in cardapio.refrigerantes)
+      cardapio.refrigerantes[tipo].forEach(r => addRefrigerante(tipo, r.nome, r.preco));
 
     const locaisDiv = document.getElementById('locaisEntrega');
     locaisDiv.innerHTML = '';
@@ -125,7 +117,7 @@ async function carregar() {
     cardapio.formasPagamento.forEach(f => addForma(f));
 
     document.getElementById('painel').style.display = 'block';
-    document.getElementById('status').textContent = '✅ Cardápio carregado com sucesso!';
+    document.getElementById('status').textContent = `Olá, ${currentUser}! ✅ Cardápio carregado.`;
   } catch(e) {
     document.getElementById('status').textContent = '❌ Erro ao carregar: ' + e.message;
     console.error(e);
@@ -136,11 +128,9 @@ async function carregar() {
 function addValorMarmita(nome = '', preco = '') {
   const div = document.createElement('div');
   div.className = 'list-item';
-  div.innerHTML = `
-    <input type="text" placeholder="Nome da opção" value="${nome}">
-    <input type="number" placeholder="Preço" value="${preco}">
-    <button class="remove-btn" onclick="this.parentNode.remove()">X</button>
-  `;
+  div.innerHTML = `<input type="text" placeholder="Nome da opção" value="${nome}">
+                   <input type="number" placeholder="Preço" value="${preco}">
+                   <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('valoresMarmita').appendChild(div);
 }
 
@@ -177,24 +167,22 @@ function addRefrigerante(tipo, nome='', preco='') {
 function addLocal(nome='', taxa='') {
   const div = document.createElement('div');
   div.className = 'list-item';
-  div.innerHTML = `<input type="text" placeholder="Local" value="${nome}"><input type="number" placeholder="Taxa" value="${taxa}"><button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+  div.innerHTML = `<input type="text" placeholder="Local" value="${nome}">
+                   <input type="number" placeholder="Taxa" value="${taxa}">
+                   <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('locaisEntrega').appendChild(div);
 }
 
 function addForma(valor='') {
   const div = document.createElement('div');
   div.className = 'list-item';
-  div.innerHTML = `<input type="text" placeholder="Forma de pagamento" value="${valor}"><button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+  div.innerHTML = `<input type="text" placeholder="Forma de pagamento" value="${valor}">
+                   <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('formasPagamento').appendChild(div);
 }
 
-// ===== SALVAR =====
+// ===== SALVAR CARDÁPIO =====
 async function salvar() {
-  if(!access_token) {
-    alert('⚠️ Faça login no GitHub primeiro');
-    return;
-  }
-
   const cardapio = {
     horarioFuncionamento: {
       abertura: document.getElementById('abertura').value,
@@ -232,12 +220,29 @@ async function salvar() {
 
   document.querySelectorAll('#formasPagamento .list-item input').forEach(i => { if(i.value) cardapio.formasPagamento.push(i.value); });
 
-  alert('⚠️ Aqui você precisaria de proxy/backend para usar o token OAuth com segurança');
+  try {
+    const res = await fetch(`${API_URL}/cardapio`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
+      body: JSON.stringify(cardapio)
+    });
+    const data = await res.json();
+    if(data.sucesso) {
+      alert('✅ Cardápio salvo com sucesso!');
+      document.getElementById('status').textContent = `Olá, ${currentUser}! 💾 Último salvamento: agora`;
+    } else {
+      alert('❌ Erro: ' + (data.erro || 'Desconhecido'));
+    }
+  } catch(e) {
+    alert('❌ Falha ao salvar: ' + e.message);
+  }
 }
 
-checkOAuth();
-carregar();
+// ===== INICIALIZA =====
+(async () => {
+  await getGitHubUser();
+  carregar();
+})();
 </script>
 </body>
 </html>
-
