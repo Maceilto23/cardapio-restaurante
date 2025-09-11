@@ -2,19 +2,19 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel do Cardápio - GitHub</title>
+<title>Painel do Cardápio</title>
 <style>
-  body { font-family: Arial; margin: 20px; background: #f9f9f9; }
-  h1, h2 { color: #333; }
-  label { display: block; margin-top: 10px; font-weight: bold; }
-  input[type=text], input[type=number] { width: 300px; padding: 5px; margin-top: 5px; }
-  button { padding: 10px 20px; margin-top: 20px; background: #28a745; color: white; border: none; cursor: pointer; }
-  button:hover { background: #218838; }
-  .day-section, .section { border: 1px solid #ccc; padding: 10px; margin-top: 15px; border-radius: 5px; background: #fff; }
-  .list-item { display: flex; gap: 10px; margin-top: 5px; }
-  .list-item input { flex: 1; }
-  .remove-btn { background: red; color: white; border: none; cursor: pointer; padding: 3px 8px; }
-  #status { margin-bottom: 15px; }
+body { font-family: Arial; margin: 20px; background: #f9f9f9; }
+h1,h2 { color: #333; }
+label { display: block; margin-top: 10px; font-weight: bold; }
+input[type=text],input[type=number] { width:300px; padding:5px; margin-top:5px; }
+button { padding:10px 20px; margin-top:20px; background:#28a745;color:white;border:none;cursor:pointer; }
+button:hover { background:#218838; }
+.day-section,.section { border:1px solid #ccc; padding:10px; margin-top:15px; border-radius:5px; background:#fff; }
+.list-item { display:flex; gap:10px; margin-top:5px; }
+.list-item input { flex:1; }
+.remove-btn { background:red;color:white;border:none;cursor:pointer;padding:3px 8px; }
+#status { margin-bottom:15px; }
 </style>
 </head>
 <body>
@@ -23,7 +23,6 @@
 <div id="status">🔄 Carregando...</div>
 
 <div id="painel" style="display:none;">
-
   <div class="section">
     <h2>Horário de Funcionamento</h2>
     <label>Abertura: <input type="text" id="abertura"></label>
@@ -65,184 +64,138 @@
 
 <script>
 const API_URL = 'http://localhost:3000'; // backend Express local
-const TOKEN = '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'; // token pessoal GitHub
-
-let currentUser = null;
-
-// ===== PEGAR USUÁRIO LOGADO =====
-async function getGitHubUser() {
-  try {
-    const res = await fetch('https://api.github.com/user', {
-      headers: { 'Authorization': `token ${TOKEN}` }
-    });
-    if(!res.ok) throw new Error('Não foi possível obter usuário GitHub');
-    const data = await res.json();
-    currentUser = data.login;
-    document.getElementById('status').textContent = `Olá, ${currentUser}! 🔄 Carregando cardápio...`;
-  } catch(e) {
-    document.getElementById('status').textContent = '❌ ' + e.message;
-    console.error(e);
-  }
-}
+const TOKEN = 'c3a46c2fe5f946fe8b707ff285a5cecc57f58240dca3d74c1c89e22a79c0dc29'; // token local
 
 // ===== CARREGAR CARDÁPIO =====
 async function carregar() {
   try {
     const res = await fetch(`${API_URL}/cardapio`);
-    if(!res.ok) throw new Error(`Erro ${res.status}: ${res.statusText}`);
+    if(!res.ok) throw new Error('Erro ao carregar cardápio');
     const cardapio = await res.json();
 
     document.getElementById('abertura').value = cardapio.horarioFuncionamento.abertura || '';
     document.getElementById('fechamento').value = cardapio.horarioFuncionamento.fechamento || '';
 
-    const valoresDiv = document.getElementById('valoresMarmita');
-    valoresDiv.innerHTML = '';
+    const valoresDiv = document.getElementById('valoresMarmita'); valoresDiv.innerHTML='';
     for (let key in cardapio.valoresMarmita) addValorMarmita(key, cardapio.valoresMarmita[key]);
 
-    const diasDiv = document.getElementById('cardapioDias');
-    diasDiv.innerHTML = '';
+    const diasDiv = document.getElementById('cardapioDias'); diasDiv.innerHTML='';
     for (let dia in cardapio.cardapio) addDiaCardapio(dia, cardapio.cardapio[dia]);
 
-    const refDiv = document.getElementById('refrigerantes');
-    refDiv.innerHTML = '';
-    for (let tipo in cardapio.refrigerantes)
-      cardapio.refrigerantes[tipo].forEach(r => addRefrigerante(tipo, r.nome, r.preco));
+    const refDiv = document.getElementById('refrigerantes'); refDiv.innerHTML='';
+    for (let tipo in cardapio.refrigerantes) cardapio.refrigerantes[tipo].forEach(r => addRefrigerante(tipo, r.nome, r.preco));
 
-    const locaisDiv = document.getElementById('locaisEntrega');
-    locaisDiv.innerHTML = '';
+    const locaisDiv = document.getElementById('locaisEntrega'); locaisDiv.innerHTML='';
     cardapio.locaisEntrega.forEach(l => addLocal(l.nome, l.taxa));
 
-    const formasDiv = document.getElementById('formasPagamento');
-    formasDiv.innerHTML = '';
+    const formasDiv = document.getElementById('formasPagamento'); formasDiv.innerHTML='';
     cardapio.formasPagamento.forEach(f => addForma(f));
 
-    document.getElementById('painel').style.display = 'block';
-    document.getElementById('status').textContent = `Olá, ${currentUser}! ✅ Cardápio carregado.`;
+    document.getElementById('painel').style.display='block';
+    document.getElementById('status').textContent = '✅ Cardápio carregado.';
   } catch(e) {
-    document.getElementById('status').textContent = '❌ Erro ao carregar: ' + e.message;
-    console.error(e);
+    document.getElementById('status').textContent = '❌ ' + e.message;
   }
 }
 
 // ===== FUNÇÕES DE CAMPOS =====
-function addValorMarmita(nome = '', preco = '') {
-  const div = document.createElement('div');
-  div.className = 'list-item';
-  div.innerHTML = `<input type="text" placeholder="Nome da opção" value="${nome}">
-                   <input type="number" placeholder="Preço" value="${preco}">
-                   <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+function addValorMarmita(nome='', preco='') {
+  const div=document.createElement('div'); div.className='list-item';
+  div.innerHTML=`<input type="text" placeholder="Nome da opção" value="${nome}">
+                 <input type="number" placeholder="Preço" value="${preco}">
+                 <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('valoresMarmita').appendChild(div);
 }
 
-function addDiaCardapio(dia, dados) {
-  const div = document.createElement('div');
-  div.className = 'day-section';
-  div.innerHTML = `<h3>${dia}</h3>
-                   <strong>Carnes:</strong><div class="carnes"></div><button onclick="addItem(this.parentNode.querySelector('.carnes'))">Adicionar Carne</button>
-                   <strong>Acompanhamentos:</strong><div class="acompanhamentos"></div><button onclick="addItem(this.parentNode.querySelector('.acompanhamentos'))">Adicionar Acompanhamento</button>`;
+function addDiaCardapio(dia,dados){
+  const div=document.createElement('div'); div.className='day-section';
+  div.innerHTML=`<h3>${dia}</h3>
+                 <strong>Carnes:</strong><div class="carnes"></div><button onclick="addItem(this.parentNode.querySelector('.carnes'))">Adicionar Carne</button>
+                 <strong>Acompanhamentos:</strong><div class="acompanhamentos"></div><button onclick="addItem(this.parentNode.querySelector('.acompanhamentos'))">Adicionar Acompanhamento</button>`;
   document.getElementById('cardapioDias').appendChild(div);
-
-  dados.carnes.forEach(c => addItem(div.querySelector('.carnes'), c));
-  dados.acompanhamentos.forEach(a => addItem(div.querySelector('.acompanhamentos'), a));
+  dados.carnes.forEach(c=>addItem(div.querySelector('.carnes'),c));
+  dados.acompanhamentos.forEach(a=>addItem(div.querySelector('.acompanhamentos'),a));
 }
 
-function addItem(container, value='') {
-  const div = document.createElement('div');
-  div.className = 'list-item';
-  div.innerHTML = `<input type="text" value="${value}"><button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+function addItem(container,value=''){
+  const div=document.createElement('div'); div.className='list-item';
+  div.innerHTML=`<input type="text" value="${value}"><button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
   container.appendChild(div);
 }
 
-function addRefrigerante(tipo, nome='', preco='') {
-  const container = document.createElement('div');
-  container.className = 'list-item';
-  container.dataset.tipo = tipo;
-  container.innerHTML = `<strong>${tipo}:</strong>
-    <input type="text" placeholder="Nome" value="${nome}">
-    <input type="number" placeholder="Preço" value="${preco}">
-    <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+function addRefrigerante(tipo,nome='',preco=''){
+  const container=document.createElement('div'); container.className='list-item'; container.dataset.tipo=tipo;
+  container.innerHTML=`<strong>${tipo}:</strong>
+                       <input type="text" placeholder="Nome" value="${nome}">
+                       <input type="number" placeholder="Preço" value="${preco}">
+                       <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('refrigerantes').appendChild(container);
 }
 
-function addLocal(nome='', taxa='') {
-  const div = document.createElement('div');
-  div.className = 'list-item';
-  div.innerHTML = `<input type="text" placeholder="Local" value="${nome}">
-                   <input type="number" placeholder="Taxa" value="${taxa}">
-                   <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+function addLocal(nome='',taxa=''){
+  const div=document.createElement('div'); div.className='list-item';
+  div.innerHTML=`<input type="text" placeholder="Local" value="${nome}">
+                 <input type="number" placeholder="Taxa" value="${taxa}">
+                 <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('locaisEntrega').appendChild(div);
 }
 
-function addForma(valor='') {
-  const div = document.createElement('div');
-  div.className = 'list-item';
-  div.innerHTML = `<input type="text" placeholder="Forma de pagamento" value="${valor}">
-                   <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+function addForma(valor=''){
+  const div=document.createElement('div'); div.className='list-item';
+  div.innerHTML=`<input type="text" placeholder="Forma de pagamento" value="${valor}">
+                 <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
   document.getElementById('formasPagamento').appendChild(div);
 }
 
-// ===== SALVAR CARDÁPIO =====
-async function salvar() {
-  const cardapio = {
-    horarioFuncionamento: {
-      abertura: document.getElementById('abertura').value,
-      fechamento: document.getElementById('fechamento').value
+// ===== SALVAR =====
+async function salvar(){
+  const cardapio={
+    horarioFuncionamento:{
+      abertura:document.getElementById('abertura').value,
+      fechamento:document.getElementById('fechamento').value
     },
-    valoresMarmita: {},
-    cardapio: {},
-    refrigerantes: { "Lata": [], "2 Litros": [] },
-    locaisEntrega: [],
-    formasPagamento: []
+    valoresMarmita:{}, cardapio:{}, refrigerantes:{ "Lata": [], "2 Litros": [] },
+    locaisEntrega:[], formasPagamento:[]
   };
 
-  document.querySelectorAll('#valoresMarmita .list-item').forEach(div => {
-    const inputs = div.querySelectorAll('input');
-    if(inputs[0].value) cardapio.valoresMarmita[inputs[0].value] = Number(inputs[1].value);
+  document.querySelectorAll('#valoresMarmita .list-item').forEach(div=>{
+    const inputs=div.querySelectorAll('input'); if(inputs[0].value) cardapio.valoresMarmita[inputs[0].value]=Number(inputs[1].value);
   });
 
-  document.querySelectorAll('#cardapioDias .day-section').forEach(div => {
-    const dia = div.querySelector('h3').textContent;
-    cardapio.cardapio[dia] = { carnes: [], acompanhamentos: [] };
-    div.querySelectorAll('.carnes input').forEach(i => { if(i.value) cardapio.cardapio[dia].carnes.push(i.value); });
-    div.querySelectorAll('.acompanhamentos input').forEach(i => { if(i.value) cardapio.cardapio[dia].acompanhamentos.push(i.value); });
+  document.querySelectorAll('#cardapioDias .day-section').forEach(div=>{
+    const dia=div.querySelector('h3').textContent;
+    cardapio.cardapio[dia]={carnes:[],acompanhamentos:[]};
+    div.querySelectorAll('.carnes input').forEach(i=>{if(i.value) cardapio.cardapio[dia].carnes.push(i.value);});
+    div.querySelectorAll('.acompanhamentos input').forEach(i=>{if(i.value) cardapio.cardapio[dia].acompanhamentos.push(i.value);});
   });
 
-  document.querySelectorAll('#refrigerantes .list-item').forEach(div => {
-    const tipo = div.dataset.tipo;
-    const inputs = div.querySelectorAll('input');
-    if(inputs[0].value) cardapio.refrigerantes[tipo].push({ nome: inputs[0].value, preco: Number(inputs[1].value) });
+  document.querySelectorAll('#refrigerantes .list-item').forEach(div=>{
+    const tipo=div.dataset.tipo; const inputs=div.querySelectorAll('input');
+    if(inputs[0].value) cardapio.refrigerantes[tipo].push({nome:inputs[0].value,preco:Number(inputs[1].value)});
   });
 
-  document.querySelectorAll('#locaisEntrega .list-item').forEach(div => {
-    const inputs = div.querySelectorAll('input');
-    if(inputs[0].value) cardapio.locaisEntrega.push({ nome: inputs[0].value, taxa: Number(inputs[1].value) });
+  document.querySelectorAll('#locaisEntrega .list-item').forEach(div=>{
+    const inputs=div.querySelectorAll('input'); if(inputs[0].value) cardapio.locaisEntrega.push({nome:inputs[0].value,taxa:Number(inputs[1].value)});
   });
 
-  document.querySelectorAll('#formasPagamento .list-item input').forEach(i => { if(i.value) cardapio.formasPagamento.push(i.value); });
+  document.querySelectorAll('#formasPagamento .list-item input').forEach(i=>{if(i.value) cardapio.formasPagamento.push(i.value);});
 
   try {
-    const res = await fetch(`${API_URL}/cardapio`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${TOKEN}` },
-      body: JSON.stringify(cardapio)
+    const res=await fetch(`${API_URL}/cardapio`,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
+      body:JSON.stringify(cardapio)
     });
-    const data = await res.json();
-    if(data.sucesso) {
-      alert('✅ Cardápio salvo com sucesso!');
-      document.getElementById('status').textContent = `Olá, ${currentUser}! 💾 Último salvamento: agora`;
-    } else {
-      alert('❌ Erro: ' + (data.erro || 'Desconhecido'));
-    }
-  } catch(e) {
-    alert('❌ Falha ao salvar: ' + e.message);
+    const data=await res.json();
+    if(data.sucesso) alert('✅ Cardápio salvo com sucesso!');
+    else alert('❌ Erro: '+(data.erro||'Desconhecido'));
+  } catch(e){
+    alert('❌ Falha ao salvar: '+e.message);
   }
 }
 
 // ===== INICIALIZA =====
-(async () => {
-  await getGitHubUser();
-  carregar();
-})();
+carregar();
 </script>
 </body>
 </html>
