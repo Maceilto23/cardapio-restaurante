@@ -74,7 +74,7 @@ let access_token = null;
 
 // ===== LOGIN via GitHub OAuth =====
 function loginGitHub() {
-  const clientId = 'SEU_CLIENT_ID'; // substitua pelo seu Client ID
+  const clientId = '20325731'; // substitua pelo seu Client ID
   const redirectUri = window.location.href;
   const scope = 'repo';
   window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
@@ -240,3 +240,4 @@ carregar();
 </script>
 </body>
 </html>
+
