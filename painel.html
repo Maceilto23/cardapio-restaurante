@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel do Cardápio</title>
+<title>Painel do Cardápio GitHub</title>
 <style>
 body { font-family: Arial; margin: 20px; background: #f9f9f9; }
 h1,h2 { color: #333; }
@@ -19,7 +19,7 @@ button:hover { background:#218838; }
 </head>
 <body>
 
-<h1>Painel do Cardápio</h1>
+<h1>Painel do Cardápio GitHub</h1>
 <div id="status">🔄 Carregando...</div>
 
 <div id="painel" style="display:none;">
@@ -63,43 +63,15 @@ button:hover { background:#218838; }
 </div>
 
 <script>
-const API_URL = 'http://localhost:3000'; // backend Express local
-const TOKEN = 'c3a46c2fe5f946fe8b707ff285a5cecc57f58240dca3d74c1c89e22a79c0dc29'; // token local
-
-// ===== CARREGAR CARDÁPIO =====
-async function carregar() {
-  try {
-    const res = await fetch(`${API_URL}/cardapio`);
-    if(!res.ok) throw new Error('Erro ao carregar cardápio');
-    const cardapio = await res.json();
-
-    document.getElementById('abertura').value = cardapio.horarioFuncionamento.abertura || '';
-    document.getElementById('fechamento').value = cardapio.horarioFuncionamento.fechamento || '';
-
-    const valoresDiv = document.getElementById('valoresMarmita'); valoresDiv.innerHTML='';
-    for (let key in cardapio.valoresMarmita) addValorMarmita(key, cardapio.valoresMarmita[key]);
-
-    const diasDiv = document.getElementById('cardapioDias'); diasDiv.innerHTML='';
-    for (let dia in cardapio.cardapio) addDiaCardapio(dia, cardapio.cardapio[dia]);
-
-    const refDiv = document.getElementById('refrigerantes'); refDiv.innerHTML='';
-    for (let tipo in cardapio.refrigerantes) cardapio.refrigerantes[tipo].forEach(r => addRefrigerante(tipo, r.nome, r.preco));
-
-    const locaisDiv = document.getElementById('locaisEntrega'); locaisDiv.innerHTML='';
-    cardapio.locaisEntrega.forEach(l => addLocal(l.nome, l.taxa));
-
-    const formasDiv = document.getElementById('formasPagamento'); formasDiv.innerHTML='';
-    cardapio.formasPagamento.forEach(f => addForma(f));
-
-    document.getElementById('painel').style.display='block';
-    document.getElementById('status').textContent = '✅ Cardápio carregado.';
-  } catch(e) {
-    document.getElementById('status').textContent = '❌ ' + e.message;
-  }
-}
+// ===== CONFIGURAÇÃO =====
+const USER = 'Maceilto23';
+const REPO = 'cardapio-restaurante';
+const FILE_PATH = 'cardapio.json';
+const TOKEN = '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';
+let SHA; // SHA do arquivo atual
 
 // ===== FUNÇÕES DE CAMPOS =====
-function addValorMarmita(nome='', preco='') {
+function addValorMarmita(nome='', preco=''){
   const div=document.createElement('div'); div.className='list-item';
   div.innerHTML=`<input type="text" placeholder="Nome da opção" value="${nome}">
                  <input type="number" placeholder="Preço" value="${preco}">
@@ -147,9 +119,44 @@ function addForma(valor=''){
   document.getElementById('formasPagamento').appendChild(div);
 }
 
-// ===== SALVAR =====
+// ===== CARREGAR CARDÁPIO DO GITHUB =====
+async function carregar(){
+  try {
+    const res = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${FILE_PATH}`);
+    if(!res.ok) throw new Error('Erro ao carregar arquivo do GitHub');
+    const data = await res.json();
+    SHA = data.sha;
+    const cardapio = JSON.parse(atob(data.content));
+
+    document.getElementById('abertura').value = cardapio.horarioFuncionamento?.abertura || '';
+    document.getElementById('fechamento').value = cardapio.horarioFuncionamento?.fechamento || '';
+
+    const valoresDiv=document.getElementById('valoresMarmita'); valoresDiv.innerHTML='';
+    for(let key in cardapio.valoresMarmita) addValorMarmita(key, cardapio.valoresMarmita[key]);
+
+    const diasDiv=document.getElementById('cardapioDias'); diasDiv.innerHTML='';
+    for(let dia in cardapio.cardapio) addDiaCardapio(dia, cardapio.cardapio[dia]);
+
+    const refDiv=document.getElementById('refrigerantes'); refDiv.innerHTML='';
+    for(let tipo in cardapio.refrigerantes) cardapio.refrigerantes[tipo].forEach(r=>addRefrigerante(tipo,r.nome,r.preco));
+
+    const locaisDiv=document.getElementById('locaisEntrega'); locaisDiv.innerHTML='';
+    cardapio.locaisEntrega?.forEach(l=>addLocal(l.nome,l.taxa));
+
+    const formasDiv=document.getElementById('formasPagamento'); formasDiv.innerHTML='';
+    cardapio.formasPagamento?.forEach(f=>addForma(f));
+
+    document.getElementById('painel').style.display='block';
+    document.getElementById('status').textContent='✅ Cardápio carregado';
+  } catch(e){
+    document.getElementById('status').textContent='❌ '+e.message;
+    console.error(e);
+  }
+}
+
+// ===== SALVAR CARDÁPIO NO GITHUB =====
 async function salvar(){
-  const cardapio={
+  const cardapio = {
     horarioFuncionamento:{
       abertura:document.getElementById('abertura').value,
       fechamento:document.getElementById('fechamento').value
@@ -181,21 +188,31 @@ async function salvar(){
   document.querySelectorAll('#formasPagamento .list-item input').forEach(i=>{if(i.value) cardapio.formasPagamento.push(i.value);});
 
   try {
-    const res=await fetch(`${API_URL}/cardapio`,{
+    const res = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${FILE_PATH}`,{
       method:'PUT',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`},
-      body:JSON.stringify(cardapio)
+      headers:{
+        'Authorization':'token '+TOKEN,
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        message:'Atualizando cardápio via painel',
+        content:btoa(JSON.stringify(cardapio, null, 2)),
+        sha: SHA,
+        branch:'main'
+      })
     });
-    const data=await res.json();
-    if(data.sucesso) alert('✅ Cardápio salvo com sucesso!');
-    else alert('❌ Erro: '+(data.erro||'Desconhecido'));
+    const data = await res.json();
+    if(data.content) { SHA = data.content.sha; alert('✅ Cardápio salvo no GitHub!'); }
+    else alert('❌ Erro ao salvar: '+(data.message||'Desconhecido'));
   } catch(e){
-    alert('❌ Falha ao salvar: '+e.message);
+    alert('❌ Erro ao salvar: '+e.message);
+    console.error(e);
   }
 }
 
-// ===== INICIALIZA =====
+// ===== INICIAR =====
 carregar();
 </script>
+
 </body>
 </html>
