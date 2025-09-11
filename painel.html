@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel do Cardápio</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    textarea { width: 100%; height: 400px; }
+    button { padding: 10px 20px; margin-top: 10px; }
+    #status { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Painel de Edição do Cardápio</h1>
+  <textarea id="editor"></textarea>
+  <br>
+  <button onclick="salvar()">Salvar Alterações</button>
+  <div id="status"></div>
+
+  <script>
+    const API_URL = 'https://seu-backend.onrender.com'; // coloque a URL do Render aqui
+    const TOKEN = 'c3a46c2fe5f946fe8b707ff285a5cecc57f58240dca3d74c1c89e22a79c0dc29';
+
+    async function carregar() {
+      const res = await fetch(`${API_URL}/cardapio`);
+      const data = await res.json();
+      document.getElementById('editor').value = JSON.stringify(data, null, 2);
+    }
+
+    async function salvar() {
+      const novoConteudo = document.getElementById('editor').value;
+      try {
+        JSON.parse(novoConteudo); // valida se é JSON válido
+
+        const res = await fetch(`${API_URL}/cardapio`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${TOKEN}`
+          },
+          body: novoConteudo
+        });
+
+        if (res.ok) {
+          document.getElementById('status').textContent = '✅ Alterações salvas com sucesso!';
+        } else {
+          document.getElementById('status').textContent = '❌ Erro ao salvar. Verifique o token.';
+        }
+      } catch (e) {
+        document.getElementById('status').textContent = '❌ JSON inválido';
+      }
+    }
+
+    carregar();
+  </script>
+</body>
+</html>
