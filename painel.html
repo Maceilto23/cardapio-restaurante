@@ -218,7 +218,8 @@ async function salvar() {
       },
       body: JSON.stringify({
         message: "Atualização do cardápio via painel",
-        content: btoa(JSON.stringify(cardapio, null, 2)),
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(cardapio, null, 2)))),
+
         sha: SHA
       })
     });
@@ -240,4 +241,5 @@ carregar();
 
 </body>
 </html>
+
 
