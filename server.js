@@ -1,3 +1,4 @@
+// server.js
 import express from 'express';
 import fs from 'fs';
 import bodyParser from 'body-parser';
@@ -5,14 +6,13 @@ import cors from 'cors';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-const TOKEN = 'c3a46c2fe5f946fe8b707ff285a5cecc57f58240dca3d74c1c89e22a79c0dc29';
+const TOKEN = 'c3a46c2fe5f946fe8b707ff285a5cecc57f58240dca3d74c1c89e22a79c0dc29'; // seu token
 const CARDAPIO_PATH = './cardapio.json';
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// Rota GET para consultar os dados
+// GET - consulta cardápio
 app.get('/cardapio', (req, res) => {
   try {
     const dados = fs.readFileSync(CARDAPIO_PATH, 'utf-8');
@@ -22,7 +22,7 @@ app.get('/cardapio', (req, res) => {
   }
 });
 
-// Rota PUT para atualizar os dados (protegida com token)
+// PUT - atualiza cardápio com token
 app.put('/cardapio', (req, res) => {
   const authHeader = req.headers['authorization'];
   if (authHeader !== `Bearer ${TOKEN}`) {
