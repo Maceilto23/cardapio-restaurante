@@ -1,57 +1,247 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Painel do Cardápio</title>
-  <style>
-    body { font-family: Arial; margin: 20px; }
-    textarea { width: 100%; height: 400px; }
-    button { padding: 10px 20px; margin-top: 10px; }
-    #status { margin-top: 10px; }
-  </style>
+<meta charset="UTF-8">
+<title>Painel Amigável do Cardápio</title>
+<style>
+  body { font-family: Arial; margin: 20px; background: #f9f9f9; }
+  h1, h2 { color: #333; }
+  label { display: block; margin-top: 10px; font-weight: bold; }
+  input[type=text], input[type=number] { width: 300px; padding: 5px; margin-top: 5px; }
+  textarea { width: 100%; padding: 5px; margin-top: 5px; }
+  button { padding: 10px 20px; margin-top: 20px; background: #28a745; color: white; border: none; cursor: pointer; }
+  button:hover { background: #218838; }
+  .day-section, .section { border: 1px solid #ccc; padding: 10px; margin-top: 15px; border-radius: 5px; background: #fff; }
+  .list-item { display: flex; gap: 10px; margin-top: 5px; }
+  .list-item input { flex: 1; }
+  .remove-btn { background: red; color: white; border: none; cursor: pointer; padding: 3px 8px; }
+</style>
 </head>
 <body>
-  <h1>Painel de Edição do Cardápio</h1>
-  <textarea id="editor"></textarea>
-  <br>
-  <button onclick="salvar()">Salvar Alterações</button>
-  <div id="status"></div>
 
-  <script>
-    const API_URL = 'https://seu-backend.onrender.com'; // coloque a URL do Render aqui
-    const TOKEN = 'c3a46c2fe5f946fe8b707ff285a5cecc57f58240dca3d74c1c89e22a79c0dc29';
+<h1>Painel Amigável do Cardápio</h1>
 
-    async function carregar() {
-      const res = await fetch(`${API_URL}/cardapio`);
-      const data = await res.json();
-      document.getElementById('editor').value = JSON.stringify(data, null, 2);
+<div class="section">
+  <h2>Horário de Funcionamento</h2>
+  <label>Abertura: <input type="text" id="abertura"></label>
+  <label>Fechamento: <input type="text" id="fechamento"></label>
+</div>
+
+<div class="section">
+  <h2>Valores das Marmitas</h2>
+  <div id="valoresMarmita"></div>
+  <button onclick="addValorMarmita()">Adicionar Opção</button>
+</div>
+
+<div class="section">
+  <h2>Cardápio Diário</h2>
+  <div id="cardapioDias"></div>
+</div>
+
+<div class="section">
+  <h2>Refrigerantes</h2>
+  <div id="refrigerantes"></div>
+  <button onclick="addRefrigerante('Lata')">Adicionar Lata</button>
+  <button onclick="addRefrigerante('2 Litros')">Adicionar 2 Litros</button>
+</div>
+
+<div class="section">
+  <h2>Locais de Entrega</h2>
+  <div id="locaisEntrega"></div>
+  <button onclick="addLocal()">Adicionar Local</button>
+</div>
+
+<div class="section">
+  <h2>Formas de Pagamento</h2>
+  <div id="formasPagamento"></div>
+  <button onclick="addForma()">Adicionar Forma</button>
+</div>
+
+<button onclick="salvar()">💾 Salvar Alterações</button>
+<div id="status"></div>
+
+<script>
+const USER = 'SEU_USUARIO_GITHUB'; 
+const REPO = 'SEU_REPOSITORIO';
+const FILE_PATH = 'cardapio.json';
+const TOKEN = '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';
+
+let SHA; // SHA do arquivo para envio
+
+async function carregar() {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${FILE_PATH}`);
+    const data = await res.json();
+    SHA = data.sha;
+    const cardapio = JSON.parse(atob(data.content));
+
+    document.getElementById('abertura').value = cardapio.horarioFuncionamento.abertura;
+    document.getElementById('fechamento').value = cardapio.horarioFuncionamento.fechamento;
+
+    // Valores Marmita
+    const valoresDiv = document.getElementById('valoresMarmita');
+    valoresDiv.innerHTML = '';
+    for (let key in cardapio.valoresMarmita) {
+      addValorMarmita(key, cardapio.valoresMarmita[key]);
     }
 
-    async function salvar() {
-      const novoConteudo = document.getElementById('editor').value;
-      try {
-        JSON.parse(novoConteudo); // valida se é JSON válido
-
-        const res = await fetch(`${API_URL}/cardapio`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${TOKEN}`
-          },
-          body: novoConteudo
-        });
-
-        if (res.ok) {
-          document.getElementById('status').textContent = '✅ Alterações salvas com sucesso!';
-        } else {
-          document.getElementById('status').textContent = '❌ Erro ao salvar. Verifique o token.';
-        }
-      } catch (e) {
-        document.getElementById('status').textContent = '❌ JSON inválido';
-      }
+    // Cardápio diário
+    const diasDiv = document.getElementById('cardapioDias');
+    diasDiv.innerHTML = '';
+    for (let dia in cardapio.cardapio) {
+      addDiaCardapio(dia, cardapio.cardapio[dia]);
     }
 
-    carregar();
-  </script>
+    // Refrigerantes
+    const refDiv = document.getElementById('refrigerantes');
+    refDiv.innerHTML = '';
+    for (let tipo in cardapio.refrigerantes) {
+      cardapio.refrigerantes[tipo].forEach(r => addRefrigerante(tipo, r.nome, r.preco));
+    }
+
+    // Locais de entrega
+    const locaisDiv = document.getElementById('locaisEntrega');
+    locaisDiv.innerHTML = '';
+    cardapio.locaisEntrega.forEach(l => addLocal(l.nome, l.taxa));
+
+    // Formas de pagamento
+    const formasDiv = document.getElementById('formasPagamento');
+    formasDiv.innerHTML = '';
+    cardapio.formasPagamento.forEach(f => addForma(f));
+
+  } catch(e) {
+    document.getElementById('status').textContent = '❌ Erro ao carregar o cardápio';
+  }
+}
+
+// ===== Funções de adicionar campos =====
+
+function addValorMarmita(nome = '', preco = '') {
+  const div = document.createElement('div');
+  div.className = 'list-item';
+  div.innerHTML = `
+    <input type="text" placeholder="Nome da opção" value="${nome}">
+    <input type="number" placeholder="Preço" value="${preco}">
+    <button class="remove-btn" onclick="this.parentNode.remove()">X</button>
+  `;
+  document.getElementById('valoresMarmita').appendChild(div);
+}
+
+function addDiaCardapio(dia, dados) {
+  const div = document.createElement('div');
+  div.className = 'day-section';
+  div.innerHTML = `<h3>${dia}</h3><strong>Carnes:</strong><div class="carnes"></div><button onclick="addItem(this.parentNode.querySelector('.carnes'))">Adicionar Carne</button>
+                   <strong>Acompanhamentos:</strong><div class="acompanhamentos"></div><button onclick="addItem(this.parentNode.querySelector('.acompanhamentos'))">Adicionar Acompanhamento</button>`;
+  document.getElementById('cardapioDias').appendChild(div);
+
+  dados.carnes.forEach(c => addItem(div.querySelector('.carnes'), c));
+  dados.acompanhamentos.forEach(a => addItem(div.querySelector('.acompanhamentos'), a));
+}
+
+function addItem(container, value='') {
+  const div = document.createElement('div');
+  div.className = 'list-item';
+  div.innerHTML = `<input type="text" value="${value}"><button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+  container.appendChild(div);
+}
+
+function addRefrigerante(tipo, nome='', preco='') {
+  const container = document.createElement('div');
+  container.className = 'list-item';
+  container.dataset.tipo = tipo;
+  container.innerHTML = `<strong>${tipo}:</strong>
+    <input type="text" placeholder="Nome" value="${nome}">
+    <input type="number" placeholder="Preço" value="${preco}">
+    <button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+  document.getElementById('refrigerantes').appendChild(container);
+}
+
+function addLocal(nome='', taxa='') {
+  const div = document.createElement('div');
+  div.className = 'list-item';
+  div.innerHTML = `<input type="text" placeholder="Local" value="${nome}"><input type="number" placeholder="Taxa" value="${taxa}"><button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+  document.getElementById('locaisEntrega').appendChild(div);
+}
+
+function addForma(valor='') {
+  const div = document.createElement('div');
+  div.className = 'list-item';
+  div.innerHTML = `<input type="text" placeholder="Forma de pagamento" value="${valor}"><button class="remove-btn" onclick="this.parentNode.remove()">X</button>`;
+  document.getElementById('formasPagamento').appendChild(div);
+}
+
+// ===== SALVAR =====
+
+async function salvar() {
+  const cardapio = {
+    horarioFuncionamento: {
+      abertura: document.getElementById('abertura').value,
+      fechamento: document.getElementById('fechamento').value
+    },
+    valoresMarmita: {},
+    cardapio: {},
+    refrigerantes: { "Lata": [], "2 Litros": [] },
+    locaisEntrega: [],
+    formasPagamento: []
+  };
+
+  // Valores Marmita
+  document.querySelectorAll('#valoresMarmita .list-item').forEach(div => {
+    const inputs = div.querySelectorAll('input');
+    if(inputs[0].value) cardapio.valoresMarmita[inputs[0].value] = Number(inputs[1].value);
+  });
+
+  // Cardápio diário
+  document.querySelectorAll('#cardapioDias .day-section').forEach(div => {
+    const dia = div.querySelector('h3').textContent;
+    cardapio.cardapio[dia] = { carnes: [], acompanhamentos: [] };
+    div.querySelectorAll('.carnes input').forEach(i => { if(i.value) cardapio.cardapio[dia].carnes.push(i.value); });
+    div.querySelectorAll('.acompanhamentos input').forEach(i => { if(i.value) cardapio.cardapio[dia].acompanhamentos.push(i.value); });
+  });
+
+  // Refrigerantes
+  document.querySelectorAll('#refrigerantes .list-item').forEach(div => {
+    const inputs = div.querySelectorAll('input');
+    if(inputs[0].value) cardapio.refrigerantes[div.dataset.tipo].push({nome: inputs[0].value, preco: Number(inputs[1].value)});
+  });
+
+  // Locais de entrega
+  document.querySelectorAll('#locaisEntrega .list-item').forEach(div => {
+    const inputs = div.querySelectorAll('input');
+    if(inputs[0].value) cardapio.locaisEntrega.push({nome: inputs[0].value, taxa: Number(inputs[1].value)});
+  });
+
+  // Formas de pagamento
+  document.querySelectorAll('#formasPagamento .list-item input').forEach(i => { if(i.value) cardapio.formasPagamento.push(i.value); });
+
+  // Envia para GitHub
+  try {
+    const res = await fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${FILE_PATH}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'Atualização do cardápio via painel amigável',
+        content: btoa(JSON.stringify(cardapio, null, 2)),
+        sha: SHA
+      })
+    });
+    const result = await res.json();
+    if(res.ok) {
+      SHA = result.content.sha;
+      document.getElementById('status').textContent = '✅ Alterações salvas!';
+    } else {
+      document.getElementById('status').textContent = '❌ ' + result.message;
+    }
+  } catch(e) {
+    document.getElementById('status').textContent = '❌ Erro ao salvar';
+  }
+}
+
+carregar();
+</script>
+
 </body>
 </html>
