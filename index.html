@@ -19,17 +19,20 @@ li:hover { background: #f0f0f0; }
 .checkbox-fake { width: 22px; height: 22px; border: 2px solid #007BFF; display: flex; align-items: center; justify-content: center; margin-right: 10px; border-radius: 4px; font-weight: bold; color: #fff; background: #007BFF; opacity: 0; transition: opacity 0.2s, transform 0.2s; flex-shrink: 0; }
 li.selected .checkbox-fake { opacity: 1; transform: scale(1.1); }
 li span { flex: 1; }
-#adicionais, input[type="text"], select { width: 100%; padding: 8px; margin-top: 8px; border-radius: 6px; border: 1px solid #ccc; }
-#enviarWhats { margin-top: 12px; padding: 10px; background: #25D366; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; }
-label { display: block; margin-bottom: 6px; cursor: pointer; }
-.marmita-options label { display: block; margin-bottom: 8px; cursor: pointer; }
-.marmita-options input { margin-right: 8px; }
+#adicionais, input[type="text"], input[type="number"], select { width: 100%; padding: 8px; margin-top: 8px; border-radius: 6px; border: 1px solid #ccc; }
+#enviarWhats, #gerarMarmitas { margin-top: 12px; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; }
+#gerarMarmitas { background: #007BFF; color: #fff; }
+#enviarWhats { background: #25D366; color: #fff; }
+.marmita-icons { display: flex; flex-wrap: wrap; margin-top: 10px; gap: 8px; }
+.marmita-icon { width: 50px; height: 50px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; border: 2px solid #ccc; transition: border 0.2s; }
+.marmita-icon.selected { border-color: #007BFF; background: #e0f0ff; }
+.marmita-choose { display: none; margin-top: 10px; padding: 10px; border: 1px solid #007BFF; border-radius: 8px; background: #f9f9f9; }
 @media (max-width: 600px) { 
   .logo-container { flex-direction: column; align-items: center; text-align: center; } 
   .logo-container img { margin-right: 0; margin-bottom: 8px; height: 50px; } 
   .titulo-container h1 { font-size: 1.3rem; } 
   .titulo-container h2 { font-size: 1rem; } 
-  #enviarWhats { font-size: 0.95rem; } 
+  #enviarWhats, #gerarMarmitas { font-size: 0.95rem; } 
 }
 </style>
 </head>
@@ -45,15 +48,20 @@ label { display: block; margin-bottom: 6px; cursor: pointer; }
     </div>
   </div>
 
-  <div class="marmita-options">
-    <h3>🍱 Escolha o tipo de Marmita</h3>
+  <label for="quantidadeMarmitas">Quantidade de Marmitas:</label>
+  <input type="number" id="quantidadeMarmitas" min="1" max="20" value="1">
+  <button id="gerarMarmitas">Gerar Marmitas</button>
+
+  <div class="marmita-icons" id="marmitaIcons"></div>
+
+  <div class="marmita-choose" id="marmitaChoose">
+    <h3>Escolha os itens da Marmita</h3>
+    <div class="marmita-options"></div>
+    <h3>🍖 Carnes</h3>
+    <ul id="carnes"></ul>
+    <h3>🥗 Acompanhamentos</h3>
+    <ul id="acompanhamentos"></ul>
   </div>
-
-  <h3>🍖 Carnes</h3>
-  <ul id="carnes"></ul>
-
-  <h3>🥗 Acompanhamentos</h3>
-  <ul id="acompanhamentos"></ul>
 
   <h3>🥤 Refrigerantes</h3>
   <ul id="refrigerantes"></ul>
@@ -80,7 +88,6 @@ label { display: block; margin-bottom: 6px; cursor: pointer; }
   <ul id="itensPedido"><li>Nenhum item selecionado</li></ul>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const diasSemana = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
 const hojeDate = new Date();
@@ -90,219 +97,172 @@ const mes = String(hojeDate.getMonth()+1).padStart(2,'0');
 const ano = hojeDate.getFullYear();
 document.getElementById("dataHoje").innerText = `${dia}/${mes}/${ano}`;
 
-fetch('cardapio.json?t=' + new Date().getTime())
-  .then(response => response.json())
-  .then(cardapioFinal => {
-    document.getElementById("horarioFuncionamento").textContent = 
-      `Horário: ${cardapioFinal.horarioFuncionamento.abertura} - ${cardapioFinal.horarioFuncionamento.fechamento}`;
+// Simulação JSON cardápio
+const cardapioFinal = {
+  horarioFuncionamento: { abertura: "11:30", fechamento: "23:00" },
+  valoresMarmita: { "01 Opção de Carne": 15, "02 Opções de Carne": 20 },
+  cardapio: { sexta-feira: { carnes:["Frango","Carne","Peixe"], acompanhamentos:["Arroz","Feijão","Macarrão","Salada"] } },
+  refrigerantes: { Lata:[{nome:"Coca Cola",preco:5},{nome:"Guaraná",preco:5}] },
+  locaisEntrega: [{nome:"Alvorada",taxa:2},{nome:"Centro",taxa:3}],
+  formasPagamento: ["Pix","Dinheiro","Cartão"]
+};
 
-    const marmitaOptions = document.querySelector(".marmita-options");
-    let marmita = "", valorMarmita = 0, limiteCarnes = 0;
-    let pedido = [], taxaEntrega = 0, pagamentoSelecionado = "";
-    let refrigerantesSelecionados = [];
+document.getElementById("horarioFuncionamento").textContent = `Horário: ${cardapioFinal.horarioFuncionamento.abertura} - ${cardapioFinal.horarioFuncionamento.fechamento}`;
 
-    Object.keys(cardapioFinal.valoresMarmita).forEach(key=>{
-      const label = document.createElement("label");
-      label.innerHTML = `<input type="radio" name="marmita" value="${key}"> Marmita ${key} - R$${cardapioFinal.valoresMarmita[key]},00`;
-      label.querySelector('input').addEventListener("change", ()=>{
-        marmita = key;
-        valorMarmita = cardapioFinal.valoresMarmita[key];
+// Gerar ícones das marmitas
+const marmitaIconsEl = document.getElementById("marmitaIcons");
+const marmitaChoose = document.getElementById("marmitaChoose");
+let marmitasSelecionadas = [];
+let marmitaAtual = 0;
 
-        if (key.includes("01 Opção")) limiteCarnes = 1;
-        else if (key.includes("02 Opção")) limiteCarnes = 2;
-        else limiteCarnes = 0;
-
-        document.querySelectorAll("#carnes li").forEach(li=>li.classList.remove("selected"));
-        pedido = pedido.filter(item => !cardapioFinal.cardapio[diasSemana[hojeDate.getDay()].toLowerCase()].carnes.includes(item));
-
-        const acompanhamentosContainer = document.getElementById("acompanhamentos");
-        if (key.includes("Porção")) {
-          acompanhamentosContainer.querySelectorAll("li").forEach(li=>{
-            li.classList.remove("selected");
-            li.style.pointerEvents = "none";
-            li.style.opacity = "0.5";
-          });
-          pedido = pedido.filter(item => !cardapioFinal.cardapio[diasSemana[hojeDate.getDay()].toLowerCase()].acompanhamentos.includes(item));
-        } else {
-          acompanhamentosContainer.querySelectorAll("li").forEach(li=>{
-            li.style.pointerEvents = "auto";
-            li.style.opacity = "1";
-          });
-        }
-
-        atualizarPedido();
-      });
-      marmitaOptions.appendChild(label);
+document.getElementById("gerarMarmitas").addEventListener("click", () => {
+  const qtd = parseInt(document.getElementById("quantidadeMarmitas").value) || 1;
+  marmitaIconsEl.innerHTML = "";
+  marmitasSelecionadas = Array(qtd).fill({marmita:"", carnes:[], acompanhamentos:[]});
+  for(let i=0;i<qtd;i++){
+    const div = document.createElement("div");
+    div.classList.add("marmita-icon");
+    div.textContent = i+1;
+    div.addEventListener("click", ()=> {
+      marmitaAtual = i;
+      marmitaChoose.style.display = "block";
+      selecionarItensMarmita(i);
+      document.querySelectorAll(".marmita-icon").forEach(ic=>ic.classList.remove("selected"));
+      div.classList.add("selected");
     });
+    marmitaIconsEl.appendChild(div);
+  }
+});
 
-    function criarLista(itens, container, tipo="normal") {
-      container.innerHTML = "";
-      itens.forEach(i=>{
-        const li = document.createElement("li");
-        li.setAttribute("data-item", i);
-        li.innerHTML = `<div class="checkbox-fake">X</div><span>${i}</span>`;
-        if(tipo !== "carnes") {
-          li.classList.add("selected");
-          if(!pedido.includes(i)) pedido.push(i);
-        }
-        li.addEventListener("click", ()=>{
-          if(tipo==="carnes"){
-            const selecionadas = container.querySelectorAll("li.selected");
-            if(!li.classList.contains("selected") && selecionadas.length >= limiteCarnes) return;
-          }
-          li.classList.toggle("selected");
-          const item = li.getAttribute("data-item");
-          if(li.classList.contains("selected")){
-            if(!pedido.includes(item)) pedido.push(item);
-          } else pedido = pedido.filter(x=>x!==item);
-          atualizarPedido();
-        });
-        container.appendChild(li);
-      });
-    }
-
-    function criarListaRefrigerantes(itens, container){
-      container.innerHTML = "";
-      itens.forEach(i=>{
-        const li = document.createElement("li");
-        li.setAttribute("data-item", i);
-        li.innerHTML = `<div class="checkbox-fake">X</div><span>${i}</span>`;
-        li.addEventListener("click", ()=>{
-          li.classList.toggle("selected");
-          const item = li.getAttribute("data-item");
-          const preco = parseFloat(item.split('R$')[1]) || 0;
-          if(li.classList.contains("selected")){
-            if(!refrigerantesSelecionados.find(r => r.nome === item)){
-              refrigerantesSelecionados.push({nome: item, preco});
-            }
-          } else {
-            refrigerantesSelecionados = refrigerantesSelecionados.filter(r => r.nome !== item);
-          }
-          atualizarPedido();
-        });
-        container.appendChild(li);
-      });
-    }
-
-    const hojeCardapio = cardapioFinal.cardapio[diasSemana[hojeDate.getDay()].toLowerCase()] || { carnes: [], acompanhamentos: [] };
-    criarLista(hojeCardapio.acompanhamentos, document.getElementById("acompanhamentos"), "acompanhamentos");
-    criarLista(hojeCardapio.carnes, document.getElementById("carnes"), "carnes");
-    criarListaRefrigerantes(
-      Object.entries(cardapioFinal.refrigerantes).flatMap(([tipo, list]) => list.map(r=>`${tipo} - ${r.nome} R$${r.preco}`)),
-      document.getElementById("refrigerantes")
-    );
-
-    const localEl = document.getElementById("localEntrega");
-    cardapioFinal.locaisEntrega.forEach((loc,i)=>{
-      const opt = document.createElement("option");
-      opt.value = loc.nome;
-      opt.dataset.taxa = loc.taxa;
-      opt.textContent = `${loc.nome} - R$${loc.taxa.toFixed(2)}`;
-      if(i===0) taxaEntrega = loc.taxa;
-      localEl.appendChild(opt);
+// Seleção de itens da marmita
+function selecionarItensMarmita(index){
+  const tiposMarmita = Object.keys(cardapioFinal.valoresMarmita);
+  const optionsDiv = document.querySelector(".marmita-options");
+  optionsDiv.innerHTML = "";
+  tiposMarmita.forEach(t=>{
+    const label = document.createElement("label");
+    label.innerHTML = `<input type="radio" name="marmitaSel" value="${t}" ${marmitasSelecionadas[index].marmita===t?"checked":""}> Marmita ${t} - R$${cardapioFinal.valoresMarmita[t]}`;
+    label.querySelector("input").addEventListener("change", ()=>{
+      marmitasSelecionadas[index].marmita = t;
+      atualizarPedido();
     });
-    localEl.addEventListener("change", ()=>{ taxaEntrega = parseFloat(localEl.selectedOptions[0].dataset.taxa); atualizarPedido(); });
-
-    const formasEl = document.getElementById("formasPagamentoList");
-    cardapioFinal.formasPagamento.forEach(f=>{
-      const li = document.createElement("li");
-      li.innerHTML = `<div class="checkbox-fake">X</div><span>${f}</span>`;
-      li.addEventListener("click", ()=>{
-        formasEl.querySelectorAll("li").forEach(l=>l.classList.remove("selected"));
-        li.classList.add("selected");
-        pagamentoSelecionado = f;
-        atualizarPedido();
-      });
-      formasEl.appendChild(li);
-    });
-
-    function atualizarPedido(){
-      const adicionais = document.getElementById("adicionais").value;
-      const totalRef = refrigerantesSelecionados.reduce((sum,r)=>sum+r.preco,0);
-      const total = valorMarmita + taxaEntrega + totalRef;
-
-      const itensEl = document.getElementById("itensPedido");
-      itensEl.innerHTML = `
-        ${marmita?`<li>🍱 Marmita ${marmita} - R$${valorMarmita}</li>`:""}
-        ${pedido.length?pedido.map(i=>`<li>✅ ${i}</li>`).join(""):"<li>Nenhum item selecionado</li>"}
-        ${refrigerantesSelecionados.map(r => `<li>🥤 ${r.nome} - R$${r.preco}</li>`).join("")}
-        ${adicionais?`<li>📝 ${adicionais}</li>`:""}
-        ${pagamentoSelecionado?`<li>💳 Pagamento: ${pagamentoSelecionado}</li>`:""}
-        <li>🏍️ Taxa de Entrega: R$${taxaEntrega.toFixed(2)}</li>
-        <li>💰 Total: R$${total.toFixed(2)}</li>
-      `;
-    }
-
-    document.getElementById("enviarWhats").addEventListener("click", () => {
-      const agora = new Date();
-      const horas = agora.getHours();
-      const minutos = agora.getMinutes();
-      const agoraMinutos = horas * 60 + minutos;
-
-      const [horaAbertura, minAbertura] = cardapioFinal.horarioFuncionamento.abertura.split(":").map(Number);
-      const [horaFechamento, minFechamento] = cardapioFinal.horarioFuncionamento.fechamento.split(":").map(Number);
-      const aberturaMinutos = horaAbertura * 60 + minAbertura;
-      const fechamentoMinutos = horaFechamento * 60 + minFechamento;
-
-      if (agoraMinutos < aberturaMinutos || agoraMinutos > fechamentoMinutos) {
-          alert(`Desculpe! Pedidos só podem ser feitos entre ${cardapioFinal.horarioFuncionamento.abertura} e ${cardapioFinal.horarioFuncionamento.fechamento}.`);
-          return;
-      }
-
-      const nome = document.getElementById("nomeCliente").value || "Cliente";
-      const endereco = document.getElementById("enderecoCliente").value || "Não informado";
-      const adicionais = document.getElementById("adicionais").value || "";
-      const local = document.getElementById("localEntrega").value;
-      const pagamento = pagamentoSelecionado || "Não definido";
-
-      const totalRef = refrigerantesSelecionados.reduce((sum,r)=>sum+r.preco,0);
-      const total = valorMarmita + taxaEntrega + totalRef;
-
-      let msg = `🍽️ *Pedido de ${nome}*\n`;
-      msg += `📍 Endereço: ${endereco}\n`;
-      msg += `🏠 Local: ${local}\n\n`;
-      msg += `📋 *Itens do Pedido:*\n`;
-      if(marmita) msg += `🍱 Marmita ${marmita} - R$${valorMarmita}\n`;
-      pedido.forEach(i => msg += `✅ ${i}\n`);
-      refrigerantesSelecionados.forEach(r => msg += `🥤 ${r.nome} - R$${r.preco}\n`);
-      if(adicionais) msg += `📝 ${adicionais}\n`;
-      msg += `💳 Pagamento: ${pagamento}\n`;
-      msg += `🏍️ Taxa de Entrega: R$${taxaEntrega.toFixed(2)}\n`;
-      msg += `💰 Total: R$${total.toFixed(2)}`;
-
-      window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.setFontSize(18);
-      doc.setFont("helvetica", "bold");
-      doc.text("Restaurante Colinas", 10, 15);
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Cliente: ${nome}`, 10, 25);
-      doc.text(`Endereço: ${endereco}`, 10, 32);
-      doc.text(`Local de entrega: ${local}`, 10, 39);
-      doc.setLineWidth(0.5);
-      doc.line(10, 44, 200, 44);
-      doc.setFont("helvetica", "bold");
-      doc.text("Itens do Pedido:", 10, 50);
-      doc.setFont("helvetica", "normal");
-      let y = 57;
-      if(marmita){ doc.text(`Marmita ${marmita} - R$${valorMarmita}`, 12, y); y+=7; }
-      pedido.forEach(i => { doc.text(`${i}`, 12, y); y+=7; });
-      refrigerantesSelecionados.forEach(r => { doc.text(`${r.nome} - R$${r.preco}`, 12, y); y+=7; });
-      if(adicionais){ doc.text(`Adicionais: ${adicionais}`, 12, y); y+=7; }
-      doc.line(10, y, 200, y); y += 5;
-      doc.text(`Pagamento: ${pagamento}`, 10, y); y+=7;
-      doc.text(`Taxa de Entrega: R$${taxaEntrega.toFixed(2)}`, 10, y); y+=7;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
-      doc.text(`TOTAL: R$${total.toFixed(2)}`, 10, y);
-      const pdfBlob = doc.output('blob');
-      const pdfURL = URL.createObjectURL(pdfBlob);
-      window.open(pdfURL, "_blank");
-    });
+    optionsDiv.appendChild(label);
   });
+
+  criarLista(cardapioFinal.cardapio["sexta-feira"].carnes, document.getElementById("carnes"), "carnes", index);
+  criarLista(cardapioFinal.cardapio["sexta-feira"].acompanhamentos, document.getElementById("acompanhamentos"), "acompanhamentos", index);
+}
+
+// Criar lista de seleção
+function criarLista(itens, container, tipo, index){
+  container.innerHTML = "";
+  itens.forEach(item=>{
+    const li = document.createElement("li");
+    li.textContent = item;
+    if(marmitasSelecionadas[index][tipo].includes(item)) li.classList.add("selected");
+    li.addEventListener("click", ()=>{
+      if(tipo==="carnes"){
+        if(!li.classList.contains("selected") && marmitasSelecionadas[index][tipo].length>=2) return;
+      }
+      li.classList.toggle("selected");
+      if(li.classList.contains("selected")){
+        marmitasSelecionadas[index][tipo].push(item);
+      } else {
+        marmitasSelecionadas[index][tipo] = marmitasSelecionadas[index][tipo].filter(x=>x!==item);
+      }
+      atualizarPedido();
+    });
+    container.appendChild(li);
+  });
+}
+
+// Refrigerantes
+let refrigerantesSelecionados = [];
+function criarListaRefrigerantes(itens, container){
+  container.innerHTML = "";
+  itens.forEach(i=>{
+    const li = document.createElement("li");
+    li.textContent = `${i.tipo} - ${i.nome} R$${i.preco}`;
+    li.addEventListener("click", ()=>{
+      li.classList.toggle("selected");
+      if(li.classList.contains("selected")){
+        refrigerantesSelecionados.push(i);
+      } else {
+        refrigerantesSelecionados = refrigerantesSelecionados.filter(r => r.nome !== i.nome);
+      }
+      atualizarPedido();
+    });
+    container.appendChild(li);
+  });
+}
+const refrEl = document.getElementById("refrigerantes");
+criarListaRefrigerantes(Object.entries(cardapioFinal.refrigerantes).flatMap(([tipo, list]) => list.map(r=>({...r,tipo}))), refrEl);
+
+// Locais
+let taxaEntrega = cardapioFinal.locaisEntrega[0].taxa;
+const localEl = document.getElementById("localEntrega");
+cardapioFinal.locaisEntrega.forEach((loc,i)=>{
+  const opt = document.createElement("option");
+  opt.value = loc.nome;
+  opt.dataset.taxa = loc.taxa;
+  opt.textContent = `${loc.nome} - R$${loc.taxa.toFixed(2)}`;
+  localEl.appendChild(opt);
+});
+localEl.addEventListener("change", ()=>{ taxaEntrega = parseFloat(localEl.selectedOptions[0].dataset.taxa); atualizarPedido(); });
+
+// Pagamento
+let pagamentoSelecionado = "";
+const formasEl = document.getElementById("formasPagamentoList");
+cardapioFinal.formasPagamento.forEach(f=>{
+  const li = document.createElement("li");
+  li.textContent = f;
+  li.addEventListener("click", ()=>{
+    formasEl.querySelectorAll("li").forEach(l=>l.classList.remove("selected"));
+    li.classList.add("selected");
+    pagamentoSelecionado = f;
+    atualizarPedido();
+  });
+  formasEl.appendChild(li);
+});
+
+// Atualizar pedido visual
+function atualizarPedido(){
+  const adicionais = document.getElementById("adicionais").value;
+  let totalMarmitas = marmitasSelecionadas.reduce((sum,m)=>sum+(cardapioFinal.valoresMarmita[m.marmita]||0),0);
+  let totalRef = refrigerantesSelecionados.reduce((sum,r)=>sum+r.preco,0);
+  const total = totalMarmitas + totalRef + taxaEntrega;
+
+  const itensEl = document.getElementById("itensPedido");
+  itensEl.innerHTML = "";
+  marmitasSelecionadas.forEach((m,i)=>{
+    itensEl.innerHTML += `<li>🍱 Marmita ${i+1}: ${m.marmita} - Itens: ${[...m.carnes,...m.acompanhamentos].join(", ")}</li>`;
+  });
+  refrigerantesSelecionados.forEach(r=>itensEl.innerHTML += `<li>🥤 ${r.tipo} - ${r.nome} R$${r.preco}</li>`);
+  if(adicionais) itensEl.innerHTML += `<li>📝 ${adicionais}</li>`;
+  if(pagamentoSelecionado) itensEl.innerHTML += `<li>💳 Pagamento: ${pagamentoSelecionado}</li>`;
+  itensEl.innerHTML += `<li>🏍️ Taxa de entrega: R$${taxaEntrega.toFixed(2)}</li>`;
+  itensEl.innerHTML += `<li>💰 Total: R$${total.toFixed(2)}</li>`;
+}
+
+// Enviar WhatsApp
+document.getElementById("enviarWhats").addEventListener("click", ()=>{
+  const nome = document.getElementById("nomeCliente").value || "Cliente";
+  const endereco = document.getElementById("enderecoCliente").value || "Não informado";
+  const local = document.getElementById("localEntrega").value;
+  const adicionais = document.getElementById("adicionais").value;
+  const pagamento = pagamentoSelecionado || "Não definido";
+  let msg = `Olá! Pedido de ${nome}\nEndereço: ${endereco}\nLocal: ${local}\n\n`;
+  marmitasSelecionadas.forEach((m,i)=>{
+    msg += `🍱 Marmita ${i+1}: ${m.marmita} - Itens: ${[...m.carnes,...m.acompanhamentos].join(", ")}\n`;
+  });
+  refrigerantesSelecionados.forEach(r=>msg += `🥤 ${r.tipo} - ${r.nome} R$${r.preco}\n`);
+  if(adicionais) msg += `📝 ${adicionais}\n`;
+  msg += `💳 Pagamento: ${pagamento}\n`;
+  msg += `🏍️ Taxa de entrega: R$${taxaEntrega.toFixed(2)}`;
+  const total = marmitasSelecionadas.reduce((sum,m)=>sum+(cardapioFinal.valoresMarmita[m.marmita]||0),0) + refrigerantesSelecionados.reduce((sum,r)=>sum+r.preco,0) + taxaEntrega;
+  msg += `\n💰 Total: R$${total.toFixed(2)}`;
+  window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`,"_blank");
+});
 </script>
 </body>
 </html>
