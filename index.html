@@ -79,65 +79,6 @@ fetch('cardapio.json?t=' + new Date().getTime())
       `Horário: ${data.horarioFuncionamento.abertura} - ${data.horarioFuncionamento.fechamento}`;
   });
 
-
-// Container principal que vai receber as pessoas
-const listaPessoas = document.getElementById('listaPessoas');
-listaPessoas.style.display = 'flex';
-listaPessoas.style.flexDirection = 'column';
-listaPessoas.style.gap = '20px';
-
-// Função para criar nova pessoa com cardápio
-function adicionarPessoa(nome) {
-  const pessoaDiv = document.createElement('div');
-  pessoaDiv.className = 'pessoa';
-  pessoaDiv.innerHTML = `
-    <h3>${nome}</h3>
-    <div class="itens"></div>
-  `;
-
-  const itensDiv = pessoaDiv.querySelector('.itens');
-
-  // Ler o cardapio.json (supondo que já foi carregado em `cardapio`)
-  cardapio.forEach(item => {
-    const label = document.createElement('label');
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.checked = false; // <-- IMPORTANTE: começa desmarcado
-
-    // evento change atualiza o pedido dessa pessoa
-    checkbox.addEventListener('change', () => {
-      if (checkbox.checked) {
-        adicionarAoPedido(nome, item.nome, item.preco);
-      } else {
-        removerDoPedido(nome, item.nome);
-      }
-    });
-
-    label.appendChild(checkbox);
-    label.append(` ${item.nome} - R$${item.preco}`);
-    itensDiv.appendChild(label);
-  });
-
-  // Adiciona no final da lista, empurrando os outros para baixo
-  listaPessoas.appendChild(pessoaDiv);
-}
-
-// Funções de controle do pedido
-const pedidos = {};
-
-function adicionarAoPedido(pessoa, item, preco) {
-  if (!pedidos[pessoa]) pedidos[pessoa] = [];
-  pedidos[pessoa].push({ item, preco });
-}
-
-function removerDoPedido(pessoa, item) {
-  if (!pedidos[pessoa]) return;
-  pedidos[pessoa] = pedidos[pessoa].filter(p => p.item !== item);
-}
-
-
-
-
 function criarPedido() {
   const index = pedidos.length;
   const pedidoObj = { nome:"", endereco:"", marmita:"", carnes:[], acompanhamentos:[], refrigerantes:[], adicionais:"", pagamento:"", taxaEntrega:0, total:0 };
@@ -448,3 +389,5 @@ doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 </script>
 </body>
 </html>
+
+
