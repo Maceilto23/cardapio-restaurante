@@ -44,11 +44,27 @@ label { display: block; margin-bottom: 6px; cursor: pointer; }
       <h3 id="horarioFuncionamento">Horário: --:-- - --:--</h3>
     </div>
 
-<!-- Botão para abrir o formulário mais_pessoas.html -->
+<!-- Botão elegante para abrir mais_pessoas.html -->
 <button 
     id="abrirMaisPessoas" 
-    style="padding: 10px 20px; background:#007BFF; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">
-    ➕ Adicionar Outra Pessoa
+    style="
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: #007BFF;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1rem;
+        justify-content: flex-start;
+        width: fit-content;
+        margin-bottom: 15px;
+    ">
+    <span style="font-size: 1.2rem;">👤</span>
+    <span>Adicionar Outra Pessoa</span>
 </button>
 
 <script>
@@ -56,6 +72,7 @@ document.getElementById('abrirMaisPessoas').addEventListener('click', () => {
     window.open('mais_pessoas.html', '_blank'); // abre em nova aba
 });
 </script>
+
 
     
   </div>
@@ -321,4 +338,5 @@ fetch('cardapio.json?t=' + new Date().getTime())
 </script>
 </body>
 </html>
+
 
