@@ -122,8 +122,6 @@ function adicionarPessoa(nome) {
   listaPessoas.appendChild(pessoaDiv);
 }
 
-// Funções de controle do pedido
-const pedidos = {};
 
 function adicionarAoPedido(pessoa, item, preco) {
   if (!pedidos[pessoa]) pedidos[pessoa] = [];
@@ -448,6 +446,7 @@ doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 </script>
 </body>
 </html>
+
 
 
 
