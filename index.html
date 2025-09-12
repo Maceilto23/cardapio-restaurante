@@ -79,6 +79,21 @@ fetch('cardapio.json?t=' + new Date().getTime())
       `Horário: ${data.horarioFuncionamento.abertura} - ${data.horarioFuncionamento.fechamento}`;
   });
 
+
+function adicionarPessoa(nome) {
+  const container = document.getElementById('listaPessoas');
+  const pessoaDiv = document.createElement('div');
+  pessoaDiv.className = 'pessoa';
+  pessoaDiv.innerHTML = `<h3>${nome}</h3><div class="itens"></div>`;
+  container.appendChild(pessoaDiv); // adiciona ao final, empurrando as anteriores para cima
+}  
+
+inputCheckbox.checked = false; // quando criar os itens
+ // depois de criar os itens da pessoa
+document.querySelectorAll('.pessoa:last-child input[type=checkbox]:checked')
+  .forEach(cb => adicionarAoPedido(cb));
+
+
 function criarPedido() {
   const index = pedidos.length;
   const pedidoObj = { nome:"", endereco:"", marmita:"", carnes:[], acompanhamentos:[], refrigerantes:[], adicionais:"", pagamento:"", taxaEntrega:0, total:0 };
@@ -389,6 +404,7 @@ doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 </script>
 </body>
 </html>
+
 
 
 
