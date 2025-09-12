@@ -291,94 +291,97 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
   window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
 
   // Gerar PDF
-  // Gerar PDF cupom 58mm
+// Gerar PDF cupom 80mm
 const { jsPDF } = window.jspdf;
 
-// Largura 58mm ≈ 165 pontos (1mm ≈ 2.83pt)
+// Largura 80mm ≈ 226pt
 const doc = new jsPDF({
   orientation: 'portrait',
   unit: 'pt',
-  format: [165, 600] // altura será expandida depois
+  format: [226, 1000] // altura grande o suficiente, cresce conforme conteúdo
 });
 
 // Cabeçalho
 doc.setFont('helvetica', 'bold');
-doc.setFontSize(12);
+doc.setFontSize(14);
 doc.text('Restaurante Colinas', 10, 20);
 
 doc.setFont('helvetica', 'normal');
-doc.setFontSize(9);
+doc.setFontSize(10);
 doc.text(`Pedidos de ${dia}/${mes}/${ano}`, 10, 35);
 
-let y = 50;
+let y = 55;
 
 // Conteúdo dos pedidos
 pedidos.forEach((p, i) => {
   doc.setFont('helvetica', 'bold');
   doc.text(`PEDIDO ${i + 1} - ${p.nome || "Cliente"}`, 10, y);
-  y += 10;
+  y += 12;
 
   doc.setFont('helvetica', 'normal');
   if (p.marmita) {
     doc.text(`Marmita: ${p.marmita}  R$${p.valorMarmita}`, 10, y);
-    y += 10;
+    y += 12;
   }
 
   if (p.carnes && p.carnes.length) {
     p.carnes.forEach(c => {
       doc.text(`Carne: ${c}`, 15, y);
-      y += 10;
+      y += 12;
     });
   }
 
   if (p.acompanhamentos && p.acompanhamentos.length) {
     p.acompanhamentos.forEach(a => {
       doc.text(`Acomp.: ${a}`, 15, y);
-      y += 10;
+      y += 12;
     });
   }
 
   if (p.refrigerantes && p.refrigerantes.length) {
     p.refrigerantes.forEach(r => {
       doc.text(`Bebida: ${r.nome}  R$${r.preco}`, 15, y);
-      y += 10;
+      y += 12;
     });
   }
 
   if (p.adicionais) {
     doc.text(`Obs: ${p.adicionais}`, 15, y);
-    y += 10;
+    y += 12;
   }
 
   if (p.pagamento) {
     doc.text(`Pagamento: ${p.pagamento}`, 15, y);
-    y += 10;
+    y += 12;
   }
 
   doc.text(`Taxa entrega: R$${(p.taxaEntrega || 0).toFixed(2)}`, 15, y);
-  y += 10;
+  y += 12;
 
   doc.setFont('helvetica', 'bold');
   doc.text(`Subtotal: R$${(p.total || 0).toFixed(2)}`, 15, y);
-  y += 15;
+  y += 16;
 
   // Linha divisória
-  doc.setDrawColor(200);
-  doc.line(10, y, 155, y);
-  y += 10;
+  doc.setDrawColor(180);
+  doc.setLineWidth(0.5);
+  doc.line(10, y, 216, y);
+  y += 12;
 });
 
 // Total geral
 doc.setFont('helvetica', 'bold');
-doc.setFontSize(11);
-doc.text(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`, 10, y);
+doc.setFontSize(12);
+doc.text(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`, 10, y + 10);
 
 // Salvar arquivo
 doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
+
 
 });
 
 </script>
 </body>
 </html>
+
 
