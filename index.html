@@ -294,51 +294,59 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
 // Gerar PDF cupom 80mm
 const { jsPDF } = window.jspdf;
 
-// Largura 80mm ≈ 226pt
 const doc = new jsPDF({
   orientation: 'portrait',
   unit: 'pt',
-  format: [226, 1000] // altura grande o suficiente, cresce conforme conteúdo
+  format: [226, 1000] // largura 80mm
 });
 
 // Cabeçalho
 doc.setFont('helvetica', 'bold');
 doc.setFontSize(14);
-doc.text('Restaurante Colinas', 10, 20);
+doc.text('Restaurante Colinas', 113, 20, { align: 'center' }); // centralizado
 
 doc.setFont('helvetica', 'normal');
 doc.setFontSize(10);
-doc.text(`Pedidos de ${dia}/${mes}/${ano}`, 10, 35);
+doc.text(`Pedidos de ${dia}/${mes}/${ano}`, 113, 35, { align: 'center' });
 
 let y = 55;
 
-// Conteúdo dos pedidos
 pedidos.forEach((p, i) => {
   doc.setFont('helvetica', 'bold');
   doc.text(`PEDIDO ${i + 1} - ${p.nome || "Cliente"}`, 10, y);
   y += 12;
 
-  doc.setFont('helvetica', 'normal');
+  // 🏠 Local e Endereço
+  if (p.local) {
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Local: ${p.local}`, 15, y);
+    y += 12;
+  }
+  if (p.endereco) {
+    doc.text(`Endereço: ${p.endereco}`, 15, y);
+    y += 12;
+  }
+
   if (p.marmita) {
     doc.text(`Marmita: ${p.marmita}  R$${p.valorMarmita}`, 10, y);
     y += 12;
   }
 
-  if (p.carnes && p.carnes.length) {
+  if (p.carnes?.length) {
     p.carnes.forEach(c => {
       doc.text(`Carne: ${c}`, 15, y);
       y += 12;
     });
   }
 
-  if (p.acompanhamentos && p.acompanhamentos.length) {
+  if (p.acompanhamentos?.length) {
     p.acompanhamentos.forEach(a => {
       doc.text(`Acomp.: ${a}`, 15, y);
       y += 12;
     });
   }
 
-  if (p.refrigerantes && p.refrigerantes.length) {
+  if (p.refrigerantes?.length) {
     p.refrigerantes.forEach(r => {
       doc.text(`Bebida: ${r.nome}  R$${r.preco}`, 15, y);
       y += 12;
@@ -369,19 +377,18 @@ pedidos.forEach((p, i) => {
   y += 12;
 });
 
-// Total geral
+// Total geral centralizado
 doc.setFont('helvetica', 'bold');
 doc.setFontSize(12);
-doc.text(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`, 10, y + 10);
+doc.text(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`, 113, y + 10, { align: 'center' });
 
-// Salvar arquivo
 doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
-
 
 });
 
 </script>
 </body>
 </html>
+
 
 
