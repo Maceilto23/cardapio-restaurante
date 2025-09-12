@@ -291,34 +291,94 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
   window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
 
   // Gerar PDF
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.setFontSize(18);
-  doc.setFont("helvetica","bold");
-  doc.text("Restaurante Colinas", 10, 10);
-  doc.setFontSize(12);
-  doc.setFont("helvetica","normal");
-  doc.text(`Pedidos de ${dia}/${mes}/${ano}`, 10, 20);
-  let y = 30;
-  pedidos.forEach((p,i)=>{
-    doc.setFont("helvetica","bold");
-    doc.text(`Pedido ${i+1} - ${p.nome || "Cliente"}`, 10, y);
-    y+=6;
-    doc.setFont("helvetica","normal");
-    if(p.marmita) { doc.text(`🍱 Marmita ${p.marmita} - R$${p.valorMarmita}`, 12, y); y+=6; }
-    if(p.carnes) p.carnes.forEach(c=>{ doc.text(`🍖 ${c}`, 12, y); y+=6; });
-    if(p.acompanhamentos) p.acompanhamentos.forEach(a=>{ doc.text(`🥗 ${a}`, 12, y); y+=6; });
-    if(p.refrigerantes) p.refrigerantes.forEach(r=>{ doc.text(`🥤 ${r.nome} - R$${r.preco}`, 12, y); y+=6; });
-    if(p.adicionais) { doc.text(`📝 ${p.adicionais}`, 12, y); y+=6; }
-    if(p.pagamento) { doc.text(`💳 Pagamento: ${p.pagamento}`, 12, y); y+=6; }
-    doc.text(`🏍️ Taxa de entrega: R$${(p.taxaEntrega||0).toFixed(2)}`, 12, y); y+=6;
-    doc.text(`💰 Subtotal: R$${(p.total||0).toFixed(2)}`, 12, y); y+=10;
-  });
-  doc.setFont("helvetica","bold");
-  doc.text(`💸 TOTAL GERAL: R$${totalGeral.toFixed(2)}`, 10, y);
-  doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
+  // Gerar PDF cupom 58mm
+const { jsPDF } = window.jspdf;
+
+// Largura 58mm ≈ 165 pontos (1mm ≈ 2.83pt)
+const doc = new jsPDF({
+  orientation: 'portrait',
+  unit: 'pt',
+  format: [165, 600] // altura será expandida depois
+});
+
+// Cabeçalho
+doc.setFont('helvetica', 'bold');
+doc.setFontSize(12);
+doc.text('Restaurante Colinas', 10, 20);
+
+doc.setFont('helvetica', 'normal');
+doc.setFontSize(9);
+doc.text(`Pedidos de ${dia}/${mes}/${ano}`, 10, 35);
+
+let y = 50;
+
+// Conteúdo dos pedidos
+pedidos.forEach((p, i) => {
+  doc.setFont('helvetica', 'bold');
+  doc.text(`PEDIDO ${i + 1} - ${p.nome || "Cliente"}`, 10, y);
+  y += 10;
+
+  doc.setFont('helvetica', 'normal');
+  if (p.marmita) {
+    doc.text(`Marmita: ${p.marmita}  R$${p.valorMarmita}`, 10, y);
+    y += 10;
+  }
+
+  if (p.carnes && p.carnes.length) {
+    p.carnes.forEach(c => {
+      doc.text(`Carne: ${c}`, 15, y);
+      y += 10;
+    });
+  }
+
+  if (p.acompanhamentos && p.acompanhamentos.length) {
+    p.acompanhamentos.forEach(a => {
+      doc.text(`Acomp.: ${a}`, 15, y);
+      y += 10;
+    });
+  }
+
+  if (p.refrigerantes && p.refrigerantes.length) {
+    p.refrigerantes.forEach(r => {
+      doc.text(`Bebida: ${r.nome}  R$${r.preco}`, 15, y);
+      y += 10;
+    });
+  }
+
+  if (p.adicionais) {
+    doc.text(`Obs: ${p.adicionais}`, 15, y);
+    y += 10;
+  }
+
+  if (p.pagamento) {
+    doc.text(`Pagamento: ${p.pagamento}`, 15, y);
+    y += 10;
+  }
+
+  doc.text(`Taxa entrega: R$${(p.taxaEntrega || 0).toFixed(2)}`, 15, y);
+  y += 10;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Subtotal: R$${(p.total || 0).toFixed(2)}`, 15, y);
+  y += 15;
+
+  // Linha divisória
+  doc.setDrawColor(200);
+  doc.line(10, y, 155, y);
+  y += 10;
+});
+
+// Total geral
+doc.setFont('helvetica', 'bold');
+doc.setFontSize(11);
+doc.text(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`, 10, y);
+
+// Salvar arquivo
+doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
+
 });
 
 </script>
 </body>
 </html>
+
