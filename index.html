@@ -43,6 +43,21 @@ label { display: block; margin-bottom: 6px; cursor: pointer; }
       <h2>🍽️ Cardápio de Hoje – <span id="diaSemana"></span>, <span id="dataHoje"></span></h2>
       <h3 id="horarioFuncionamento">Horário: --:-- - --:--</h3>
     </div>
+
+<!-- Botão para abrir o formulário mais_pessoas.html -->
+<button 
+    id="abrirMaisPessoas" 
+    style="padding: 10px 20px; background:#007BFF; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">
+    ➕ Adicionar Outra Pessoa
+</button>
+
+<script>
+document.getElementById('abrirMaisPessoas').addEventListener('click', () => {
+    window.open('mais_pessoas.html', '_blank'); // abre em nova aba
+});
+</script>
+
+    
   </div>
 
   <div class="marmita-options">
@@ -306,3 +321,4 @@ fetch('cardapio.json?t=' + new Date().getTime())
 </script>
 </body>
 </html>
+
