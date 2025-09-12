@@ -287,6 +287,7 @@ document.getElementById("adicionarPedido").addEventListener("click", ()=>{
   criarPedido();
 });
 
+
 // Enviar via WhatsApp
 document.getElementById("enviarWhats").addEventListener("click", ()=>{
   const agora = new Date();
@@ -297,6 +298,7 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
   const [horaFechamento, minFechamento] = cardapioFinal.horarioFuncionamento.fechamento.split(":").map(Number);
   const aberturaMinutos = horaAbertura*60+minAbertura;
   const fechamentoMinutos = horaFechamento*60+minFechamento;
+
   if(agoraMinutos<aberturaMinutos || agoraMinutos>fechamentoMinutos){
     alert(`Pedidos só podem ser feitos entre ${cardapioFinal.horarioFuncionamento.abertura} e ${cardapioFinal.horarioFuncionamento.fechamento}.`);
     return;
@@ -304,53 +306,79 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
 
   if(pedidos.length===0){ alert("Nenhum pedido adicionado."); return; }
 
-  let msg = "🍽️ *Pedidos do Dia*\n";
+  // Montar mensagem profissional
+  let msg = `*Restaurante Colinas*\nPedidos de ${dia}/${mes}/${ano}\n\n`;
   pedidos.forEach((p,i)=>{
-    msg += `\n📌 Pedido ${i+1} - ${p.nome || "Cliente"}\n`;
-    if(p.marmita) msg += `🍱 Marmita ${p.marmita} - R$${p.valorMarmita}\n`;
-    if(p.carnes) p.carnes.forEach(c=>msg += `🍖 ${c}\n`);
-    if(p.acompanhamentos) p.acompanhamentos.forEach(a=>msg += `🥗 ${a}\n`);
-    if(p.refrigerantes) p.refrigerantes.forEach(r=>msg += `🥤 ${r.nome} - R$${r.preco}\n`);
-    if(p.adicionais) msg += `📝 ${p.adicionais}\n`;
+    msg += `*Pedido ${i+1} – ${p.nome || "Cliente"}*\n`;
+    if(p.marmita) msg += `🍱 Marmita: ${p.marmita} – R$${(p.valorMarmita || 0).toFixed(2)}\n`;
+    if(p.carnes && p.carnes.length>0) msg += `🍖 Carnes: ${p.carnes.join(", ")}\n`;
+    if(p.acompanhamentos && p.acompanhamentos.length>0) msg += `🥗 Acompanhamentos: ${p.acompanhamentos.join(", ")}\n`;
+    if(p.refrigerantes && p.refrigerantes.length>0) {
+      p.refrigerantes.forEach(r=>{
+        msg += `🥤 Refrigerante: ${r.nome} – R$${r.preco.toFixed(2)}\n`;
+      });
+    }
+    if(p.adicionais) msg += `📝 Adicionais: ${p.adicionais}\n`;
     if(p.pagamento) msg += `💳 Pagamento: ${p.pagamento}\n`;
     msg += `🏍️ Taxa de entrega: R$${(p.taxaEntrega||0).toFixed(2)}\n`;
-    msg += `💰 Subtotal: R$${(p.total||0).toFixed(2)}\n`;
+    msg += `💰 Subtotal: R$${(p.total||0).toFixed(2)}\n\n`;
   });
-  const totalGeral = pedidos.reduce((sum,p)=>sum+(p.total||0),0);
-  msg += `\n💸 *TOTAL GERAL: R$${totalGeral.toFixed(2)}*`;
 
+  const totalGeral = pedidos.reduce((sum,p)=>sum+(p.total||0),0);
+  msg += `*💸 TOTAL GERAL: R$${totalGeral.toFixed(2)}*`;
+
+  // Abrir WhatsApp
   window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
+});
+
 
   // Gerar PDF
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.setFontSize(18);
+  // Gerar PDF profissional
+const { jsPDF } = window.jspdf;
+const doc = new jsPDF();
+doc.setFont("helvetica","bold");
+doc.setFontSize(18);
+doc.text("Restaurante Colinas", 10, 10);
+
+doc.setFont("helvetica","normal");
+doc.setFontSize(12);
+doc.text(`Pedidos de ${dia}/${mes}/${ano}`, 10, 20);
+
+let y = 30; // Posição vertical inicial
+pedidos.forEach((p,i)=>{
   doc.setFont("helvetica","bold");
-  doc.text("Restaurante Colinas", 10, 10);
-  doc.setFontSize(12);
+  doc.text(`Pedido ${i+1} – ${p.nome || "Cliente"}`, 10, y);
+  y += 8;
+  
   doc.setFont("helvetica","normal");
-  doc.text(`Pedidos de ${dia}/${mes}/${ano}`, 10, 20);
-  let y = 30;
-  pedidos.forEach((p,i)=>{
-    doc.setFont("helvetica","bold");
-    doc.text(`Pedido ${i+1} - ${p.nome || "Cliente"}`, 10, y);
-    y+=6;
-    doc.setFont("helvetica","normal");
-    if(p.marmita) { doc.text(`🍱 Marmita ${p.marmita} - R$${p.valorMarmita}`, 12, y); y+=6; }
-    if(p.carnes) p.carnes.forEach(c=>{ doc.text(`🍖 ${c}`, 12, y); y+=6; });
-    if(p.acompanhamentos) p.acompanhamentos.forEach(a=>{ doc.text(`🥗 ${a}`, 12, y); y+=6; });
-    if(p.refrigerantes) p.refrigerantes.forEach(r=>{ doc.text(`🥤 ${r.nome} - R$${r.preco}`, 12, y); y+=6; });
-    if(p.adicionais) { doc.text(`📝 ${p.adicionais}`, 12, y); y+=6; }
-    if(p.pagamento) { doc.text(`💳 Pagamento: ${p.pagamento}`, 12, y); y+=6; }
-    doc.text(`🏍️ Taxa de entrega: R$${(p.taxaEntrega||0).toFixed(2)}`, 12, y); y+=6;
-    doc.text(`💰 Subtotal: R$${(p.total||0).toFixed(2)}`, 12, y); y+=10;
-  });
-  doc.setFont("helvetica","bold");
-  doc.text(`💸 TOTAL GERAL: R$${totalGeral.toFixed(2)}`, 10, y);
-  doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
+  if(p.marmita) { doc.text(`🍱 Marmita: ${p.marmita} – R$${(p.valorMarmita || 0).toFixed(2)}`, 12, y); y+=6; }
+  if(p.carnes && p.carnes.length>0) doc.text(`🍖 Carnes: ${p.carnes.join(", ")}`, 12, y), y+=6;
+  if(p.acompanhamentos && p.acompanhamentos.length>0) doc.text(`🥗 Acompanhamentos: ${p.acompanhamentos.join(", ")}`, 12, y), y+=6;
+  if(p.refrigerantes && p.refrigerantes.length>0){
+    p.refrigerantes.forEach(r=>{
+      doc.text(`🥤 Refrigerante: ${r.nome} – R$${r.preco.toFixed(2)}`, 12, y);
+      y += 6;
+    });
+  }
+  if(p.adicionais) { doc.text(`📝 Adicionais: ${p.adicionais}`, 12, y); y+=6; }
+  if(p.pagamento) { doc.text(`💳 Pagamento: ${p.pagamento}`, 12, y); y+=6; }
+  doc.text(`🏍️ Taxa de entrega: R$${(p.taxaEntrega||0).toFixed(2)}`, 12, y); y+=6;
+  doc.text(`💰 Subtotal: R$${(p.total||0).toFixed(2)}`, 12, y); y+=10;
+
+  // Verifica se y está próximo do final da página e cria nova página se necessário
+  if(y > 270){ doc.addPage(); y = 20; }
+});
+
+const totalGeral = pedidos.reduce((sum,p)=>sum+(p.total||0),0);
+doc.setFont("helvetica","bold");
+doc.text(`💸 TOTAL GERAL: R$${totalGeral.toFixed(2)}`, 10, y);
+
+doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
+
 });
 
 </script>
 </body>
 </html>
+
 
