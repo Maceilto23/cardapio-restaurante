@@ -124,7 +124,8 @@ fetch('cardapio.json?t=' + new Date().getTime())
     document.getElementById("gerarMarmitas").addEventListener("click", () => {
       const qtd = parseInt(document.getElementById("quantidadeMarmitas").value) || 1;
       marmitaIconsEl.innerHTML = "";
-      marmitasSelecionadas = Array(qtd).fill({marmita:"", carnes:[], acompanhamentos:[]});
+      // Adiciona quantidade inicial 1
+      marmitasSelecionadas = Array(qtd).fill({marmita:"", carnes:[], acompanhamentos:[], quantidade: 1});
       
       for(let i=0;i<qtd;i++){
         const div = document.createElement("div");
@@ -157,6 +158,17 @@ fetch('cardapio.json?t=' + new Date().getTime())
           atualizarPedido();
         });
         optionsDiv.appendChild(label);
+      });
+
+      // Campo para quantidade
+      const quantidadeDiv = document.getElementById("quantidadeAtualMarmita");
+      quantidadeDiv.innerHTML = `Quantidade: <input type="number" min="1" value="${marmitasSelecionadas[index].quantidade}" style="width:50px;">`;
+      quantidadeDiv.querySelector("input").addEventListener("change", (e)=>{
+        let val = parseInt(e.target.value);
+        if(isNaN(val) || val < 1) val = 1;
+        marmitasSelecionadas[index].quantidade = val;
+        e.target.value = val;
+        atualizarPedido();
       });
 
       criarLista(cardapioFinal.cardapio["sexta-feira"].carnes, document.getElementById("carnes"), "carnes", index);
@@ -243,14 +255,14 @@ fetch('cardapio.json?t=' + new Date().getTime())
     // --------------------
     function atualizarPedido(){
       const adicionais = document.getElementById("adicionais").value;
-      let totalMarmitas = marmitasSelecionadas.reduce((sum,m)=>sum+(cardapioFinal.valoresMarmita[m.marmita]||0),0);
+      let totalMarmitas = marmitasSelecionadas.reduce((sum,m)=>sum+(cardapioFinal.valoresMarmita[m.marmita]||0)*m.quantidade,0);
       let totalRef = refrigerantesSelecionados.reduce((sum,r)=>sum+r.preco,0);
       const total = totalMarmitas + totalRef + taxaEntrega;
 
       const itensEl = document.getElementById("itensPedido");
       itensEl.innerHTML = "";
       marmitasSelecionadas.forEach((m,i)=>{
-        itensEl.innerHTML += `<li>🍱 Marmita ${i+1}: ${m.marmita} - Itens: ${[...m.carnes,...m.acompanhamentos].join(", ")}</li>`;
+        itensEl.innerHTML += `<li>🍱 Marmita ${i+1} (${m.quantidade}x): ${m.marmita} - Itens: ${[...m.carnes,...m.acompanhamentos].join(", ")}</li>`;
       });
       refrigerantesSelecionados.forEach(r=>itensEl.innerHTML += `<li>🥤 ${r.tipo} - ${r.nome} R$${r.preco}</li>`);
       if(adicionais) itensEl.innerHTML += `<li>📝 ${adicionais}</li>`;
@@ -269,13 +281,13 @@ fetch('cardapio.json?t=' + new Date().getTime())
       const adicionais = document.getElementById("adicionais").value;
       let msg = `Olá! Pedido de ${nome}\nEndereço: ${endereco}\nLocal: ${local}\n\n`;
       marmitasSelecionadas.forEach((m,i)=>{
-        msg += `🍱 Marmita ${i+1}: ${m.marmita} - Itens: ${[...m.carnes,...m.acompanhamentos].join(", ")}\n`;
+        msg += `🍱 Marmita ${i+1} (${m.quantidade}x): ${m.marmita} - Itens: ${[...m.carnes,...m.acompanhamentos].join(", ")}\n`;
       });
       refrigerantesSelecionados.forEach(r=>msg += `🥤 ${r.tipo} - ${r.nome} R$${r.preco}\n`);
       if(adicionais) msg += `📝 ${adicionais}\n`;
       msg += `💳 Pagamento: ${pagamentoSelecionado || "Não definido"}\n`;
       msg += `🏍️ Taxa de entrega: R$${taxaEntrega.toFixed(2)}`;
-      const total = marmitasSelecionadas.reduce((sum,m)=>sum+(cardapioFinal.valoresMarmita[m.marmita]||0),0) + refrigerantesSelecionados.reduce((sum,r)=>sum+r.preco,0) + taxaEntrega;
+      const total = marmitasSelecionadas.reduce((sum,m)=>sum+(cardapioFinal.valoresMarmita[m.marmita]||0)*m.quantidade,0) + refrigerantesSelecionados.reduce((sum,r)=>sum+r.preco,0) + taxaEntrega;
       msg += `\n💰 Total: R$${total.toFixed(2)}`;
       window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`,"_blank");
     });
@@ -283,5 +295,3 @@ fetch('cardapio.json?t=' + new Date().getTime())
   })
   .catch(err => console.error("Erro ao carregar cardápio.json:", err));
 </script>
-
-
