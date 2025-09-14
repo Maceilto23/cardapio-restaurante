@@ -108,61 +108,113 @@ fetch('cardapio.json?t=' + new Date().getTime())
 
 // Criar pedido individual
 function criarPedido() {
-  if(!cardapioFinal) { alert("Aguarde o carregamento do cardápio..."); return; }
+  if (!cardapioFinal) return alert("Aguarde o carregamento do cardápio...");
+
   const index = pedidos.length;
-  const pedidoObj = { nome:"", marmita:"", carnes:[], acompanhamentos:[], refrigerantes:[], adicionais:"", pagamento:"", taxaEntrega:0, total:0, valorMarmita:0 };
+  const pedidoObj = { nome:"", marmita:"", carnes:[], acompanhamentos:[], refrigerantes:[], adicionais:"", pagamento:"", local:"", taxaEntrega:0 };
   pedidos.push(pedidoObj);
 
   const container = document.createElement("div");
   container.classList.add("pedido-individual");
   container.dataset.index = index;
+
   container.innerHTML = `
     <h4>Pedido da Pessoa ${index+1}</h4>
     <label>Nome:</label>
     <input type="text" class="nomeCliente" placeholder="Nome do cliente">
+
+    <label>Local de Entrega:</label>
+    <select class="localEntrega"></select>
+
     <div class="marmita-options"><h4>🍱 Tipo de Marmita</h4></div>
+    
     <h4>🍖 Carnes</h4><ul class="carnes"></ul>
     <h4>🥗 Acompanhamentos</h4><ul class="acompanhamentos"></ul>
     <h4>🥤 Refrigerantes</h4><ul class="refrigerantes"></ul>
+
     <h4>Adicionais:</h4>
     <input type="text" class="adicionais" placeholder="Digite adicionais">
+    
     <h4>💳 Formas de Pagamento</h4>
     <ul class="formasPagamentoList"></ul>
   `;
+
   document.getElementById("pedidosContainer").appendChild(container);
 
+  // --- Carregar locais de entrega ---
+  const localEl = container.querySelector(".localEntrega");
+  cardapioFinal.locaisEntrega.forEach((loc, i) => {
+    const opt = document.createElement("option");
+    opt.value = loc.nome;
+    opt.dataset.taxa = loc.taxa;
+    opt.textContent = `${loc.nome} - R$${loc.taxa.toFixed(2)}`;
+    if(i===0) pedidoObj.taxaEntrega = loc.taxa;
+    localEl.appendChild(opt);
+  });
+  localEl.addEventListener("change", ()=>{
+    pedidoObj.local = localEl.value;
+    pedidoObj.taxaEntrega = parseFloat(localEl.selectedOptions[0].dataset.taxa);
+    atualizarPedido();
+  });
+
+  // --- Carregar tipos de marmita ---
   const marmitaContainer = container.querySelector(".marmita-options");
   Object.keys(cardapioFinal.valoresMarmita).forEach(key => {
     const label = document.createElement("label");
     label.innerHTML = `<input type="radio" name="marmita${index}" value="${key}"> Marmita ${key} - R$${cardapioFinal.valoresMarmita[key]},00`;
-    label.querySelector("input").addEventListener("change", ()=> {
+    label.querySelector("input").addEventListener("change", ()=>{
       pedidoObj.marmita = key;
       pedidoObj.valorMarmita = cardapioFinal.valoresMarmita[key];
-      container.querySelectorAll(".carnes li").forEach(li=>li.classList.remove("selected"));
       atualizarPedido();
     });
     marmitaContainer.appendChild(label);
   });
 
-  criarLista(cardapioFinal.carnes, container.querySelector(".carnes"));
-  criarLista(cardapioFinal.acompanhamentos, container.querySelector(".acompanhamentos"));
-  criarLista(cardapioFinal.refrigerantes, container.querySelector(".refrigerantes"));
-  criarLista(cardapioFinal.formasPagamento, container.querySelector(".formasPagamentoList"));
+  // --- Função para criar listas de seleção ---
+  function criarLista(itens, ulContainer, tipo) {
+    ulContainer.innerHTML = "";
+    itens.forEach(i => {
+      const li = document.createElement("li");
+      li.setAttribute("data-item", i);
+      li.innerHTML = `<div class="checkbox-fake">✔</div><span>${i}</span>`;
+      li.addEventListener("click", ()=>{
+        li.classList.toggle("selected");
+        if(tipo === "carnes") pedidoObj.carnes = Array.from(ulContainer.querySelectorAll("li.selected")).map(x=>x.dataset.item);
+        if(tipo === "acompanhamentos") pedidoObj.acompanhamentos = Array.from(ulContainer.querySelectorAll("li.selected")).map(x=>x.dataset.item);
+        if(tipo === "refrigerantes") pedidoObj.refrigerantes = Array.from(ulContainer.querySelectorAll("li.selected")).map(x=>x.dataset.item);
+        atualizarPedido();
+      });
+      ulContainer.appendChild(li);
+    });
+  }
 
-  container.querySelector(".formasPagamentoList").querySelectorAll("li").forEach(li=>{
-    li.addEventListener("click", ()=> {
-      container.querySelector(".formasPagamentoList").querySelectorAll("li").forEach(l=>l.classList.remove("selected"));
+  // --- Carregar cardápio específico do dia ---
+  const hojeCardapio = cardapioFinal.cardapio[diasSemana[hojeDate.getDay()].toLowerCase()] || { carnes: [], acompanhamentos: [] };
+  criarLista(hojeCardapio.carnes, container.querySelector(".carnes"), "carnes");
+  criarLista(hojeCardapio.acompanhamentos, container.querySelector(".acompanhamentos"), "acompanhamentos");
+  criarLista(cardapioFinal.refrigerantes, container.querySelector(".refrigerantes"), "refrigerantes");
+
+  // --- Formas de pagamento ---
+  const formasEl = container.querySelector(".formasPagamentoList");
+  cardapioFinal.formasPagamento.forEach(f => {
+    const li = document.createElement("li");
+    li.innerHTML = `<div class="checkbox-fake">X</div><span>${f}</span>`;
+    li.addEventListener("click", ()=>{
+      formasEl.querySelectorAll("li").forEach(l=>l.classList.remove("selected"));
       li.classList.add("selected");
-      pedidoObj.pagamento = li.dataset.item || li.textContent;
+      pedidoObj.pagamento = f;
       atualizarPedido();
     });
+    formasEl.appendChild(li);
   });
 
-  container.querySelector(".nomeCliente").addEventListener("input", e=> { pedidoObj.nome = e.target.value; atualizarPedido(); });
-  container.querySelector(".adicionais").addEventListener("input", e=> { pedidoObj.adicionais = e.target.value; atualizarPedido(); });
+  // --- Inputs nome e adicionais ---
+  container.querySelector(".nomeCliente").addEventListener("input", e => { pedidoObj.nome = e.target.value; atualizarPedido(); });
+  container.querySelector(".adicionais").addEventListener("input", e => { pedidoObj.adicionais = e.target.value; atualizarPedido(); });
 
   atualizarPedido();
 }
+
 
 // Atualiza lista de pedidos e totais
 function atualizarPedido() {
@@ -254,3 +306,4 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
 </script>
 </body>
 </html>
+
