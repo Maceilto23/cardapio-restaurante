@@ -168,6 +168,46 @@ function criarPedido(){
     marmitaContainer.appendChild(label);
   });
 
+  <ul id="listaRefrigerantes"></ul>
+
+<script>
+// Espera carregar o cardápio
+fetch('cardapio.json?t=' + new Date().getTime())
+  .then(res => res.json())
+  .then(data => {
+    const refrigerantes = data.refrigerantes || [];
+    const ul = document.getElementById("listaRefrigerantes");
+    ul.innerHTML = "";
+    
+    refrigerantes.forEach(r => {
+      const li = document.createElement("li");
+      li.textContent = r; // Apenas exibe o nome
+      li.dataset.item = r;
+      
+      // Opcional: marcação de seleção ao clicar
+      li.addEventListener("click", () => {
+        li.classList.toggle("selected");
+      });
+
+      ul.appendChild(li);
+    });
+  })
+  .catch(err => console.error("Erro ao carregar refrigerantes:", err));
+</script>
+
+<style>
+#listaRefrigerantes li {
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin: 3px 0;
+  transition: background 0.2s;
+}
+#listaRefrigerantes li:hover { background: #f0f0f0; }
+#listaRefrigerantes li.selected { background: #007BFF; color: #fff; }
+</style>
+
+
   // Função genérica para listas
   function criarLista(itens, ulContainer, tipo, unico=false){
     ulContainer.innerHTML="";
@@ -286,3 +326,4 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
 
 </body>
 </html>
+
