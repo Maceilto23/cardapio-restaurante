@@ -168,29 +168,54 @@ function criarPedido(){
 
   let limiteCarnes = 0;
   const marmitaContainer = container.querySelector(".marmita-options");
+
+  // Definir padrões de acompanhamentos por marmita
+  const hojeCardapio = cardapioFinal.cardapio[diasSemana[hojeDate.getDay()].toLowerCase()] || { carnes: [], acompanhamentos: [] };
+  const acompanhamentosPadrao = {
+    "01": hojeCardapio.acompanhamentos, // Marmita 01
+    "02": hojeCardapio.acompanhamentos  // Marmita 02
+    // Porções não entram aqui
+  };
+
+  // Criar opções de marmita
   Object.keys(cardapioFinal.valoresMarmita).forEach(key=>{
     const label = document.createElement("label");
     label.innerHTML = `<input type="radio" name="marmita${index}" value="${key}"> Marmita ${key} - R$${cardapioFinal.valoresMarmita[key]},00`;
     label.querySelector("input").addEventListener("change", ()=>{
       pedidoObj.marmita = key;
       pedidoObj.valorMarmita = cardapioFinal.valoresMarmita[key];
-      limiteCarnes = key.includes("01")?1:key.includes("02")?2:0;
+
+      // Definir limite de carnes
+      limiteCarnes = key.includes("01") ? 1 : key.includes("02") ? 2 : 0;
 
       const acompLis = container.querySelectorAll(".acompanhamentos li");
-      acompLis.forEach(li=>{
-        li.style.pointerEvents = limiteCarnes>0 ? "auto" : "none";
-        li.classList.toggle("selected", key.includes("01"));
-      });
 
-      pedidoObj.acompanhamentos = Array.from(container.querySelectorAll(".acompanhamentos li.selected")).map(x=>x.dataset.item);
+      if(key.toLowerCase().includes("porção")) {
+        // Porções não permitem acompanhamentos
+        acompLis.forEach(li=>{
+          li.classList.remove("selected");
+          li.style.pointerEvents = "none";
+        });
+        pedidoObj.acompanhamentos = [];
+      } else {
+        // Marmitas marcam acompanhamentos automaticamente
+        acompLis.forEach(li=>{
+          li.classList.toggle("selected", acompanhamentosPadrao[key]?.includes(li.dataset.item));
+          li.style.pointerEvents = "auto";
+        });
+        pedidoObj.acompanhamentos = Array.from(acompLis).filter(li=>li.classList.contains("selected")).map(li=>li.dataset.item);
+      }
 
+      // Limpa carnes selecionadas
       container.querySelectorAll(".carnes li").forEach(li=>li.classList.remove("selected"));
       pedidoObj.carnes = [];
+
       atualizarPedido();
     });
     marmitaContainer.appendChild(label);
   });
 
+  // Função para criar listas de itens
   function criarLista(itens, ulContainer, tipo, unico=false){
     ulContainer.innerHTML="";
     itens.forEach(i=>{
@@ -210,24 +235,22 @@ function criarPedido(){
     });
   }
 
-  const hojeCardapio = cardapioFinal.cardapio[diasSemana[hojeDate.getDay()].toLowerCase()] || { carnes: [], acompanhamentos: [] };
   criarLista(hojeCardapio.carnes, container.querySelector(".carnes"), "carnes");
   criarLista(hojeCardapio.acompanhamentos, container.querySelector(".acompanhamentos"), "acompanhamentos");
+
   // Combinar todas as bebidas em um único array para exibir
-    const refrigerantesHoje = [];
-    Object.values(cardapioFinal.refrigerantes).forEach(tipo => {
-      tipo.forEach(r => refrigerantesHoje.push(`${r.nome} R$${r.preco.toFixed(2)}`));
-    });
-    
-    criarLista(refrigerantesHoje, container.querySelector(".refrigerantes"), "refrigerantes", true);
-
-
+  const refrigerantesHoje = [];
+  Object.values(cardapioFinal.refrigerantes).forEach(tipo => {
+    tipo.forEach(r => refrigerantesHoje.push(`${r.nome} R$${r.preco.toFixed(2)}`));
+  });
+  criarLista(refrigerantesHoje, container.querySelector(".refrigerantes"), "refrigerantes", true);
 
   container.querySelector(".nomeCliente").addEventListener("input", e=>{ pedidoObj.nome=e.target.value; atualizarPedido(); });
   container.querySelector(".adicionais").addEventListener("input", e=>{ pedidoObj.adicionais=e.target.value; atualizarPedido(); });
 
   atualizarPedido();
 }
+
 
 // ATUALIZAR PEDIDO
 function atualizarPedido(){
@@ -374,5 +397,6 @@ doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 </script>
 </body>
 </html>
+
 
 
