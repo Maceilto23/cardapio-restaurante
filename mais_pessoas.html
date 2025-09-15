@@ -295,12 +295,14 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
   const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:[226,1000] });
   const t = (texto) => texto.normalize("NFC");
   const larguraMax = 206;
-
-  doc.setFont('helvetica','bold'); doc.setFontSize(14); 
+  
+  doc.setFont('helvetica','bold'); 
+  doc.setFontSize(14); 
   doc.text(t('Restaurante Colinas'), 113, 20, {align:'center'});
-  doc.setFont('helvetica','normal'); doc.setFontSize(10); 
+  doc.setFont('helvetica','normal'); 
+  doc.setFontSize(10); 
   doc.text(t(`Pedidos de ${dia}/${mes}/${ano}`), 113, 35, {align:'center'});
-
+  
   let y = 55;
   [`Local: ${localNome}`, `Endereço: ${endereco}`, `Pagamento: ${pagamentoGlobal}`, `Taxa de entrega: R$${taxa.toFixed(2)}`].forEach(texto=>{
     const linhas = doc.splitTextToSize(t(texto), larguraMax);
@@ -308,28 +310,52 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
     y += linhas.length * 10;
   });
   y += 5;
-
+  
   pedidos.forEach((p,i)=>{
     doc.setFont('helvetica','bold'); 
     doc.text(doc.splitTextToSize(t(`PEDIDO ${i+1} - ${p.nome||"Cliente"}`), larguraMax), 10, y); 
     y += 10;
-
+  
     doc.setFont('helvetica','normal');
-    if(p.marmita) { doc.text(doc.splitTextToSize(t(`Marmita: ${p.marmita} R$${(p.valorMarmita||0).toFixed(2)}`), larguraMax), 15, y); y+=10; }
-    if(p.carnes.length) doc.text(doc.splitTextToSize(t(`Carnes: ${p.carnes.join(", ")}`), larguraMax), 15, y), y+=10;
-    if(p.acompanhamentos.length) doc.text(doc.splitTextToSize(t(`Acompanhamentos: ${p.acompanhamentos.join(", ")}`), larguraMax), 15, y), y+=10;
-    if(p.refrigerantes.length) doc.text(doc.splitTextToSize(t(`Bebidas: ${p.refrigerantes.join(", ")}`), larguraMax), 15, y), y+=10;
-    if(p.adicionais) doc.text(doc.splitTextToSize(t(`Observação: ${p.adicionais}`), larguraMax), 15, y), y+=10;
-
+    if(p.marmita) { 
+      doc.text(doc.splitTextToSize(t(`Marmita: ${p.marmita} R$${(p.valorMarmita||0).toFixed(2)}`), larguraMax), 15, y); 
+      y+=10; 
+    }
+    if(p.carnes.length) {
+      doc.text(doc.splitTextToSize(t(`Carnes: ${p.carnes.join(", ")}`), larguraMax), 15, y); 
+      y+=10;
+    }
+    if(p.acompanhamentos.length) {
+      doc.text(doc.splitTextToSize(t(`Acompanhamentos: ${p.acompanhamentos.join(", ")}`), larguraMax), 15, y); 
+      y+=10;
+    }
+    // Garantir que bebidas fiquem sempre abaixo
+    if(p.refrigerantes.length) {
+      y += 2; // Pequeno espaço antes das bebidas
+      doc.text(doc.splitTextToSize(t(`Bebidas: ${p.refrigerantes.join(", ")}`), larguraMax), 15, y); 
+      y+=10;
+    }
+    if(p.adicionais) {
+      doc.text(doc.splitTextToSize(t(`Observação: ${p.adicionais}`), larguraMax), 15, y); 
+      y+=10;
+    }
+  
     doc.setFont('helvetica','bold'); 
-    doc.text(doc.splitTextToSize(t(`Subtotal: R$${(p.total||0).toFixed(2)}`), larguraMax), 15, y); y += 10;
-    doc.setDrawColor(180); doc.setLineWidth(0.5); doc.line(10, y, 216, y); y += 10;
+    doc.text(doc.splitTextToSize(t(`Subtotal: R$${(p.total||0).toFixed(2)}`), larguraMax), 15, y); 
+    y += 10;
+    doc.setDrawColor(180); 
+    doc.setLineWidth(0.5); 
+    doc.line(10, y, 216, y); 
+    y += 10;
   });
-
-  doc.setFont('helvetica','bold'); doc.setFontSize(12); 
+  
+  doc.setFont('helvetica','bold'); 
+  doc.setFontSize(12); 
   doc.text(t(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`), 113, y+5, {align:'center'});
   doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
+
 });
 </script>
 </body>
 </html>
+
