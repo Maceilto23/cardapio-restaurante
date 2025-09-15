@@ -55,14 +55,10 @@ label { display: block; margin-bottom: 6px; cursor: pointer; }
   <label>Local de Entrega:</label>
   <select id="localEntrega"></select>
 
-  <!-- nova exibição fixa da taxa (única para todo o pedido) -->
   <div id="taxaEntregaInfo">🏍️ Taxa de entrega: R$ 0,00</div>
 
-  <!-- Forma de pagamento GLOBAL -->
-  <label for="pagamento">💳 Forma de Pagamento (única para todos)</label>
-  <select id="pagamento">
-    <option value="" disabled selected>Carregando opções...</option>
-  </select>
+  <label for="pagamentoGlobal">💳 Forma de Pagamento (única para todos)</label>
+  <select id="pagamentoGlobal"></select>
 
   <button id="adicionarPedido">➕ Adicionar Pedido de Outra Pessoa</button>
 
@@ -78,7 +74,7 @@ label { display: block; margin-bottom: 6px; cursor: pointer; }
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
-// Normalizar texto
+// Função de normalização
 const t = (texto) => texto.normalize("NFC");
 
 // Data
@@ -101,14 +97,24 @@ fetch('cardapio.json?t=' + new Date().getTime())
     document.getElementById("horarioFuncionamento").textContent = 
       `Horário: ${data.horarioFuncionamento.abertura} - ${data.horarioFuncionamento.fechamento}`;
 
-    // Carregar locais de entrega
+    // Locais de entrega
     const localSelect = document.getElementById("localEntrega");
-    data.locaisEntrega.forEach((loc, i) => {
+    data.locaisEntrega.forEach(loc=>{
       const opt = document.createElement("option");
       opt.value = loc.nome;
       opt.dataset.taxa = loc.taxa;
       opt.textContent = `${loc.nome} - R$${loc.taxa.toFixed(2)}`;
       localSelect.appendChild(opt);
+    });
+
+    // Formas de pagamento global
+    const pagamentoSelect = document.getElementById("pagamentoGlobal");
+    pagamentoSelect.innerHTML = '<option value="" disabled selected>Selecione</option>';
+    data.formasPagamento.forEach(p=>{
+      const opt = document.createElement("option");
+      opt.value = p;
+      opt.textContent = p;
+      pagamentoSelect.appendChild(opt);
     });
   });
 
@@ -135,7 +141,7 @@ function criarPedido(){
     <h4>🥤 Refrigerantes</h4><ul class="refrigerantes"></ul>
     <h4>Adicionais:</h4>
     <input type="text" class="adicionais" placeholder="Digite adicionais">
-    <h4>💳 Formas de Pagamento</h4>
+    <h4>💳 Forma de Pagamento</h4>
     <ul class="formasPagamentoList"></ul>
   `;
   document.getElementById("pedidosContainer").appendChild(container);
@@ -152,11 +158,9 @@ function criarPedido(){
       pedidoObj.valorMarmita = cardapioFinal.valoresMarmita[key];
       limiteCarnes = key.includes("01")?1:key.includes("02")?2:0;
 
-      // Acompanhamentos habilitar/desabilitar
       const acompLis = container.querySelectorAll(".acompanhamentos li");
       acompLis.forEach(li=>{ li.classList.toggle("selected", limiteCarnes>0); li.style.pointerEvents = limiteCarnes>0?"auto":"none"; });
 
-      // Limitar carnes
       const carneLis = container.querySelectorAll(".carnes li");
       carneLis.forEach(li=>li.classList.remove("selected"));
       atualizarPedido();
@@ -164,7 +168,7 @@ function criarPedido(){
     marmitaContainer.appendChild(label);
   });
 
-  // Função genérica listas
+  // Função genérica para listas
   function criarLista(itens, ulContainer, tipo, unico=false){
     ulContainer.innerHTML="";
     itens.forEach(i=>{
@@ -177,7 +181,7 @@ function criarPedido(){
         if(unico) ulContainer.querySelectorAll("li").forEach(l=>l.classList.remove("selected"));
         li.classList.toggle("selected");
         pedidoObj[tipo] = Array.from(ulContainer.querySelectorAll("li.selected")).map(x=>x.dataset.item);
-        if(tipo==="pagamento") pedidoObj.pagamento = pedidoObj.pagamento[0] || "";
+        if(tipo==="pagamento") pedidoObj.pagamento = pedidoObj[tipo][0] || "";
         atualizarPedido();
       });
       ulContainer.appendChild(li);
@@ -202,7 +206,6 @@ function atualizarPedido(){
   if(pedidos.length===0){ itensEl.innerHTML="<li>Nenhum pedido adicionado</li>"; return; }
   let html="";
   let totalGeral = 0;
-
   const taxaEntrega = parseFloat(document.getElementById("localEntrega").selectedOptions[0]?.dataset.taxa || 0);
 
   pedidos.forEach((p,i)=>{
@@ -231,10 +234,10 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
   if(pedidos.length===0) return alert("Nenhum pedido adicionado.");
 
   const localNome = document.getElementById("localEntrega").value;
-  const pagamentoGlobal = pedidos[0]?.pagamento || "";
+  const pagamentoGlobal = document.getElementById("pagamentoGlobal").value || "";
   const taxa = parseFloat(document.getElementById("localEntrega").selectedOptions[0]?.dataset.taxa || 0);
 
-  // WhatsApp
+  // Mensagem WhatsApp
   let msg = `🍽️ *Pedidos do Dia*\n📍 Local: ${localNome}\n📍 Endereço: ${endereco}\n💳 Pagamento: ${pagamentoGlobal}\n🏍️ Taxa de entrega: R$${taxa.toFixed(2)}\n`;
   let totalGeral=0;
   pedidos.forEach((p,i)=>{
@@ -252,40 +255,34 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
   msg += `\n💸 *TOTAL GERAL: R$${totalGeral.toFixed(2)}*`;
   window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
 
-  // PDF
+  // Gerar PDF
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({orientation:'portrait', unit:'pt', format:[226,1000]});
   doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text(t('Restaurante Colinas'),113,20,{align:'center'});
   doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.text(t(`Pedidos de ${dia}/${mes}/${ano}`),113,35,{align:'center'});
 
   let y=55;
-  doc.text(t(`📍 Local: ${localNome}`),10,y); y+=12;
-  doc.text(t(`📍 Endereço: ${endereco}`),10,y); y+=12;
-  doc.text(t(`💳 Pagamento: ${pagamentoGlobal}`),10,y); y+=12;
-  doc.text(t(`🏍️ Taxa de entrega: R$${taxa.toFixed(2)}`),10,y); y+=18;
+  doc.text(t(`Local: ${localNome}`),10,y); y+=12;
+  doc.text(t(`Endereço: ${endereco}`),10,y); y+=12;
+  doc.text(t(`Pagamento: ${pagamentoGlobal}`),10,y); y+=12;
+  doc.text(t(`Taxa de entrega: R$${taxa.toFixed(2)}`),10,y); y+=18;
 
   pedidos.forEach((p,i)=>{
     doc.setFont('helvetica','bold'); doc.text(t(`PEDIDO ${i+1} - ${p.nome||"Cliente"}`),10,y); y+=12;
     doc.setFont('helvetica','normal');
-    if(p.marmita) doc.text(t(`Marmita: ${p.marmita} R$${(p.valorMarmita||0).toFixed(2)}`),15,y),y+=12;
-    if(p.carnes) p.carnes.forEach(c=>{ doc.text(t(`Carne: ${c}`),15,y); y+=12; });
-    if(p.acompanhamentos) p.acompanhamentos.forEach(a=>{ doc.text(t(`Acomp.: ${a}`),15,y); y+=12; });
-    if(p.refrigerantes) p.refrigerantes.forEach(r=>{ doc.text(t(`Bebida: ${r}`),15,y); y+=12; });
-    if(p.adicionais) doc.text(t(`Obs: ${p.adicionais}`),15,y),y+=12;
-    if(p.pagamento) doc.text(t(`Pagamento: ${p.pagamento}`),15,y),y+=12;
-    doc.setFont('helvetica','bold'); doc.text(t(`Subtotal: R$${(p.total||0).toFixed(2)}`),15,y); y+=16;
-    doc.setDrawColor(180); doc.setLineWidth(0.5); doc.line(10,y,216,y); y+=12;
+    if(p.marmita) doc.text(t(`Marmita ${p.marmita} - R$${p.valorMarmita}`),10,y), y+=12;
+    p.carnes.forEach(c=>doc.text(t(`Carne: ${c}`),10,y), y+=12);
+    p.acompanhamentos.forEach(a=>doc.text(t(`Acompanhamento: ${a}`),10,y), y+=12);
+    p.refrigerantes.forEach(r=>doc.text(t(`Refrigerante: ${r}`),10,y), y+=12);
+    if(p.adicionais) doc.text(t(`Adicionais: ${p.adicionais}`),10,y), y+=12;
+    if(p.pagamento) doc.text(t(`Pagamento: ${p.pagamento}`),10,y), y+=12;
+    doc.text(t(`Taxa entrega: R$${p.taxaEntrega.toFixed(2)}`),10,y); y+=12;
+    doc.text(t(`Subtotal: R$${p.total.toFixed(2)}`),10,y); y+=18;
   });
-
-  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text(t(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`),113,y+10,{align:'center'});
+  doc.text(t(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`),10,y+5);
   doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 });
 </script>
 
-
-
 </body>
 </html>
-
-
-
