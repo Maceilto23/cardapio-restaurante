@@ -213,7 +213,9 @@ function criarPedido(){
   const hojeCardapio = cardapioFinal.cardapio[diasSemana[hojeDate.getDay()].toLowerCase()] || { carnes: [], acompanhamentos: [] };
   criarLista(hojeCardapio.carnes, container.querySelector(".carnes"), "carnes");
   criarLista(hojeCardapio.acompanhamentos, container.querySelector(".acompanhamentos"), "acompanhamentos");
-  criarLista(cardapioFinal.refrigerantes, container.querySelector(".refrigerantes"), "refrigerantes");
+  const refrigerantesHoje = Array.isArray(cardapioFinal.refrigerantes) ? cardapioFinal.refrigerantes : [];
+  criarLista(refrigerantesHoje, container.querySelector(".refrigerantes"), "refrigerantes");
+
 
   container.querySelector(".nomeCliente").addEventListener("input", e=>{ pedidoObj.nome=e.target.value; atualizarPedido(); });
   container.querySelector(".adicionais").addEventListener("input", e=>{ pedidoObj.adicionais=e.target.value; atualizarPedido(); });
@@ -325,3 +327,4 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
 </script>
 </body>
 </html>
+
