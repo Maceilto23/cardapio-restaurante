@@ -326,10 +326,10 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
   window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
 
   // Gerar PDF
- const { jsPDF } = window.jspdf;
-const doc = new jsPDF({orientation:'portrait', unit:'pt', format:[226,1000]});
+const { jsPDF } = window.jspdf;
+const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:[226,1000] });
 
-// Função para normalizar texto com acentos e emojis
+// Função para normalizar texto com acentos
 const t = (texto) => texto.normalize("NFC");
 
 doc.setFont('helvetica','bold'); 
@@ -343,10 +343,10 @@ doc.text(t(`Pedidos de ${dia}/${mes}/${ano}`), 113, 35, {align:'center'});
 let y = 55;
 
 // Dados gerais
-doc.text(t(`📍 Local: ${localNome}`), 10, y); y += 12;
-doc.text(t(`📍 Endereço: ${endereco}`), 10, y); y += 12;
-doc.text(t(`💳 Pagamento: ${pagamentoGlobal}`), 10, y); y += 12;
-doc.text(t(`🏍️ Taxa de entrega: R$${taxa.toFixed(2)}`), 10, y); y += 18;
+doc.text(t(`Local: ${localNome}`), 10, y); y += 12;
+doc.text(t(`Endereço: ${endereco}`), 10, y); y += 12;
+doc.text(t(`Pagamento: ${pagamentoGlobal}`), 10, y); y += 12;
+doc.text(t(`Taxa de entrega: R$${taxa.toFixed(2)}`), 10, y); y += 18;
 
 // Pedidos individuais
 pedidos.forEach((p,i)=>{
@@ -359,9 +359,9 @@ pedidos.forEach((p,i)=>{
     y += 12;
   }
   if(p.carnes) p.carnes.forEach(c=>{ doc.text(t(`Carne: ${c}`), 15, y); y += 12; });
-  if(p.acompanhamentos) p.acompanhamentos.forEach(a=>{ doc.text(t(`Acomp.: ${a}`), 15, y); y += 12; });
-  if(p.refrigerantes) p.refrigerantes.forEach(r=>{ doc.text(t(`Bebida: ${r}`), 15, y); y += 12; });
-  if(p.adicionais){ doc.text(t(`Obs: ${p.adicionais}`), 15, y); y += 12; }
+  if(p.acompanhamentos) p.acompanhamentos.forEach(a=>{ doc.text(t(`Acompanhamento: ${a}`), 15, y); y += 12; });
+  if(p.refrigerantes) p.refrigerantes.forEach(r=>{ doc.text(t(`Refrigerante: ${r}`), 15, y); y += 12; });
+  if(p.adicionais){ doc.text(t(`Observação: ${p.adicionais}`), 15, y); y += 12; }
 
   doc.setFont('helvetica','bold'); 
   doc.text(t(`Subtotal: R$${(p.total||0).toFixed(2)}`), 15, y); y += 16;
@@ -378,9 +378,11 @@ doc.text(t(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`), 113, y+10, {align:'center
 // Salvar PDF
 doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 
+
 });
 </script>
 
 </body>
 </html>
+
 
