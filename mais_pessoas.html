@@ -52,7 +52,19 @@ label { display: block; margin-bottom: 6px; cursor: pointer; }
   <input type="text" id="endereco" placeholder="Digite o endereço de entrega">
   <label>Local de Entrega:</label>
   <select id="localEntrega"></select>
+  <!-- NOVOS CAMPOS GLOBAIS -->
+  <label for="pagamento">💳 Forma de Pagamento (única para todos)</label>
+  <select id="pagamento">
+    <option value="Dinheiro">Dinheiro</option>
+    <option value="Pix">Pix</option>
+    <option value="Cartão">Cartão</option>
+  </select>
+  
+  <label for="taxa">🏍️ Taxa de Entrega (única para todos)</label>
+  <input type="number" id="taxa" placeholder="Ex: 5.00" step="0.01">
 
+  
+  
   <button id="adicionarPedido">➕ Adicionar Pedido de Outra Pessoa</button>
 
   <div id="pedidosContainer"></div>
@@ -184,9 +196,13 @@ function criarPedido(){
 // Atualizar pedidos
 function atualizarPedido(){
   const itensEl = document.getElementById("itensPedido");
-  if(pedidos.length===0){ itensEl.innerHTML="<li>Nenhum pedido adicionado</li>"; return; }
+  if(pedidos.length===0){ 
+    itensEl.innerHTML="<li>Nenhum pedido adicionado</li>"; 
+    return; 
+  }
   let html="";
   let totalGeral = 0;
+  const taxaEntregaGlobal = parseFloat(document.getElementById("taxa").value || 0);
 
   pedidos.forEach((p,i)=>{
     html += `<li><strong>Pedido ${i+1} - ${p.nome || "Cliente"}:</strong><ul>`;
@@ -195,15 +211,17 @@ function atualizarPedido(){
     if(p.acompanhamentos) p.acompanhamentos.forEach(a=>html+=`<li>🥗 ${a}</li>`);
     if(p.refrigerantes) p.refrigerantes.forEach(r=>html+=`<li>🥤 ${r}</li>`);
     if(p.adicionais) html+=`<li>📝 ${p.adicionais}</li>`;
-    if(p.pagamento) html+=`<li>💳 Pagamento: ${p.pagamento}</li>`;
-    const taxaEntrega = parseFloat(document.getElementById("localEntrega").selectedOptions[0]?.dataset.taxa || 0);
-    p.taxaEntrega = taxaEntrega;
-    p.total = (p.valorMarmita||0)+taxaEntrega;
+    
+    // não exibe pagamento e taxa individual aqui
+    p.total = (p.valorMarmita||0);
     totalGeral += p.total;
-    html+=`<li>🏍️ Taxa entrega: R$${taxaEntrega.toFixed(2)}</li>`;
     html+=`<li><strong>Subtotal: R$${p.total.toFixed(2)}</strong></li>`;
     html+="</ul></li>";
   });
+
+  totalGeral += taxaEntregaGlobal;
+
+  html+=`<li>🏍️ Taxa de entrega única: R$${taxaEntregaGlobal.toFixed(2)}</li>`;
   html+=`<li><strong>TOTAL GERAL: R$${totalGeral.toFixed(2)}</strong></li>`;
   itensEl.innerHTML = html;
 }
@@ -211,11 +229,15 @@ function atualizarPedido(){
 // Enviar WhatsApp e gerar PDF
 document.getElementById("enviarWhats").addEventListener("click", ()=>{
   const endereco = document.getElementById("endereco").value.trim();
+  const pagamento = document.getElementById('pagamento').value;
+  const taxa = parseFloat(document.getElementById('taxa').value || 0);
+
   if(!endereco) return alert("Informe o endereço de entrega.");
   if(pedidos.length===0) return alert("Nenhum pedido adicionado.");
 
-  let msg = `🍽️ *Pedidos do Dia*\n📍 Endereço: ${endereco}\n`;
-  let totalGeral=0;
+  let msg = `🍽️ *Pedidos do Dia*\n📍 Endereço: ${endereco}\n💳 Pagamento: ${pagamento}\n🏍️ Taxa de Entrega: R$${taxa.toFixed(2)}\n`;
+  let totalGeral = 0;
+
   pedidos.forEach((p,i)=>{
     msg += `\n📌 Pedido ${i+1} - ${p.nome || "Cliente"}\n`;
     if(p.marmita) msg += `🍱 Marmita ${p.marmita} - R$${p.valorMarmita}\n`;
@@ -223,36 +245,45 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
     if(p.acompanhamentos) p.acompanhamentos.forEach(a=>msg += `🥗 ${a}\n`);
     if(p.refrigerantes) p.refrigerantes.forEach(r=>msg += `🥤 ${r}\n`);
     if(p.adicionais) msg += `📝 ${p.adicionais}\n`;
-    if(p.pagamento) msg += `💳 Pagamento: ${p.pagamento}\n`;
-    msg += `🏍️ Taxa entrega: R$${p.taxaEntrega.toFixed(2)}\n`;
-    msg += `💰 Subtotal: R$${p.total.toFixed(2)}\n`;
-    totalGeral+=p.total;
+
+    totalGeral += (p.valorMarmita||0);
   });
+
+  totalGeral += taxa;
   msg += `\n💸 *TOTAL GERAL: R$${totalGeral.toFixed(2)}*`;
+
   window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
 
   // Gerar PDF
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({orientation:'portrait', unit:'pt', format:[226,1000]});
-  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text('Restaurante Colinas',113,20,{align:'center'});
-  doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.text(`Pedidos de ${dia}/${mes}/${ano}`,113,35,{align:'center'});
+  doc.setFont('helvetica','bold'); 
+  doc.setFontSize(14); 
+  doc.text('Restaurante Colinas',113,20,{align:'center'});
+  doc.setFont('helvetica','normal'); 
+  doc.setFontSize(10); 
+  doc.text(`Pedidos de ${dia}/${mes}/${ano}`,113,35,{align:'center'});
+
   let y=55;
+  doc.setFont('helvetica','normal'); 
+  doc.text(`📍 Endereço: ${endereco}`,10,y); y+=12;
+  doc.text(`💳 Pagamento: ${pagamento}`,10,y); y+=12;
+  doc.text(`🏍️ Taxa de entrega: R$${taxa.toFixed(2)}`,10,y); y+=18;
+
   pedidos.forEach((p,i)=>{
-    doc.setFont('helvetica','bold'); doc.text(`PEDIDO ${i+1} - ${p.nome||"Cliente"}`,10,y); y+=12;
+    doc.setFont('helvetica','bold'); 
+    doc.text(`PEDIDO ${i+1} - ${p.nome||"Cliente"}`,10,y); y+=12;
     if(p.marmita){ doc.setFont('helvetica','normal'); doc.text(`Marmita: ${p.marmita} R$${p.valorMarmita}`,15,y); y+=12;}
     if(p.carnes) p.carnes.forEach(c=>{ doc.text(`Carne: ${c}`,15,y); y+=12; });
     if(p.acompanhamentos) p.acompanhamentos.forEach(a=>{ doc.text(`Acomp.: ${a}`,15,y); y+=12; });
     if(p.refrigerantes) p.refrigerantes.forEach(r=>{ doc.text(`Bebida: ${r}`,15,y); y+=12; });
     if(p.adicionais){ doc.text(`Obs: ${p.adicionais}`,15,y); y+=12; }
-    if(p.pagamento){ doc.text(`Pagamento: ${p.pagamento}`,15,y); y+=12; }
-    doc.text(`Taxa entrega: R$${p.taxaEntrega.toFixed(2)}`,15,y); y+=12;
-    doc.setFont('helvetica','bold'); doc.text(`Subtotal: R$${p.total.toFixed(2)}`,15,y); y+=16;
-    doc.setDrawColor(180); doc.setLineWidth(0.5); doc.line(10,y,216,y); y+=12;
-  });
-  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.text(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`,113,y+10,{align:'center'});
-  doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
-});
-</script>
 
-</body>
-</html>
+    y+=5;
+  });
+
+  doc.setFont('helvetica','bold'); 
+  doc.text(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`,10,y);
+
+  doc.save(`pedido-${dia}-${mes}-${ano}.pdf`);
+});
