@@ -1,289 +1,194 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cardápio Interativo</title>
+<title>Pedidos - Restaurante Colinas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-* { box-sizing: border-box; margin:0; padding:0; }
-body { font-family: Arial, sans-serif; background: #f5f5f5; display: flex; flex-direction: column; align-items: center; padding: 10px; }
-.cardapio { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 6px 15px rgba(0,0,0,0.2); max-width: 500px; width: 100%; margin-bottom: 20px; }
-.logo-container { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 20px; }
-.logo-container img { height: 60px; margin-right: 15px; border-radius: 8px; }
-.titulo-container h1 { font-size: 1.5rem; color: #007BFF; margin-bottom: 5px; }
-.titulo-container h2 { font-size: 1.1rem; color: #555; font-weight: normal; }
-.titulo-container h3 { font-size: 1rem; margin-bottom: 10px; color: #333; }
-ul { list-style: none; padding: 0; }
-li { margin: 5px 0; cursor: pointer; display: flex; align-items: center; padding: 6px 10px; border-radius: 8px; transition: background 0.2s; }
-li:hover { background: #f0f0f0; }
-.checkbox-fake { width: 22px; height: 22px; border: 2px solid #007BFF; display: flex; align-items: center; justify-content: center; margin-right: 10px; border-radius: 4px; font-weight: bold; color: #fff; background: #007BFF; opacity: 0; transition: opacity 0.2s, transform 0.2s; flex-shrink: 0; }
-li.selected .checkbox-fake { opacity: 1; transform: scale(1.1); }
-li span { flex: 1; }
-#adicionais, input[type="text"], select { width: 100%; padding: 8px; margin-top: 8px; border-radius: 6px; border: 1px solid #ccc; }
-#enviarWhats { margin-top: 12px; padding: 10px; background: #25D366; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; }
-label { display: block; margin-bottom: 6px; cursor: pointer; }
-.marmita-options label { display: block; margin-bottom: 8px; cursor: pointer; }
-.marmita-options input { margin-right: 8px; }
-#adicionarPedido { margin: 10px 0; padding: 8px; width: 100%; border-radius: 8px; border: 1px solid #007BFF; background: #007BFF; color: #fff; cursor: pointer; font-weight: bold; }
-.pedido-individual { border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 8px; background: #f9f9f9; }
-.pedido-individual h4 { margin-bottom: 5px; }
-@media (max-width: 600px) { 
-  .logo-container { flex-direction: column; align-items: center; text-align: center; } 
-  .logo-container img { margin-right: 0; margin-bottom: 8px; height: 50px; } 
-  .titulo-container h1 { font-size: 1.3rem; } 
-  .titulo-container h2 { font-size: 1rem; } 
-  #enviarWhats, #adicionarPedido { font-size: 0.95rem; } 
-}
+  body { font-family: Arial, sans-serif; max-width: 400px; margin: auto; }
+  label { display:block; margin-top:10px; }
+  ul { padding-left: 20px; }
+  #itensPedido li { margin-bottom: 4px; }
+  .pedido { border:1px solid #ccc; padding:10px; margin:10px 0; border-radius:8px; }
+  button { margin-top:10px; padding:8px 12px; }
 </style>
 </head>
 <body>
 
-<div class="cardapio">
-  <div class="logo-container">
-    <img src="logo.png" alt="Logo Restaurante">
-    <div class="titulo-container">
-      <h1>Restaurante Colinas</h1>
-      <h2>🍽️ Cardápio de Hoje – <span id="diaSemana"></span>, <span id="dataHoje"></span></h2>
-      <h3 id="horarioFuncionamento">Horário: --:-- - --:--</h3>
-    </div>
-  </div>
+<h2>📋 Novo Pedido</h2>
 
-  <label for="endereco">📍 Endereço de Entrega (único para todos os pedidos)</label>
-  <input type="text" id="endereco" placeholder="Digite o endereço de entrega">
-  <label>Local de Entrega:</label>
-  <select id="localEntrega"></select>
-  <!-- NOVOS CAMPOS GLOBAIS -->
-  <label for="pagamento">💳 Forma de Pagamento (única para todos)</label>
-  <select id="pagamento">
-    <option value="Dinheiro">Dinheiro</option>
-    <option value="Pix">Pix</option>
-    <option value="Cartão">Cartão</option>
+<label>📍 Endereço de Entrega</label>
+<input type="text" id="endereco" placeholder="Digite o endereço">
+
+<label>🗺️ Local de Entrega</label>
+<select id="localEntrega">
+  <option value="">Selecione</option>
+  <option value="Cidade A" data-taxa="5.00">Cidade A - R$5,00</option>
+  <option value="Cidade B" data-taxa="8.00">Cidade B - R$8,00</option>
+  <option value="Cidade C" data-taxa="10.00">Cidade C - R$10,00</option>
+</select>
+
+<label>💳 Forma de Pagamento</label>
+<select id="pagamento">
+  <option value="Dinheiro">Dinheiro</option>
+  <option value="Pix">Pix</option>
+  <option value="Cartão">Cartão</option>
+</select>
+
+<hr>
+
+<div class="pedido">
+  <label>👤 Nome do Cliente</label>
+  <input type="text" id="nomeCliente" placeholder="Nome">
+
+  <label>🍱 Marmita</label>
+  <select id="marmita">
+    <option value="">Selecione</option>
+    <option value="01" data-valor="20.00">Marmita 01 - R$20,00</option>
+    <option value="02" data-valor="25.00">Marmita 02 - R$25,00</option>
   </select>
-  
-  <label for="taxa">🏍️ Taxa de Entrega (única para todos)</label>
-  <input type="number" id="taxa" placeholder="Ex: 5.00" step="0.01">
 
-  
-  
-  <button id="adicionarPedido">➕ Adicionar Pedido de Outra Pessoa</button>
+  <label>🍖 Carnes</label>
+  <input type="text" id="carnes" placeholder="Separar por vírgula">
 
-  <div id="pedidosContainer"></div>
+  <label>🥗 Acompanhamentos</label>
+  <input type="text" id="acompanhamentos" placeholder="Separar por vírgula">
 
-  <h3>📋 Pedidos Selecionados</h3>
-  <ul id="itensPedido">
-    <li>Nenhum pedido adicionado</li>
-  </ul>
+  <label>🥤 Refrigerantes</label>
+  <input type="text" id="refrigerantes" placeholder="Separar por vírgula">
 
-  <button id="enviarWhats">📲 Enviar para WhatsApp</button>
+  <label>📝 Observações / Adicionais</label>
+  <input type="text" id="adicionais">
+
+  <button type="button" id="addPedido">➕ Adicionar Pedido</button>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<h3>🧾 Itens do Pedido</h3>
+<ul id="itensPedido"></ul>
+
+<button id="enviarWhats">📤 Enviar WhatsApp + PDF</button>
+
 <script>
-// Data
-const diasSemana = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
-const hojeDate = new Date();
-document.getElementById("diaSemana").innerText = diasSemana[hojeDate.getDay()];
-const dia = String(hojeDate.getDate()).padStart(2,'0');
-const mes = String(hojeDate.getMonth()+1).padStart(2,'0');
-const ano = hojeDate.getFullYear();
-document.getElementById("dataHoje").innerText = `${dia}/${mes}/${ano}`;
+const pedidos = [];
 
-let pedidos = [];
-let cardapioFinal = null;
+document.getElementById("localEntrega").addEventListener("change", atualizarPedido);
 
-// Buscar cardápio
-fetch('cardapio.json?t=' + new Date().getTime())
-  .then(res => res.json())
-  .then(data => {
-    cardapioFinal = data;
-    document.getElementById("horarioFuncionamento").textContent = 
-      `Horário: ${data.horarioFuncionamento.abertura} - ${data.horarioFuncionamento.fechamento}`;
+document.getElementById("addPedido").addEventListener("click", ()=>{
+  const nome = document.getElementById("nomeCliente").value.trim();
+  const marmitaSel = document.getElementById("marmita");
+  const marmita = marmitaSel.value;
+  const valorMarmita = parseFloat(marmitaSel.selectedOptions[0]?.dataset.valor || 0);
+  const carnes = document.getElementById("carnes").value.split(",").map(c=>c.trim()).filter(c=>c);
+  let acompanhamentos = document.getElementById("acompanhamentos").value.split(",").map(a=>a.trim()).filter(a=>a);
+  const refrigerantes = document.getElementById("refrigerantes").value.split(",").map(r=>r.trim()).filter(r=>r);
+  const adicionais = document.getElementById("adicionais").value.trim();
 
-    // Carregar locais de entrega
-    const localSelect = document.getElementById("localEntrega");
-    data.locaisEntrega.forEach((loc, i) => {
-      const opt = document.createElement("option");
-      opt.value = loc.nome;
-      opt.dataset.taxa = loc.taxa;
-      opt.textContent = `${loc.nome} - R$${loc.taxa.toFixed(2)}`;
-      localSelect.appendChild(opt);
-    });
-  });
-
-// Adicionar pedido
-document.getElementById("adicionarPedido").addEventListener("click", criarPedido);
-
-function criarPedido(){
-  if(!cardapioFinal) return alert("Aguarde o carregamento do cardápio...");
-
-  const index = pedidos.length;
-  const pedidoObj = { nome:"", marmita:"", carnes:[], acompanhamentos:[], refrigerantes:[], adicionais:"", pagamento:"", taxaEntrega:0, valorMarmita:0};
-  pedidos.push(pedidoObj);
-
-  const container = document.createElement("div");
-  container.classList.add("pedido-individual");
-  container.dataset.index = index;
-  container.innerHTML = `
-    <h4>Pedido da Pessoa ${index+1}</h4>
-    <label>Nome:</label>
-    <input type="text" class="nomeCliente" placeholder="Nome do cliente">
-    <div class="marmita-options"><h4>🍱 Tipo de Marmita</h4></div>
-    <h4>🍖 Carnes</h4><ul class="carnes"></ul>
-    <h4>🥗 Acompanhamentos</h4><ul class="acompanhamentos"></ul>
-    <h4>🥤 Refrigerantes</h4><ul class="refrigerantes"></ul>
-    <h4>Adicionais:</h4>
-    <input type="text" class="adicionais" placeholder="Digite adicionais">
-    <h4>💳 Formas de Pagamento</h4>
-    <ul class="formasPagamentoList"></ul>
-  `;
-  document.getElementById("pedidosContainer").appendChild(container);
-
-  let limiteCarnes = 0;
-
-  // Marmitas
-  const marmitaContainer = container.querySelector(".marmita-options");
-  Object.keys(cardapioFinal.valoresMarmita).forEach(key=>{
-    const label = document.createElement("label");
-    label.innerHTML = `<input type="radio" name="marmita${index}" value="${key}"> Marmita ${key} - R$${cardapioFinal.valoresMarmita[key]},00`;
-    label.querySelector("input").addEventListener("change", ()=>{
-      pedidoObj.marmita = key;
-      pedidoObj.valorMarmita = cardapioFinal.valoresMarmita[key];
-      limiteCarnes = key.includes("01")?1:key.includes("02")?2:0;
-
-      // Acompanhamentos
-      const acompLis = container.querySelectorAll(".acompanhamentos li");
-      acompLis.forEach(li=>{ li.classList.toggle("selected", limiteCarnes>0); li.style.pointerEvents = limiteCarnes>0?"auto":"none"; });
-
-      // Limitar carnes
-      const carneLis = container.querySelectorAll(".carnes li");
-      carneLis.forEach(li=>li.classList.remove("selected"));
-      atualizarPedido();
-    });
-    marmitaContainer.appendChild(label);
-  });
-
-  // Função genérica listas
-  function criarLista(itens, ulContainer, tipo, unico=false){
-    ulContainer.innerHTML="";
-    itens.forEach(i=>{
-      const li = document.createElement("li");
-      li.setAttribute("data-item", i);
-      li.innerHTML = `<div class="checkbox-fake">✔</div><span>${i}</span>`;
-      li.addEventListener("click", ()=>{
-        const selecionados = Array.from(ulContainer.querySelectorAll("li.selected"));
-        if(tipo==="carnes" && !li.classList.contains("selected") && selecionados.length>=limiteCarnes) return;
-        if(unico) ulContainer.querySelectorAll("li").forEach(l=>l.classList.remove("selected"));
-        li.classList.toggle("selected");
-        pedidoObj[tipo] = Array.from(ulContainer.querySelectorAll("li.selected")).map(x=>x.dataset.item);
-        atualizarPedido();
-      });
-      ulContainer.appendChild(li);
-    });
+  // Se for Marmita 01, inserir acompanhamentos padrão
+  if(marmita === "01" && acompanhamentos.length === 0){
+    acompanhamentos = ["Arroz","Feijão","Salada"];
   }
 
-  const hojeCardapio = cardapioFinal.cardapio[diasSemana[hojeDate.getDay()].toLowerCase()] || { carnes: [], acompanhamentos: [] };
-  criarLista(hojeCardapio.carnes, container.querySelector(".carnes"), "carnes");
-  criarLista(hojeCardapio.acompanhamentos, container.querySelector(".acompanhamentos"), "acompanhamentos");
-  criarLista(cardapioFinal.refrigerantes, container.querySelector(".refrigerantes"), "refrigerantes");
-  criarLista(cardapioFinal.formasPagamento, container.querySelector(".formasPagamentoList"), "pagamento", true);
+  if(!marmita) return alert("Selecione a marmita.");
 
-  container.querySelector(".nomeCliente").addEventListener("input", e=>{ pedidoObj.nome=e.target.value; atualizarPedido(); });
-  container.querySelector(".adicionais").addEventListener("input", e=>{ pedidoObj.adicionais=e.target.value; atualizarPedido(); });
+  pedidos.push({nome, marmita, valorMarmita, carnes, acompanhamentos, refrigerantes, adicionais});
+  document.getElementById("nomeCliente").value = "";
+  document.getElementById("marmita").value = "";
+  document.getElementById("carnes").value = "";
+  document.getElementById("acompanhamentos").value = "";
+  document.getElementById("refrigerantes").value = "";
+  document.getElementById("adicionais").value = "";
 
   atualizarPedido();
-}
+});
 
-// Atualizar pedidos
 function atualizarPedido(){
   const itensEl = document.getElementById("itensPedido");
-  if(pedidos.length===0){ 
-    itensEl.innerHTML="<li>Nenhum pedido adicionado</li>"; 
-    return; 
-  }
-  let html="";
-  let totalGeral = 0;
-  const taxaEntregaGlobal = parseFloat(document.getElementById("taxa").value || 0);
+  if(pedidos.length===0){ itensEl.innerHTML="<li>Nenhum pedido adicionado</li>"; return; }
+
+  const taxaEntrega = parseFloat(document.getElementById("localEntrega").selectedOptions[0]?.dataset.taxa || 0);
+  let totalGeral = taxaEntrega;
+  let html = `<li>📍 Local de Entrega: ${document.getElementById("localEntrega").value || "-"}</li>`;
+  html += `<li>🏍️ Taxa de entrega única: R$${taxaEntrega.toFixed(2)}</li>`;
 
   pedidos.forEach((p,i)=>{
-    html += `<li><strong>Pedido ${i+1} - ${p.nome || "Cliente"}:</strong><ul>`;
-    if(p.marmita) html+=`<li>🍱 Marmita ${p.marmita} - R$${p.valorMarmita}</li>`;
-    if(p.carnes) p.carnes.forEach(c=>html+=`<li>🍖 ${c}</li>`);
-    if(p.acompanhamentos) p.acompanhamentos.forEach(a=>html+=`<li>🥗 ${a}</li>`);
-    if(p.refrigerantes) p.refrigerantes.forEach(r=>html+=`<li>🥤 ${r}</li>`);
+    let subtotal = p.valorMarmita||0;
+    totalGeral += subtotal;
+
+    html += `<li><strong>Pedido ${i+1} - ${p.nome||"Cliente"}:</strong><ul>`;
+    html += `<li>🍱 Marmita ${p.marmita} - R$${p.valorMarmita.toFixed(2)}</li>`;
+    if(p.carnes.length) p.carnes.forEach(c=>html+=`<li>🍖 ${c}</li>`);
+    if(p.acompanhamentos.length) p.acompanhamentos.forEach(a=>html+=`<li>🥗 ${a}</li>`);
+    if(p.refrigerantes.length) p.refrigerantes.forEach(r=>html+=`<li>🥤 ${r}</li>`);
     if(p.adicionais) html+=`<li>📝 ${p.adicionais}</li>`;
-    
-    // não exibe pagamento e taxa individual aqui
-    p.total = (p.valorMarmita||0);
-    totalGeral += p.total;
-    html+=`<li><strong>Subtotal: R$${p.total.toFixed(2)}</strong></li>`;
-    html+="</ul></li>";
+    html += `<li><strong>Subtotal: R$${subtotal.toFixed(2)}</strong></li></ul></li>`;
   });
 
-  totalGeral += taxaEntregaGlobal;
-
-  html+=`<li>🏍️ Taxa de entrega única: R$${taxaEntregaGlobal.toFixed(2)}</li>`;
-  html+=`<li><strong>TOTAL GERAL: R$${totalGeral.toFixed(2)}</strong></li>`;
+  html+=`<li><strong>💰 TOTAL GERAL: R$${totalGeral.toFixed(2)}</strong></li>`;
   itensEl.innerHTML = html;
 }
 
-// Enviar WhatsApp e gerar PDF
 document.getElementById("enviarWhats").addEventListener("click", ()=>{
   const endereco = document.getElementById("endereco").value.trim();
-  const pagamento = document.getElementById('pagamento').value;
-  const taxa = parseFloat(document.getElementById('taxa').value || 0);
+  const localEntrega = document.getElementById("localEntrega").value;
+  const taxa = parseFloat(document.getElementById("localEntrega").selectedOptions[0]?.dataset.taxa || 0);
+  const pagamento = document.getElementById("pagamento").value;
 
-  if(!endereco) return alert("Informe o endereço de entrega.");
+  if(!endereco) return alert("Informe o endereço.");
+  if(!localEntrega) return alert("Escolha o local de entrega.");
   if(pedidos.length===0) return alert("Nenhum pedido adicionado.");
 
-  let msg = `🍽️ *Pedidos do Dia*\n📍 Endereço: ${endereco}\n💳 Pagamento: ${pagamento}\n🏍️ Taxa de Entrega: R$${taxa.toFixed(2)}\n`;
-  let totalGeral = 0;
+  let totalGeral = taxa;
+  let msg = `🍽️ *Pedidos do Dia*\n📍 Local: ${localEntrega}\n🏠 Endereço: ${endereco}\n💳 Pagamento: ${pagamento}\n🏍️ Taxa: R$${taxa.toFixed(2)}\n`;
 
   pedidos.forEach((p,i)=>{
-    msg += `\n📌 Pedido ${i+1} - ${p.nome || "Cliente"}\n`;
-    if(p.marmita) msg += `🍱 Marmita ${p.marmita} - R$${p.valorMarmita}\n`;
-    if(p.carnes) p.carnes.forEach(c=>msg += `🍖 ${c}\n`);
-    if(p.acompanhamentos) p.acompanhamentos.forEach(a=>msg += `🥗 ${a}\n`);
-    if(p.refrigerantes) p.refrigerantes.forEach(r=>msg += `🥤 ${r}\n`);
+    totalGeral += p.valorMarmita||0;
+    msg += `\n📌 Pedido ${i+1} - ${p.nome||"Cliente"}\n🍱 Marmita ${p.marmita} - R$${p.valorMarmita.toFixed(2)}\n`;
+    if(p.carnes.length) p.carnes.forEach(c=>msg+=`🍖 ${c}\n`);
+    if(p.acompanhamentos.length) p.acompanhamentos.forEach(a=>msg+=`🥗 ${a}\n`);
+    if(p.refrigerantes.length) p.refrigerantes.forEach(r=>msg+=`🥤 ${r}\n`);
     if(p.adicionais) msg += `📝 ${p.adicionais}\n`;
-
-    totalGeral += (p.valorMarmita||0);
   });
-
-  totalGeral += taxa;
   msg += `\n💸 *TOTAL GERAL: R$${totalGeral.toFixed(2)}*`;
 
-  window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
+  window.open(`https://wa.me/556192633504?text=${encodeURIComponent(msg)}`,"_blank");
 
-  // Gerar PDF
+  // PDF
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({orientation:'portrait', unit:'pt', format:[226,1000]});
-  doc.setFont('helvetica','bold'); 
-  doc.setFontSize(14); 
+  const data = new Date();
+  const dia = String(data.getDate()).padStart(2,'0');
+  const mes = String(data.getMonth()+1).padStart(2,'0');
+  const ano = data.getFullYear();
+
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(14);
   doc.text('Restaurante Colinas',113,20,{align:'center'});
-  doc.setFont('helvetica','normal'); 
-  doc.setFontSize(10); 
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(10);
   doc.text(`Pedidos de ${dia}/${mes}/${ano}`,113,35,{align:'center'});
 
   let y=55;
-  doc.setFont('helvetica','normal'); 
-  doc.text(`📍 Endereço: ${endereco}`,10,y); y+=12;
-  doc.text(`💳 Pagamento: ${pagamento}`,10,y); y+=12;
-  doc.text(`🏍️ Taxa de entrega: R$${taxa.toFixed(2)}`,10,y); y+=18;
+  doc.text(`Local: ${localEntrega}`,10,y); y+=12;
+  doc.text(`Endereço: ${endereco}`,10,y); y+=12;
+  doc.text(`Pagamento: ${pagamento}`,10,y); y+=12;
+  doc.text(`Taxa de Entrega: R$${taxa.toFixed(2)}`,10,y); y+=20;
 
   pedidos.forEach((p,i)=>{
     doc.setFont('helvetica','bold'); 
     doc.text(`PEDIDO ${i+1} - ${p.nome||"Cliente"}`,10,y); y+=12;
-    if(p.marmita){ doc.setFont('helvetica','normal'); doc.text(`Marmita: ${p.marmita} R$${p.valorMarmita}`,15,y); y+=12;}
-    if(p.carnes) p.carnes.forEach(c=>{ doc.text(`Carne: ${c}`,15,y); y+=12; });
-    if(p.acompanhamentos) p.acompanhamentos.forEach(a=>{ doc.text(`Acomp.: ${a}`,15,y); y+=12; });
-    if(p.refrigerantes) p.refrigerantes.forEach(r=>{ doc.text(`Bebida: ${r}`,15,y); y+=12; });
+    doc.setFont('helvetica','normal'); 
+    doc.text(`Marmita ${p.marmita} - R$${p.valorMarmita.toFixed(2)}`,15,y); y+=12;
+    if(p.carnes.length) p.carnes.forEach(c=>{ doc.text(`Carne: ${c}`,15,y); y+=12; });
+    if(p.acompanhamentos.length) p.acompanhamentos.forEach(a=>{ doc.text(`Acomp.: ${a}`,15,y); y+=12; });
+    if(p.refrigerantes.length) p.refrigerantes.forEach(r=>{ doc.text(`Bebida: ${r}`,15,y); y+=12; });
     if(p.adicionais){ doc.text(`Obs: ${p.adicionais}`,15,y); y+=12; }
-
-    y+=5;
+    y+=8;
   });
 
-  doc.setFont('helvetica','bold'); 
-  doc.text(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`,10,y);
-
-  doc.save(`pedido-${dia}-${mes}-${ano}.pdf`);
+  doc.text(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`,10,y+10);
+  doc.save(`Pedidos_${dia}-${mes}-${ano}.pdf`);
 });
+</script>
+
+</body>
+</html>
