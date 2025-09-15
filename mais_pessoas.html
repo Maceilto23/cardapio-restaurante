@@ -291,13 +291,18 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
   window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
 
   // PDF
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script>
+  // PDF
 const { jsPDF } = window.jspdf;
 
 const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:[226,1000] });
 const t = texto => texto.normalize("NFC");
 const larguraMax = 206;
+
+// Obter data atual
+const hoje = new Date();
+const dia = String(hoje.getDate()).padStart(2, '0');
+const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+const ano = hoje.getFullYear();
 
 // Cabeçalho
 doc.setFont('helvetica','bold'); 
@@ -344,21 +349,21 @@ pedidos.forEach((p, i) => {
   }
 
   // Carnes
-  if(p.carnes.length) {
+  if(p.carnes && p.carnes.length) {
     let linhas = doc.splitTextToSize(t(`Carnes: ${p.carnes.join(", ")}`), larguraMax);
     doc.text(linhas, 15, y);
     y += linhas.length * 10 + 2;
   }
 
   // Acompanhamentos
-  if(p.acompanhamentos.length) {
+  if(p.acompanhamentos && p.acompanhamentos.length) {
     let linhas = doc.splitTextToSize(t(`Acompanhamentos: ${p.acompanhamentos.join(", ")}`), larguraMax);
     doc.text(linhas, 15, y);
     y += linhas.length * 10 + 2;
   }
 
   // Bebidas
-  if(p.refrigerantes.length) {
+  if(p.refrigerantes && p.refrigerantes.length) {
     let linhas = doc.splitTextToSize(t(`Bebidas: ${p.refrigerantes.join(", ")}`), larguraMax);
     doc.text(linhas, 15, y);
     y += linhas.length * 10 + 2;
@@ -391,10 +396,12 @@ doc.text(t(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`), 113, y+5, {align:'center'
 
 // Salvar PDF
 doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
+
 </script>
 
 </body>
 </html>
+
 
 
 
