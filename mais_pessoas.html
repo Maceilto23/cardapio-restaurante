@@ -325,7 +325,7 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
 
   window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
 
-  // Gerar PDF
+ // Gerar PDF compacto
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:[226,1000] });
 
@@ -343,40 +343,45 @@ doc.text(t(`Pedidos de ${dia}/${mes}/${ano}`), 113, 35, {align:'center'});
 let y = 55;
 
 // Dados gerais
-doc.text(t(`Local: ${localNome}`), 10, y); y += 12;
-doc.text(t(`Endereço: ${endereco}`), 10, y); y += 12;
-doc.text(t(`Pagamento: ${pagamentoGlobal}`), 10, y); y += 12;
-doc.text(t(`Taxa de entrega: R$${taxa.toFixed(2)}`), 10, y); y += 18;
+const infoGerais = [
+  `Local: ${localNome}`,
+  `Endereço: ${endereco}`,
+  `Pagamento: ${pagamentoGlobal}`,
+  `Taxa de entrega: R$${taxa.toFixed(2)}`
+];
 
-// Pedidos individuais
+infoGerais.forEach(texto => { doc.text(t(texto), 10, y); y += 10; });
+y += 5;
+
+// Pedidos individuais (compactos)
 pedidos.forEach((p,i)=>{
   doc.setFont('helvetica','bold'); 
-  doc.text(t(`PEDIDO ${i+1} - ${p.nome||"Cliente"}`), 10, y); y += 12;
+  doc.text(t(`PEDIDO ${i+1} - ${p.nome||"Cliente"}`), 10, y); y += 10;
 
   doc.setFont('helvetica','normal');
-  if(p.marmita){ 
-    doc.text(t(`Marmita: ${p.marmita} R$${(p.valorMarmita||0).toFixed(2)}`), 15, y); 
-    y += 12;
+  if(p.marmita) { 
+    doc.text(t(`Marmita: ${p.marmita} R$${(p.valorMarmita||0).toFixed(2)}`), 15, y); y += 10;
   }
-  if(p.carnes) p.carnes.forEach(c=>{ doc.text(t(`Carne: ${c}`), 15, y); y += 12; });
-  if(p.acompanhamentos) p.acompanhamentos.forEach(a=>{ doc.text(t(`Acompanhamento: ${a}`), 15, y); y += 12; });
-  if(p.refrigerantes) p.refrigerantes.forEach(r=>{ doc.text(t(`Refrigerante: ${r}`), 15, y); y += 12; });
-  if(p.adicionais){ doc.text(t(`Observação: ${p.adicionais}`), 15, y); y += 12; }
-
+  if(p.carnes && p.carnes.length) doc.text(t(`Carnes: ${p.carnes.join(", ")}`), 15, y), y += 10;
+  if(p.acompanhamentos && p.acompanhamentos.length) doc.text(t(`Acomp.: ${p.acompanhamentos.join(", ")}`), 15, y), y += 10;
+  if(p.refrigerantes && p.refrigerantes.length) doc.text(t(`Bebidas: ${p.refrigerantes.join(", ")}`), 15, y), y += 10;
+  if(p.adicionais) doc.text(t(`Observação: ${p.adicionais}`), 15, y), y += 10;
+  
   doc.setFont('helvetica','bold'); 
-  doc.text(t(`Subtotal: R$${(p.total||0).toFixed(2)}`), 15, y); y += 16;
+  doc.text(t(`Subtotal: R$${(p.total||0).toFixed(2)}`), 15, y); y += 12;
   doc.setDrawColor(180); 
   doc.setLineWidth(0.5); 
-  doc.line(10, y, 216, y); y += 12;
+  doc.line(10, y, 216, y); y += 10;
 });
 
 // Total geral
 doc.setFont('helvetica','bold'); 
 doc.setFontSize(12); 
-doc.text(t(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`), 113, y+10, {align:'center'});
+doc.text(t(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`), 113, y+5, {align:'center'});
 
 // Salvar PDF
 doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
+
 
 
 });
@@ -384,5 +389,6 @@ doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 
 </body>
 </html>
+
 
 
