@@ -253,36 +253,64 @@ function criarPedido(){
 
 
 // ATUALIZAR PEDIDO
+// ATUALIZAR PEDIDO
 function atualizarPedido(){
   const itensEl = document.getElementById("itensPedido");
-  if(pedidos.length===0){ itensEl.innerHTML="<li>Nenhum pedido adicionado</li>"; return; }
+  if(pedidos.length===0){ 
+    itensEl.innerHTML="<li>Nenhum pedido adicionado</li>"; 
+    return; 
+  }
 
-  let html="";
-  let totalGeral=0;
+  let html = "";
+  let totalGeral = 0;
   const taxaEntregaGlobal = parseFloat(document.getElementById("localEntrega").selectedOptions[0]?.dataset.taxa || 0);
   const localNome = document.getElementById("localEntrega").value || "-";
 
   html += `<li>📍 Local de Entrega: ${localNome}</li>`;
   html += `<li>🏍️ Taxa de entrega única: R$${taxaEntregaGlobal.toFixed(2)}</li>`;
 
-  pedidos.forEach((p,i)=>{
+  pedidos.forEach((p, i) => {
     html += `<li><strong>Pedido ${i+1} - ${p.nome || "Cliente"}:</strong><ul>`;
-    if(p.marmita) html+=`<li>🍱 Marmita ${p.marmita} - R$${(p.valorMarmita||0).toFixed(2)}</li>`;
-    if(p.carnes) p.carnes.forEach(c=>html+=`<li>🍖 ${c}</li>`);
-    if(p.acompanhamentos) p.acompanhamentos.forEach(a=>html+=`<li>🥗 ${a}</li>`);
-    if(p.refrigerantes) p.refrigerantes.forEach(r=>html+=`<li>🥤 ${r}</li>`);
-    if(p.adicionais) html+=`<li>📝 ${p.adicionais}</li>`;
-    p.total = (p.valorMarmita||0);
+
+    let valorRefrigerantes = 0;
+
+    if (p.marmita) 
+      html += `<li>🍱 Marmita ${p.marmita} - R$${(p.valorMarmita||0).toFixed(2)}</li>`;
+
+    if (p.carnes) 
+      p.carnes.forEach(c => html += `<li>🍖 ${c}</li>`);
+
+    if (p.acompanhamentos) 
+      p.acompanhamentos.forEach(a => html += `<li>🥗 ${a}</li>`);
+
+    if (p.refrigerantes) {
+      p.refrigerantes.forEach(r => {
+        html += `<li>🥤 ${r.nome} - R$${r.preco.toFixed(2)}</li>`;
+        valorRefrigerantes += r.preco;
+      });
+    }
+
+    if (p.adicionais) 
+      html += `<li>📝 ${p.adicionais}</li>`;
+
+    p.total = (p.valorMarmita || 0) + valorRefrigerantes;
+
     totalGeral += p.total;
-    html+=`<li><strong>Subtotal: R$${p.total.toFixed(2)}</strong></li>`;
-    html+="</ul></li>";
+
+    html += `<li><strong>Subtotal: R$${p.total.toFixed(2)}</strong></li>`;
+    html += "</ul></li>";
   });
 
   totalGeral += taxaEntregaGlobal;
-  html+=`<li><strong>TOTAL GERAL: R$${totalGeral.toFixed(2)}</strong></li>`;
+
+  html += `<li><strong>TOTAL GERAL: R$${totalGeral.toFixed(2)}</strong></li>`;
+
   itensEl.innerHTML = html;
-  document.getElementById('taxaEntregaInfo').textContent = `🏍️ Taxa de entrega: R$ ${taxaEntregaGlobal.toFixed(2)}`;
+
+  document.getElementById('taxaEntregaInfo').textContent = 
+    `🏍️ Taxa de entrega: R$ ${taxaEntregaGlobal.toFixed(2)}`;
 }
+
 
 // ENVIAR WHATSAPP E GERAR PDF
 document.getElementById("enviarWhats").addEventListener("click", ()=>{
@@ -397,5 +425,4 @@ doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 </script>
 </body>
 </html>
-
 
