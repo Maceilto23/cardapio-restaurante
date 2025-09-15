@@ -290,115 +290,46 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
   msg += `\n💸 *TOTAL GERAL: R$${totalGeral.toFixed(2)}*`;
   window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
 
-  // GERAR PDF
   // PDF
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script>
-const { jsPDF } = window.jspdf;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:[226,1000] });
+  const t = (texto) => texto.normalize("NFC");
+  const larguraMax = 206;
 
-const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:[226,1000] });
-const t = texto => texto.normalize("NFC");
-const larguraMax = 206;
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); 
+  doc.text(t('Restaurante Colinas'), 113, 20, {align:'center'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(10); 
+  doc.text(t(`Pedidos de ${dia}/${mes}/${ano}`), 113, 35, {align:'center'});
 
-// Cabeçalho
-doc.setFont('helvetica','bold'); 
-doc.setFontSize(14); 
-doc.text(t('Restaurante Colinas'), 113, 20, {align:'center'});
+  let y = 55;
+  [`Local: ${localNome}`, `Endereço: ${endereco}`, `Pagamento: ${pagamentoGlobal}`, `Taxa de entrega: R$${taxa.toFixed(2)}`].forEach(texto=>{
+    const linhas = doc.splitTextToSize(t(texto), larguraMax);
+    doc.text(linhas, 10, y);
+    y += linhas.length * 10;
+  });
+  y += 5;
 
-doc.setFont('helvetica','normal'); 
-doc.setFontSize(10); 
-doc.text(t(`Pedidos de ${dia}/${mes}/${ano}`), 113, 35, {align:'center'});
+  pedidos.forEach((p,i)=>{
+    doc.setFont('helvetica','bold'); 
+    doc.text(doc.splitTextToSize(t(`PEDIDO ${i+1} - ${p.nome||"Cliente"}`), larguraMax), 10, y); 
+    y += 10;
 
-let y = 55;
+    doc.setFont('helvetica','normal');
+    if(p.marmita) { doc.text(doc.splitTextToSize(t(`Marmita: ${p.marmita} R$${(p.valorMarmita||0).toFixed(2)}`), larguraMax), 15, y); y+=10; }
+    if(p.carnes.length) doc.text(doc.splitTextToSize(t(`Carnes: ${p.carnes.join(", ")}`), larguraMax), 15, y), y+=10;
+    if(p.acompanhamentos.length) doc.text(doc.splitTextToSize(t(`Acompanhamentos: ${p.acompanhamentos.join(", ")}`), larguraMax), 15, y), y+=10;
+    if(p.refrigerantes.length) doc.text(doc.splitTextToSize(t(`Bebidas: ${p.refrigerantes.join(", ")}`), larguraMax), 15, y), y+=10;
+    if(p.adicionais) doc.text(doc.splitTextToSize(t(`Observação: ${p.adicionais}`), larguraMax), 15, y), y+=10;
 
-// Informações gerais
-const infos = [
-  `Local: ${localNome}`,
-  `Endereço: ${endereco}`,
-  `Pagamento: ${pagamentoGlobal}`,
-  `Taxa de entrega: R$${taxa.toFixed(2)}`
-];
+    doc.setFont('helvetica','bold'); 
+    doc.text(doc.splitTextToSize(t(`Subtotal: R$${(p.total||0).toFixed(2)}`), larguraMax), 15, y); y += 10;
+    doc.setDrawColor(180); doc.setLineWidth(0.5); doc.line(10, y, 216, y); y += 10;
+  });
 
-infos.forEach(texto => {
-  const linhas = doc.splitTextToSize(t(texto), larguraMax);
-  doc.text(linhas, 10, y);
-  y += linhas.length * 10 + 2;
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); 
+  doc.text(t(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`), 113, y+5, {align:'center'});
+  doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 });
-
-y += 5;
-
-// Pedidos
-pedidos.forEach((p, i) => {
-  // Cabeçalho do pedido
-  doc.setFont('helvetica','bold'); 
-  let linhasPedido = doc.splitTextToSize(t(`PEDIDO ${i+1} - ${p.nome || "Cliente"}`), larguraMax);
-  doc.text(linhasPedido, 10, y);
-  y += linhasPedido.length * 10 + 5;
-
-  doc.setFont('helvetica','normal');
-
-  // Marmita
-  if(p.marmita) {
-    let linhas = doc.splitTextToSize(t(`Marmita: ${p.marmita} R$${(p.valorMarmita||0).toFixed(2)}`), larguraMax);
-    doc.text(linhas, 15, y);
-    y += linhas.length * 10 + 2;
-  }
-
-  // Carnes
-  if(p.carnes.length) {
-    let linhas = doc.splitTextToSize(t(`Carnes: ${p.carnes.join(", ")}`), larguraMax);
-    doc.text(linhas, 15, y);
-    y += linhas.length * 10 + 2;
-  }
-
-  // Acompanhamentos
-  if(p.acompanhamentos.length) {
-    let linhas = doc.splitTextToSize(t(`Acompanhamentos: ${p.acompanhamentos.join(", ")}`), larguraMax);
-    doc.text(linhas, 15, y);
-    y += linhas.length * 10 + 2;
-  }
-
-  // Bebidas
-  if(p.refrigerantes.length) {
-    let linhas = doc.splitTextToSize(t(`Bebidas: ${p.refrigerantes.join(", ")}`), larguraMax);
-    doc.text(linhas, 15, y);
-    y += linhas.length * 10 + 2;
-  }
-
-  // Observações
-  if(p.adicionais) {
-    let linhas = doc.splitTextToSize(t(`Observação: ${p.adicionais}`), larguraMax);
-    doc.text(linhas, 15, y);
-    y += linhas.length * 10 + 2;
-  }
-
-  // Subtotal
-  doc.setFont('helvetica','bold'); 
-  let linhasSubtotal = doc.splitTextToSize(t(`Subtotal: R$${(p.total||0).toFixed(2)}`), larguraMax);
-  doc.text(linhasSubtotal, 15, y);
-  y += linhasSubtotal.length * 10 + 5;
-
-  // Linha divisória
-  doc.setDrawColor(180); 
-  doc.setLineWidth(0.5); 
-  doc.line(10, y, 216, y); 
-  y += 10;
-});
-
-// Total Geral
-doc.setFont('helvetica','bold'); 
-doc.setFontSize(12); 
-doc.text(t(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`), 113, y+5, {align:'center'});
-
-// Salvar PDF
-doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 </script>
-
 </body>
 </html>
-
-
-
-
-
-
