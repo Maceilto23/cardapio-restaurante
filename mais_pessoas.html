@@ -260,10 +260,10 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
   doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.text(t(`Pedidos de ${dia}/${mes}/${ano}`),113,35,{align:'center'});
 
   let y=55;
-  doc.text(t(`📍 Local: ${localNome}`),10,y); y+=12;
-  doc.text(t(`📍 Endereço: ${endereco}`),10,y); y+=12;
-  doc.text(t(`💳 Pagamento: ${pagamentoGlobal}`),10,y); y+=12;
-  doc.text(t(`🏍️ Taxa de entrega: R$${taxa.toFixed(2)}`),10,y); y+=18;
+  doc.text(t(`Local: ${localNome}`),10,y); y+=12;
+  doc.text(t(`Endereço: ${endereco}`),10,y); y+=12;
+  doc.text(t(`Pagamento: ${pagamentoGlobal}`),10,y); y+=12;
+  doc.text(t(`Taxa de entrega: R$${taxa.toFixed(2)}`),10,y); y+=18;
 
   pedidos.forEach((p,i)=>{
     doc.setFont('helvetica','bold'); doc.text(t(`PEDIDO ${i+1} - ${p.nome||"Cliente"}`),10,y); y+=12;
@@ -285,6 +285,7 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
 
 </body>
 </html>
+
 
 
 
