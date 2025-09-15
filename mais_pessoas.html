@@ -1,192 +1,137 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Pedidos - Restaurante Colinas</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardápio Interativo</title>
 <style>
-  body { font-family: Arial, sans-serif; max-width: 400px; margin: auto; }
-  label { display:block; margin-top:10px; }
-  ul { padding-left: 20px; }
-  #itensPedido li { margin-bottom: 4px; }
-  .pedido { border:1px solid #ccc; padding:10px; margin:10px 0; border-radius:8px; }
-  button { margin-top:10px; padding:8px 12px; }
+* { box-sizing: border-box; margin:0; padding:0; }
+body { font-family: Arial, sans-serif; background: #f5f5f5; display: flex; flex-direction: column; align-items: center; padding: 10px; }
+
+.cardapio { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 6px 15px rgba(0,0,0,0.2); max-width: 500px; width: 100%; margin-bottom: 20px; }
+
+.logo-container { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 20px; }
+.logo-container img { height: 60px; margin-right: 15px; border-radius: 8px; }
+.titulo-container h1 { font-size: 1.5rem; color: #007BFF; margin-bottom: 5px; }
+.titulo-container h2 { font-size: 1.1rem; color: #555; font-weight: normal; }
+.titulo-container h3 { font-size: 1rem; margin-bottom: 10px; color: #333; }
+
+ul { list-style: none; padding: 0; }
+li { margin: 5px 0; cursor: pointer; display: flex; align-items: center; padding: 6px 10px; border-radius: 8px; transition: background 0.2s; }
+li:hover { background: #f0f0f0; }
+.checkbox-fake { width: 22px; height: 22px; border: 2px solid #007BFF; display: flex; align-items: center; justify-content: center; margin-right: 10px; border-radius: 4px; font-weight: bold; color: #fff; background: #007BFF; opacity: 0; transition: opacity 0.2s, transform 0.2s; flex-shrink: 0; }
+li.selected .checkbox-fake { opacity: 1; transform: scale(1.1); }
+li span { flex: 1; }
+
+#adicionais, input[type="text"], select { width: 100%; padding: 8px; margin-top: 8px; border-radius: 6px; border: 1px solid #ccc; }
+label { display: block; margin-top: 12px; margin-bottom: 6px; cursor: pointer; }
+
+#taxaEntregaInfo { 
+  margin: 15px 0; 
+  background: #e8f0fe; 
+  padding: 10px; 
+  border-radius: 8px; 
+  border: 1px solid #007BFF; 
+  color: #007BFF; 
+  font-weight: bold; 
+  text-align: center;
+}
+
+#enviarWhats { margin-top: 12px; padding: 10px; background: #25D366; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1rem; }
+#adicionarPedido { margin: 10px 0; padding: 8px; width: 100%; border-radius: 8px; border: 1px solid #007BFF; background: #007BFF; color: #fff; cursor: pointer; font-weight: bold; }
+
+.pedido-individual { border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 8px; background: #f9f9f9; }
+.pedido-individual h4 { margin-bottom: 5px; }
+
+@media (max-width: 600px) { 
+  .logo-container { flex-direction: column; align-items: center; text-align: center; } 
+  .logo-container img { margin-right: 0; margin-bottom: 8px; height: 50px; } 
+  .titulo-container h1 { font-size: 1.3rem; } 
+  .titulo-container h2 { font-size: 1rem; } 
+  #enviarWhats, #adicionarPedido { font-size: 0.95rem; } 
+}
 </style>
 </head>
 <body>
 
-<h2>📋 Novo Pedido</h2>
+<div class="cardapio">
+  <div class="logo-container">
+    <img src="logo.png" alt="Logo Restaurante">
+    <div class="titulo-container">
+      <h1>Restaurante Colinas</h1>
+      <h2>🍽️ Cardápio de Hoje – <span id="diaSemana"></span>, <span id="dataHoje"></span></h2>
+      <h3 id="horarioFuncionamento">Horário: --:-- - --:--</h3>
+    </div>
+  </div>
 
-<label>📍 Endereço de Entrega</label>
-<input type="text" id="endereco" placeholder="Digite o endereço">
+  <!-- Campos Globais -->
+  <label for="endereco">📍 Endereço de Entrega (único para todos os pedidos)</label>
+  <input type="text" id="endereco" placeholder="Digite o endereço de entrega">
 
-<label>🗺️ Local de Entrega</label>
-<select id="localEntrega">
-  <option value="">Selecione</option>
-  <option value="Cidade A" data-taxa="5.00">Cidade A - R$5,00</option>
-  <option value="Cidade B" data-taxa="8.00">Cidade B - R$8,00</option>
-  <option value="Cidade C" data-taxa="10.00">Cidade C - R$10,00</option>
-</select>
-
-<label>💳 Forma de Pagamento</label>
-<select id="pagamento">
-  <option value="Dinheiro">Dinheiro</option>
-  <option value="Pix">Pix</option>
-  <option value="Cartão">Cartão</option>
-</select>
-
-<hr>
-
-<div class="pedido">
-  <label>👤 Nome do Cliente</label>
-  <input type="text" id="nomeCliente" placeholder="Nome">
-
-  <label>🍱 Marmita</label>
-  <select id="marmita">
-    <option value="">Selecione</option>
-    <option value="01" data-valor="20.00">Marmita 01 - R$20,00</option>
-    <option value="02" data-valor="25.00">Marmita 02 - R$25,00</option>
+  <label for="localEntrega">🚚 Local de Entrega</label>
+  <select id="localEntrega">
+    <option value="" disabled selected>Selecione o local</option>
+    <option value="Centro" data-taxa="5.00">Centro - R$ 5,00</option>
+    <option value="Bairro A" data-taxa="8.00">Bairro A - R$ 8,00</option>
+    <option value="Bairro B" data-taxa="10.00">Bairro B - R$ 10,00</option>
   </select>
 
-  <label>🍖 Carnes</label>
-  <input type="text" id="carnes" placeholder="Separar por vírgula">
+  <div id="taxaEntregaInfo">Taxa de entrega: R$ 0,00</div>
 
-  <label>🥗 Acompanhamentos</label>
-  <input type="text" id="acompanhamentos" placeholder="Separar por vírgula">
+  <label for="pagamento">💳 Forma de Pagamento</label>
+  <select id="pagamento">
+    <option value="Dinheiro">Dinheiro</option>
+    <option value="Pix">Pix</option>
+    <option value="Cartão">Cartão</option>
+  </select>
 
-  <label>🥤 Refrigerantes</label>
-  <input type="text" id="refrigerantes" placeholder="Separar por vírgula">
+  <!-- Itens e Adicionais -->
+  <label for="adicionais">🥗 Adicionais</label>
+  <input type="text" id="adicionais" placeholder="Ex: Sem cebola, pouco sal...">
 
-  <label>📝 Observações / Adicionais</label>
-  <input type="text" id="adicionais">
+  <button id="adicionarPedido">Adicionar Pedido</button>
 
-  <button type="button" id="addPedido">➕ Adicionar Pedido</button>
+  <!-- Lista de pedidos -->
+  <div id="listaPedidos"></div>
+
+  <button id="enviarWhats">Enviar Pedido via WhatsApp</button>
 </div>
 
-<h3>🧾 Itens do Pedido</h3>
-<ul id="itensPedido"></ul>
-
-<button id="enviarWhats">📤 Enviar WhatsApp + PDF</button>
-
 <script>
-const pedidos = [];
+const localEntrega = document.getElementById('localEntrega');
+const taxaInfo = document.getElementById('taxaEntregaInfo');
 
-document.getElementById("localEntrega").addEventListener("change", atualizarPedido);
-
-document.getElementById("addPedido").addEventListener("click", ()=>{
-  const nome = document.getElementById("nomeCliente").value.trim();
-  const marmitaSel = document.getElementById("marmita");
-  const marmita = marmitaSel.value;
-  const valorMarmita = parseFloat(marmitaSel.selectedOptions[0]?.dataset.valor || 0);
-  const carnes = document.getElementById("carnes").value.split(",").map(c=>c.trim()).filter(c=>c);
-  let acompanhamentos = document.getElementById("acompanhamentos").value.split(",").map(a=>a.trim()).filter(a=>a);
-  const refrigerantes = document.getElementById("refrigerantes").value.split(",").map(r=>r.trim()).filter(r=>r);
-  const adicionais = document.getElementById("adicionais").value.trim();
-
-  // Se for Marmita 01, inserir acompanhamentos padrão
-  if(marmita === "01" && acompanhamentos.length === 0){
-    acompanhamentos = ["Arroz","Feijão","Salada"];
-  }
-
-  if(!marmita) return alert("Selecione a marmita.");
-
-  pedidos.push({nome, marmita, valorMarmita, carnes, acompanhamentos, refrigerantes, adicionais});
-  document.getElementById("nomeCliente").value = "";
-  document.getElementById("marmita").value = "";
-  document.getElementById("carnes").value = "";
-  document.getElementById("acompanhamentos").value = "";
-  document.getElementById("refrigerantes").value = "";
-  document.getElementById("adicionais").value = "";
-
-  atualizarPedido();
+localEntrega.addEventListener('change', function() {
+  const taxa = this.options[this.selectedIndex].dataset.taxa || 0;
+  taxaInfo.textContent = `Taxa de entrega: R$ ${parseFloat(taxa).toFixed(2)}`;
 });
 
-function atualizarPedido(){
-  const itensEl = document.getElementById("itensPedido");
-  if(pedidos.length===0){ itensEl.innerHTML="<li>Nenhum pedido adicionado</li>"; return; }
+document.getElementById('adicionarPedido').addEventListener('click', () => {
+  const adicionais = document.getElementById('adicionais').value;
+  if (!adicionais.trim()) return alert('Descreva o pedido ou adicionais');
 
-  const taxaEntrega = parseFloat(document.getElementById("localEntrega").selectedOptions[0]?.dataset.taxa || 0);
-  let totalGeral = taxaEntrega;
-  let html = `<li>📍 Local de Entrega: ${document.getElementById("localEntrega").value || "-"}</li>`;
-  html += `<li>🏍️ Taxa de entrega única: R$${taxaEntrega.toFixed(2)}</li>`;
+  const pedidoBox = document.createElement('div');
+  pedidoBox.className = 'pedido-individual';
+  pedidoBox.innerHTML = `<h4>Pedido:</h4><p>${adicionais}</p>`;
+  document.getElementById('listaPedidos').appendChild(pedidoBox);
 
-  pedidos.forEach((p,i)=>{
-    let subtotal = p.valorMarmita||0;
-    totalGeral += subtotal;
+  document.getElementById('adicionais').value = '';
+});
 
-    html += `<li><strong>Pedido ${i+1} - ${p.nome||"Cliente"}:</strong><ul>`;
-    html += `<li>🍱 Marmita ${p.marmita} - R$${p.valorMarmita.toFixed(2)}</li>`;
-    if(p.carnes.length) p.carnes.forEach(c=>html+=`<li>🍖 ${c}</li>`);
-    if(p.acompanhamentos.length) p.acompanhamentos.forEach(a=>html+=`<li>🥗 ${a}</li>`);
-    if(p.refrigerantes.length) p.refrigerantes.forEach(r=>html+=`<li>🥤 ${r}</li>`);
-    if(p.adicionais) html+=`<li>📝 ${p.adicionais}</li>`;
-    html += `<li><strong>Subtotal: R$${subtotal.toFixed(2)}</strong></li></ul></li>`;
-  });
+document.getElementById('enviarWhats').addEventListener('click', () => {
+  const endereco = document.getElementById('endereco').value;
+  const local = document.getElementById('localEntrega').value;
+  const pagamento = document.getElementById('pagamento').value;
+  const pedidos = [...document.querySelectorAll('.pedido-individual p')].map(p => p.textContent).join(' | ');
+  const taxa = taxaInfo.textContent;
 
-  html+=`<li><strong>💰 TOTAL GERAL: R$${totalGeral.toFixed(2)}</strong></li>`;
-  itensEl.innerHTML = html;
-}
+  if (!endereco || !local || !pagamento || !pedidos) {
+    return alert('Preencha todos os campos e adicione pelo menos um pedido.');
+  }
 
-document.getElementById("enviarWhats").addEventListener("click", ()=>{
-  const endereco = document.getElementById("endereco").value.trim();
-  const localEntrega = document.getElementById("localEntrega").value;
-  const taxa = parseFloat(document.getElementById("localEntrega").selectedOptions[0]?.dataset.taxa || 0);
-  const pagamento = document.getElementById("pagamento").value;
-
-  if(!endereco) return alert("Informe o endereço.");
-  if(!localEntrega) return alert("Escolha o local de entrega.");
-  if(pedidos.length===0) return alert("Nenhum pedido adicionado.");
-
-  let totalGeral = taxa;
-  let msg = `🍽️ *Pedidos do Dia*\n📍 Local: ${localEntrega}\n🏠 Endereço: ${endereco}\n💳 Pagamento: ${pagamento}\n🏍️ Taxa: R$${taxa.toFixed(2)}\n`;
-
-  pedidos.forEach((p,i)=>{
-    totalGeral += p.valorMarmita||0;
-    msg += `\n📌 Pedido ${i+1} - ${p.nome||"Cliente"}\n🍱 Marmita ${p.marmita} - R$${p.valorMarmita.toFixed(2)}\n`;
-    if(p.carnes.length) p.carnes.forEach(c=>msg+=`🍖 ${c}\n`);
-    if(p.acompanhamentos.length) p.acompanhamentos.forEach(a=>msg+=`🥗 ${a}\n`);
-    if(p.refrigerantes.length) p.refrigerantes.forEach(r=>msg+=`🥤 ${r}\n`);
-    if(p.adicionais) msg += `📝 ${p.adicionais}\n`;
-  });
-  msg += `\n💸 *TOTAL GERAL: R$${totalGeral.toFixed(2)}*`;
-
-  window.open(`https://wa.me/556192633504?text=${encodeURIComponent(msg)}`,"_blank");
-
-  // PDF
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({orientation:'portrait', unit:'pt', format:[226,1000]});
-  const data = new Date();
-  const dia = String(data.getDate()).padStart(2,'0');
-  const mes = String(data.getMonth()+1).padStart(2,'0');
-  const ano = data.getFullYear();
-
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(14);
-  doc.text('Restaurante Colinas',113,20,{align:'center'});
-  doc.setFont('helvetica','normal');
-  doc.setFontSize(10);
-  doc.text(`Pedidos de ${dia}/${mes}/${ano}`,113,35,{align:'center'});
-
-  let y=55;
-  doc.text(`Local: ${localEntrega}`,10,y); y+=12;
-  doc.text(`Endereço: ${endereco}`,10,y); y+=12;
-  doc.text(`Pagamento: ${pagamento}`,10,y); y+=12;
-  doc.text(`Taxa de Entrega: R$${taxa.toFixed(2)}`,10,y); y+=20;
-
-  pedidos.forEach((p,i)=>{
-    doc.setFont('helvetica','bold'); 
-    doc.text(`PEDIDO ${i+1} - ${p.nome||"Cliente"}`,10,y); y+=12;
-    doc.setFont('helvetica','normal'); 
-    doc.text(`Marmita ${p.marmita} - R$${p.valorMarmita.toFixed(2)}`,15,y); y+=12;
-    if(p.carnes.length) p.carnes.forEach(c=>{ doc.text(`Carne: ${c}`,15,y); y+=12; });
-    if(p.acompanhamentos.length) p.acompanhamentos.forEach(a=>{ doc.text(`Acomp.: ${a}`,15,y); y+=12; });
-    if(p.refrigerantes.length) p.refrigerantes.forEach(r=>{ doc.text(`Bebida: ${r}`,15,y); y+=12; });
-    if(p.adicionais){ doc.text(`Obs: ${p.adicionais}`,15,y); y+=12; }
-    y+=8;
-  });
-
-  doc.text(`TOTAL GERAL: R$${totalGeral.toFixed(2)}`,10,y+10);
-  doc.save(`Pedidos_${dia}-${mes}-${ano}.pdf`);
+  const mensagem = `📍 Endereço: ${endereco}\n🚚 Local: ${local}\n💰 ${taxa}\n💳 Pagamento: ${pagamento}\n📝 Pedidos: ${pedidos}`;
+  const url = `https://wa.me/5581999999999?text=${encodeURIComponent(mensagem)}`;
+  window.open(url, '_blank');
 });
 </script>
 
