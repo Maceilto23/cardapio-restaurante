@@ -317,37 +317,52 @@ function atualizarPedido(){
   itensEl.innerHTML = html;
 }
 
-// ========== ENVIO WHATSAPP ==========
+// ENVIAR WHATSAPP E GERAR PDF
 document.getElementById("enviarWhats").addEventListener("click", ()=>{
-  if(pedidos.length===0) return alert("Adicione ao menos um pedido!");
-  let msg = `📋 *Pedidos de Hoje*\n`;
-  const endereco = document.getElementById("endereco").value;
-  const pagamento = document.getElementById("pagamento").value;
-  const taxaEntregaGlobal = parseFloat(document.getElementById("localEntrega").selectedOptions[0]?.dataset.taxa || 0);
+  const endereco = document.getElementById("endereco").value.trim();
+  const localNome = document.getElementById("localEntrega").value;
+  const pagamentoGlobal = document.getElementById('pagamento').value;
+  const taxa = parseFloat(document.getElementById('localEntrega').selectedOptions[0]?.dataset.taxa || 0);
+
+  if(!endereco) return alert("Informe o endereço de entrega.");
+  if(!localNome) return alert("Escolha o local de entrega.");
+  if(!pagamentoGlobal) return alert("Escolha a forma de pagamento.");
+  if(pedidos.length===0) return alert("Nenhum pedido adicionado.");
+
+  let msg = `🍽️ *Pedidos do Dia*\n📍 Local: ${localNome}\n📍 Endereço: ${endereco}\n💳 Pagamento: ${pagamentoGlobal}\n🏍️ Taxa de Entrega: R$${taxa.toFixed(2)}\n`;
+  let totalGeral = 0;
 
   pedidos.forEach((p,i)=>{
-    msg+=`\n*Pedido ${i+1} - ${p.nome || "Cliente"}*\n`;
-    if(p.marmita) msg+=`🍱 Marmita ${p.marmita} - R$${(p.valorMarmita||0).toFixed(2)}\n`;
-    if(p.carnes) p.carnes.forEach(c=> msg+=`🍖 ${c}\n`);
-    if(p.acompanhamentos) p.acompanhamentos.forEach(a=> msg+=`🥗 ${a}\n`);
-    if(p.refrigerantes) p.refrigerantes.forEach(r=> msg+=`🥤 ${r}\n`);
-    if(p.adicionais) msg+=`📝 ${p.adicionais}\n`;
-    msg+=`Subtotal: R$${(p.total||0).toFixed(2)}\n`;
+    msg += `\n📌 Pedido ${i+1} - ${p.nome || "Cliente"}\n`;
+    let subtotal = p.valorMarmita || 0;
+
+    if(p.marmita) msg += `🍱 Marmita ${p.marmita} - R$${(p.valorMarmita||0).toFixed(2)}\n`;
+
+    if(p.carnes) p.carnes.forEach(c=>msg += `🍖 ${c}\n`);
+    if(p.acompanhamentos) p.acompanhamentos.forEach(a=>msg += `🥗 ${a}\n`);
+
+    // Refrigerantes com quantidade
+    if(p.refrigerantes && p.refrigerantes.length){
+        const contagemRef = {};
+        p.refrigerantes.forEach(r=> contagemRef[r] = (contagemRef[r]||0)+1 );
+        Object.keys(contagemRef).forEach(r=>{
+          msg += `🥤 ${r} x${contagemRef[r]}\n`;
+          const preco = parseFloat(r.split('R$')[1]) || 0;
+          subtotal += preco * contagemRef[r];
+        });
+    }
+
+    if(p.adicionais) msg += `📝 ${p.adicionais}\n`;
+
+    msg += `Subtotal: R$${subtotal.toFixed(2)}\n`;
+    totalGeral += subtotal;
   });
-  const totalGeral = pedidos.reduce((sum,p)=>sum+(p.total||0),0)+taxaEntregaGlobal;
-  msg+=`\n🏍️ Taxa de entrega: R$${taxaEntregaGlobal.toFixed(2)}\n💰 Total Geral: R$${totalGeral.toFixed(2)}\n`;
-  if(endereco) msg+=`\n📍 Endereço de Entrega: ${endereco}`;
-  if(pagamento) msg+=`\n💳 Forma de pagamento: ${pagamento}`;
 
-  const numeroWhats = "55SEUNUMERO"; // Substitua pelo número
-  const url = `https://api.whatsapp.com/send?phone=${numeroWhats}&text=${encodeURIComponent(msg)}`;
-  window.open(url,"_blank");
-});
+  totalGeral += taxa;
+  msg += `\n💸 *TOTAL GERAL: R$${totalGeral.toFixed(2)}*`;
+  window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
 
-  // ========== GERAR PDF ==========
-function gerarPDF() {
-  if(pedidos.length===0) return alert("Adicione ao menos um pedido!");
-
+  // PDF
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:[226,1000] });
   const t = (texto) => texto.normalize("NFC");
@@ -355,69 +370,92 @@ function gerarPDF() {
 
   doc.setFont('helvetica','bold'); 
   doc.setFontSize(14); 
-  doc.text(t('Restaurante Colinas'), 10, 20);
+  doc.text(t('Restaurante Colinas'), 113, 20, {align:'center'});
 
-  let y = 40;
+  doc.setFont('helvetica','normal'); 
+  doc.setFontSize(10); 
+  doc.text(t(`Pedidos de ${dia}/${mes}/${ano}`), 113, 35, {align:'center'});
+
+  let y = 55;
+  [`Local: ${localNome}`, `Endereço: ${endereco}`, `Pagamento: ${pagamentoGlobal}`, `Taxa de entrega: R$${taxa.toFixed(2)}`].forEach(texto=>{
+    const linhas = doc.splitTextToSize(t(texto), larguraMax);
+    doc.text(linhas, 10, y);
+    y += linhas.length * 10;
+  });
+  y += 5;
+
+  let totalGeralPDF = 0;
 
   pedidos.forEach((p,i)=>{
-    doc.setFontSize(12);
-    doc.setFont('helvetica','bold');
-    doc.text(t(`Pedido ${i+1} - ${p.nome || "Cliente"}`), 10, y);
-    y+=14;
+    doc.setFont('helvetica','bold'); 
+    const linhasPedido = doc.splitTextToSize(t(`PEDIDO ${i+1} - ${p.nome||"Cliente"}`), larguraMax);
+    doc.text(linhasPedido, 10, y); 
+    y += linhasPedido.length * 10 + 5;
+
     doc.setFont('helvetica','normal');
+    let subtotal = p.valorMarmita || 0;
 
     if(p.marmita) { 
-      doc.text(t(`🍱 Marmita ${p.marmita} - R$${(p.valorMarmita||0).toFixed(2)}`), 12, y); y+=12; 
+      const linhasMarmita = doc.splitTextToSize(t(`Marmita: ${p.marmita} R$${(p.valorMarmita||0).toFixed(2)}`), larguraMax);
+      doc.text(linhasMarmita, 15, y); 
+      y += linhasMarmita.length * 10 + 2;
     }
 
-    if(p.carnes.length){
+    if(p.carnes.length) {
       p.carnes.forEach(c=>{
-        doc.text(t(`🍖 ${c}`), 12, y); y+=12;
+        const linhasC = doc.splitTextToSize(t(`🍖 ${c}`), larguraMax);
+        doc.text(linhasC, 15, y); y += linhasC.length*10 + 2;
       });
     }
 
-    if(p.acompanhamentos.length){
+    if(p.acompanhamentos.length) {
       p.acompanhamentos.forEach(a=>{
-        doc.text(t(`🥗 ${a}`), 12, y); y+=12;
+        const linhasA = doc.splitTextToSize(t(`🥗 ${a}`), larguraMax);
+        doc.text(linhasA, 15, y); y += linhasA.length*10 + 2;
       });
     }
 
-    // ==== REFRIGERANTES APÓS ACOMPANHAMENTOS ====
+    // Refrigerantes com quantidade no PDF
     if(p.refrigerantes.length){
       const contagemRef = {};
-      p.refrigerantes.forEach(r=>{
-        contagemRef[r] = (contagemRef[r]||0)+1;
-      });
+      p.refrigerantes.forEach(r=> contagemRef[r] = (contagemRef[r]||0)+1 );
       Object.keys(contagemRef).forEach(r=>{
-        doc.text(t(`🥤 ${r} x${contagemRef[r]}`), 12, y); 
-        y+=12;
+        const linhasR = doc.splitTextToSize(t(`🥤 ${r} x${contagemRef[r]}`), larguraMax);
+        doc.text(linhasR, 15, y); y += linhasR.length*10 + 2;
+        const preco = parseFloat(r.split('R$')[1]) || 0;
+        subtotal += preco * contagemRef[r];
       });
     }
 
     if(p.adicionais){
-      doc.text(t(`📝 ${p.adicionais}`), 12, y); y+=12;
+      const linhasObs = doc.splitTextToSize(t(`Observação: ${p.adicionais}`), larguraMax);
+      doc.text(linhasObs, 15, y); y += linhasObs.length*10 + 2;
     }
 
-    doc.text(t(`Subtotal: R$${(p.total||0).toFixed(2)}`), 12, y); y+=16;
+    doc.setFont('helvetica','bold'); 
+    const linhasSubtotal = doc.splitTextToSize(t(`Subtotal: R$${subtotal.toFixed(2)}`), larguraMax);
+    doc.text(linhasSubtotal, 15, y); y += linhasSubtotal.length*10 + 5;
 
-    if(y>900){ doc.addPage(); y=20; }
+    // Linha separadora
+    doc.setDrawColor(180); 
+    doc.setLineWidth(0.5); 
+    doc.line(10, y, 216, y); 
+    y += 10;
+
+    totalGeralPDF += subtotal;
   });
 
-  const taxaEntregaGlobal = parseFloat(document.getElementById("localEntrega").selectedOptions[0]?.dataset.taxa || 0);
-  const totalGeral = pedidos.reduce((sum,p)=>sum+(p.total||0),0) + taxaEntregaGlobal;
+  totalGeralPDF += taxa;
 
-  doc.text(t(`🏍️ Taxa de entrega: R$${taxaEntregaGlobal.toFixed(2)}`), 10, y); y+=14;
-  doc.text(t(`💰 Total Geral: R$${totalGeral.toFixed(2)}`), 10, y); y+=14;
+  doc.setFont('helvetica','bold'); 
+  doc.setFontSize(12); 
+  doc.text(t(`TOTAL GERAL: R$${totalGeralPDF.toFixed(2)}`), 113, y+5, {align:'center'});
 
-  const endereco = document.getElementById("endereco").value;
-  const pagamento = document.getElementById("pagamento").value;
-  if(endereco) { doc.text(t(`📍 Endereço de Entrega: ${endereco}`), 10, y); y+=14; }
-  if(pagamento){ doc.text(t(`💳 Forma de pagamento: ${pagamento}`), 10, y); y+=14; }
-
-  doc.save(`Pedidos_${dia}-${mes}-${ano}.pdf`);
-}
+  doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
+});
 
 </script>
 </body>
 </html>
+
 
