@@ -401,7 +401,7 @@ pedidos.forEach((p,i)=>{
   // Marmita
   if(p.marmita){ 
     doc.setFont('helvetica','bold');
-    doc.text('Destaque em Marmita:', 15, y);
+    doc.text('Marmita:', 15, y);
     doc.setFont('helvetica','normal');
     const linhasMarmita = doc.splitTextToSize(t(`${p.marmita} - R$${(p.valorMarmita||0).toFixed(2)}`), larguraMax - 50);
     doc.text(linhasMarmita, 70, y);
@@ -481,11 +481,13 @@ doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 
 
 
+
 });
 
 </script>
 </body>
 </html>
+
 
 
 
