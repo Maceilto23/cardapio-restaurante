@@ -364,7 +364,7 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
 
  
 // PDF Profissional
-// PDF Profissional com Destaques e Acompanhamentos em Linha Única
+// PDF Profissional com Destaques em Negrito
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:[226,1000] });
 const t = (texto) => texto.normalize("NFC");
@@ -400,32 +400,45 @@ pedidos.forEach((p,i)=>{
 
   // Marmita
   if(p.marmita){ 
-    const linhasMarmita = doc.splitTextToSize(t(`Destaque em Marmita: ${p.marmita} - R$${(p.valorMarmita||0).toFixed(2)}`), larguraMax);
-    doc.text(linhasMarmita, 15, y); 
+    doc.setFont('helvetica','bold');
+    doc.text('Destaque em Marmita:', 15, y);
+    doc.setFont('helvetica','normal');
+    const linhasMarmita = doc.splitTextToSize(t(`${p.marmita} - R$${(p.valorMarmita||0).toFixed(2)}`), larguraMax - 50);
+    doc.text(linhasMarmita, 70, y);
     y += linhasMarmita.length * 10 + 2;
   }
 
   // Carnes
   if(p.carnes.length){
-    const linhasCarnes = doc.splitTextToSize(t(`Carnes: ${p.carnes.join(", ")}`), larguraMax);
-    doc.text(linhasCarnes, 15, y);
+    doc.setFont('helvetica','bold');
+    doc.text('Carnes:', 15, y);
+    doc.setFont('helvetica','normal');
+    const linhasCarnes = doc.splitTextToSize(t(`${p.carnes.join(", ")}`), larguraMax - 50);
+    doc.text(linhasCarnes, 70, y);
     y += linhasCarnes.length * 10 + 2;
   }
 
-  // Acompanhamentos em linha
+  // Acompanhamentos
   if(p.acompanhamentos.length){
-    const linhasAcomp = doc.splitTextToSize(t(`Acompanhamentos: ${p.acompanhamentos.join(", ")}`), larguraMax);
-    doc.text(linhasAcomp, 15, y);
+    doc.setFont('helvetica','bold');
+    doc.text('Acompanhamentos:', 15, y);
+    doc.setFont('helvetica','normal');
+    const linhasAcomp = doc.splitTextToSize(t(`${p.acompanhamentos.join(", ")}`), larguraMax - 50);
+    doc.text(linhasAcomp, 70, y);
     y += linhasAcomp.length * 10 + 2;
   }
 
-  // Bebidas com quantidade
+  // Bebidas
   if(p.refrigerantes.length){
     const contagemRef = {};
     p.refrigerantes.forEach(r=> contagemRef[r] = (contagemRef[r]||0)+1 );
     const bebidasText = Object.keys(contagemRef).map(r=> `${r} x${contagemRef[r]}`).join(", ");
-    const linhasBebidas = doc.splitTextToSize(t(`Destaque em Bebidas: ${bebidasText}`), larguraMax);
-    doc.text(linhasBebidas, 15, y); 
+
+    doc.setFont('helvetica','bold');
+    doc.text('Bebidas:', 15, y);
+    doc.setFont('helvetica','normal');
+    const linhasBebidas = doc.splitTextToSize(t(bebidasText), larguraMax - 50);
+    doc.text(linhasBebidas, 70, y);
     y += linhasBebidas.length * 10 + 2;
 
     Object.keys(contagemRef).forEach(r=>{
@@ -436,8 +449,11 @@ pedidos.forEach((p,i)=>{
 
   // Observação
   if(p.adicionais){
-    const linhasObs = doc.splitTextToSize(t(`Observação: ${p.adicionais}`), larguraMax);
-    doc.text(linhasObs, 15, y);
+    doc.setFont('helvetica','bold');
+    doc.text('Observação:', 15, y);
+    doc.setFont('helvetica','normal');
+    const linhasObs = doc.splitTextToSize(t(p.adicionais), larguraMax - 50);
+    doc.text(linhasObs, 70, y);
     y += linhasObs.length * 10 + 2;
   }
 
@@ -464,11 +480,13 @@ doc.text(t(`TOTAL GERAL: R$${totalGeralPDF.toFixed(2)}`), 113, y+5, {align:'cent
 doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 
 
+
 });
 
 </script>
 </body>
 </html>
+
 
 
 
