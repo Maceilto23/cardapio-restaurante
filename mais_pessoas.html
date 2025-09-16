@@ -343,6 +343,81 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
   const url = `https://api.whatsapp.com/send?phone=${numeroWhats}&text=${encodeURIComponent(msg)}`;
   window.open(url,"_blank");
 });
+
+  // ========== GERAR PDF ==========
+function gerarPDF() {
+  if(pedidos.length===0) return alert("Adicione ao menos um pedido!");
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:[226,1000] });
+  const t = (texto) => texto.normalize("NFC");
+  const larguraMax = 206;
+
+  doc.setFont('helvetica','bold'); 
+  doc.setFontSize(14); 
+  doc.text(t('Restaurante Colinas'), 10, 20);
+
+  let y = 40;
+
+  pedidos.forEach((p,i)=>{
+    doc.setFontSize(12);
+    doc.setFont('helvetica','bold');
+    doc.text(t(`Pedido ${i+1} - ${p.nome || "Cliente"}`), 10, y);
+    y+=14;
+    doc.setFont('helvetica','normal');
+
+    if(p.marmita) { 
+      doc.text(t(`🍱 Marmita ${p.marmita} - R$${(p.valorMarmita||0).toFixed(2)}`), 12, y); y+=12; 
+    }
+
+    if(p.carnes.length){
+      p.carnes.forEach(c=>{
+        doc.text(t(`🍖 ${c}`), 12, y); y+=12;
+      });
+    }
+
+    if(p.acompanhamentos.length){
+      p.acompanhamentos.forEach(a=>{
+        doc.text(t(`🥗 ${a}`), 12, y); y+=12;
+      });
+    }
+
+    // ==== REFRIGERANTES APÓS ACOMPANHAMENTOS ====
+    if(p.refrigerantes.length){
+      const contagemRef = {};
+      p.refrigerantes.forEach(r=>{
+        contagemRef[r] = (contagemRef[r]||0)+1;
+      });
+      Object.keys(contagemRef).forEach(r=>{
+        doc.text(t(`🥤 ${r} x${contagemRef[r]}`), 12, y); 
+        y+=12;
+      });
+    }
+
+    if(p.adicionais){
+      doc.text(t(`📝 ${p.adicionais}`), 12, y); y+=12;
+    }
+
+    doc.text(t(`Subtotal: R$${(p.total||0).toFixed(2)}`), 12, y); y+=16;
+
+    if(y>900){ doc.addPage(); y=20; }
+  });
+
+  const taxaEntregaGlobal = parseFloat(document.getElementById("localEntrega").selectedOptions[0]?.dataset.taxa || 0);
+  const totalGeral = pedidos.reduce((sum,p)=>sum+(p.total||0),0) + taxaEntregaGlobal;
+
+  doc.text(t(`🏍️ Taxa de entrega: R$${taxaEntregaGlobal.toFixed(2)}`), 10, y); y+=14;
+  doc.text(t(`💰 Total Geral: R$${totalGeral.toFixed(2)}`), 10, y); y+=14;
+
+  const endereco = document.getElementById("endereco").value;
+  const pagamento = document.getElementById("pagamento").value;
+  if(endereco) { doc.text(t(`📍 Endereço de Entrega: ${endereco}`), 10, y); y+=14; }
+  if(pagamento){ doc.text(t(`💳 Forma de pagamento: ${pagamento}`), 10, y); y+=14; }
+
+  doc.save(`Pedidos_${dia}-${mes}-${ano}.pdf`);
+}
+
 </script>
 </body>
 </html>
+
