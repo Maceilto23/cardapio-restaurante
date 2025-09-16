@@ -272,9 +272,21 @@ function atualizarPedido(){
     if(p.acompanhamentos) p.acompanhamentos.forEach(a=>html+=`<li>🥗 ${a}</li>`);
     if(p.refrigerantes) p.refrigerantes.forEach(r=>html+=`<li>🥤 ${r}</li>`);
     if(p.adicionais) html+=`<li>📝 ${p.adicionais}</li>`;
-    p.total = (p.valorMarmita||0);
-    totalGeral += p.total;
-    html+=`<li><strong>Subtotal: R$${p.total.toFixed(2)}</strong></li>`;
+
+    // Calcula subtotal incluindo refrigerantes
+    let totalPedido = p.valorMarmita || 0;
+    if(p.refrigerantes && p.refrigerantes.length){
+      p.refrigerantes.forEach(r=>{
+        // r está no formato "Coca R$5.00", extrair o valor
+        const preco = parseFloat(r.split('R$')[1]) || 0;
+        totalPedido += preco;
+      });
+    }
+
+    p.total = totalPedido;
+    totalGeral += totalPedido;
+
+    html+=`<li><strong>Subtotal: R$${totalPedido.toFixed(2)}</strong></li>`;
     html+="</ul></li>";
   });
 
@@ -283,6 +295,7 @@ function atualizarPedido(){
   itensEl.innerHTML = html;
   document.getElementById('taxaEntregaInfo').textContent = `🏍️ Taxa de entrega: R$ ${taxaEntregaGlobal.toFixed(2)}`;
 }
+
 
 // ENVIAR WHATSAPP E GERAR PDF
 document.getElementById("enviarWhats").addEventListener("click", ()=>{
@@ -397,6 +410,7 @@ doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 </script>
 </body>
 </html>
+
 
 
 
