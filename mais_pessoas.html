@@ -364,7 +364,7 @@ document.getElementById("enviarWhats").addEventListener("click", ()=>{
 
  
 // PDF Profissional
-// PDF Profissional com Destaques em Negrito
+// PDF Profissional Organizado
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF({ orientation:'portrait', unit:'pt', format:[226,1000] });
 const t = (texto) => texto.normalize("NFC");
@@ -391,55 +391,28 @@ let totalGeralPDF = 0;
 
 pedidos.forEach((p,i)=>{
   doc.setFont('helvetica','bold'); 
-  const linhasPedido = doc.splitTextToSize(t(`PEDIDO ${i+1} - ${p.nome||"Cliente"}`), larguraMax);
-  doc.text(linhasPedido, 10, y); 
-  y += linhasPedido.length * 10 + 5;
+  doc.text(`PEDIDO ${i+1} - ${p.nome||"Cliente"}`, 10, y);
+  y += 12;
 
-  doc.setFont('helvetica','normal');
   let subtotal = p.valorMarmita || 0;
 
+  const campos = [];
+
   // Marmita
-  if(p.marmita){ 
-    doc.setFont('helvetica','bold');
-    doc.text('Marmita:', 15, y);
-    doc.setFont('helvetica','normal');
-    const linhasMarmita = doc.splitTextToSize(t(`${p.marmita} - R$${(p.valorMarmita||0).toFixed(2)}`), larguraMax - 50);
-    doc.text(linhasMarmita, 70, y);
-    y += linhasMarmita.length * 10 + 2;
-  }
+  if(p.marmita) campos.push({titulo:'Marmita:', valor:`${p.marmita} - R$${(p.valorMarmita||0).toFixed(2)}`});
 
   // Carnes
-  if(p.carnes.length){
-    doc.setFont('helvetica','bold');
-    doc.text('Carnes:', 15, y);
-    doc.setFont('helvetica','normal');
-    const linhasCarnes = doc.splitTextToSize(t(`${p.carnes.join(", ")}`), larguraMax - 50);
-    doc.text(linhasCarnes, 70, y);
-    y += linhasCarnes.length * 10 + 2;
-  }
+  if(p.carnes.length) campos.push({titulo:'Carnes:', valor:`${p.carnes.join(", ")}`});
 
   // Acompanhamentos
-  if(p.acompanhamentos.length){
-    doc.setFont('helvetica','bold');
-    doc.text('Acompanhamentos:', 15, y);
-    doc.setFont('helvetica','normal');
-    const linhasAcomp = doc.splitTextToSize(t(`${p.acompanhamentos.join(", ")}`), larguraMax - 50);
-    doc.text(linhasAcomp, 70, y);
-    y += linhasAcomp.length * 10 + 2;
-  }
+  if(p.acompanhamentos.length) campos.push({titulo:'Acompanhamentos:', valor:`${p.acompanhamentos.join(", ")}`});
 
   // Bebidas
   if(p.refrigerantes.length){
     const contagemRef = {};
     p.refrigerantes.forEach(r=> contagemRef[r] = (contagemRef[r]||0)+1 );
     const bebidasText = Object.keys(contagemRef).map(r=> `${r} x${contagemRef[r]}`).join(", ");
-
-    doc.setFont('helvetica','bold');
-    doc.text('Bebidas:', 15, y);
-    doc.setFont('helvetica','normal');
-    const linhasBebidas = doc.splitTextToSize(t(bebidasText), larguraMax - 50);
-    doc.text(linhasBebidas, 70, y);
-    y += linhasBebidas.length * 10 + 2;
+    campos.push({titulo:'Bebidas:', valor:bebidasText});
 
     Object.keys(contagemRef).forEach(r=>{
       const preco = parseFloat(r.split('R$')[1]) || 0;
@@ -448,24 +421,26 @@ pedidos.forEach((p,i)=>{
   }
 
   // Observação
-  if(p.adicionais){
-    doc.setFont('helvetica','bold');
-    doc.text('Observação:', 15, y);
-    doc.setFont('helvetica','normal');
-    const linhasObs = doc.splitTextToSize(t(p.adicionais), larguraMax - 50);
-    doc.text(linhasObs, 70, y);
-    y += linhasObs.length * 10 + 2;
-  }
+  if(p.adicionais) campos.push({titulo:'Observação:', valor:p.adicionais});
 
-  doc.setFont('helvetica','bold'); 
-  const linhasSubtotal = doc.splitTextToSize(t(`Subtotal: R$${subtotal.toFixed(2)}`), larguraMax);
-  doc.text(linhasSubtotal, 15, y); 
-  y += linhasSubtotal.length*10 + 5;
+  // Renderização dos campos
+  campos.forEach(c=>{
+    doc.setFont('helvetica','bold');
+    doc.text(c.titulo, 15, y);
+    doc.setFont('helvetica','normal');
+    const linhasValor = doc.splitTextToSize(t(c.valor), larguraMax - 50);
+    doc.text(linhasValor, 70, y);
+    y += linhasValor.length*10 + 2;
+  });
+
+  doc.setFont('helvetica','bold');
+  doc.text(`Subtotal: R$${subtotal.toFixed(2)}`, 15, y);
+  y += 12;
 
   // Linha separadora
-  doc.setDrawColor(180); 
-  doc.setLineWidth(0.5); 
-  doc.line(10, y, 216, y); 
+  doc.setDrawColor(180);
+  doc.setLineWidth(0.5);
+  doc.line(10, y, 216, y);
   y += 10;
 
   totalGeralPDF += subtotal;
@@ -473,11 +448,12 @@ pedidos.forEach((p,i)=>{
 
 totalGeralPDF += taxa;
 
-doc.setFont('helvetica','bold'); 
-doc.setFontSize(12); 
-doc.text(t(`TOTAL GERAL: R$${totalGeralPDF.toFixed(2)}`), 113, y+5, {align:'center'});
+doc.setFont('helvetica','bold');
+doc.setFontSize(12);
+doc.text(`TOTAL GERAL: R$${totalGeralPDF.toFixed(2)}`, 113, y+5, {align:'center'});
 
 doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
+
 
 
 
@@ -487,6 +463,7 @@ doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 </script>
 </body>
 </html>
+
 
 
 
