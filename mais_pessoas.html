@@ -405,7 +405,7 @@ pedidos.forEach((p,i)=>{
   if(p.carnes.length) campos.push({titulo:'Carnes:', valor:`${p.carnes.join(", ")}`});
 
   // Acompanhamentos
-  if(p.acompanhamentos.length) campos.push({titulo:'Acompanhamentos:', valor:`${p.acompanhamentos.join(", ")}`});
+  if(p.acompanhamentos.length) campos.push({titulo:'Acomp:', valor:`${p.acompanhamentos.join(", ")}`});
 
   // Bebidas
   if(p.refrigerantes.length){
@@ -463,6 +463,7 @@ doc.save(`Pedidos_${dia}${mes}${ano}.pdf`);
 </script>
 </body>
 </html>
+
 
 
 
