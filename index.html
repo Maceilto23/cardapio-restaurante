@@ -55,7 +55,7 @@ li.selected .checkbox-fake {
   opacity: 1; 
   transform: scale(1.1); 
 }
-
+.hidden { display: none !important; }
 </style>
 </head>
 <body>
@@ -96,15 +96,23 @@ li.selected .checkbox-fake {
   <div class="cliente-info">
     <label for="nomeCliente">Nome do Cliente:</label>
     <input type="text" id="nomeCliente" placeholder="Digite seu nome">
-    <label for="enderecoCliente">Endereço:</label>
-    <input type="text" id="enderecoCliente" placeholder="Digite o endereço de entrega">
+    <div id="enderecoWrapper">
+      <label for="enderecoCliente">Endereço:</label>
+      <input type="text" id="enderecoCliente" placeholder="Digite o endereço de entrega">
+    </div>
   </div>
 
-  <h3>📍 Local de Entrega</h3>
+  <h3>📍 Local de Entrega</h3> 
   <select id="localEntrega"></select>
 
   <h3>💳 Formas de Pagamento</h3>
   <ul id="formasPagamentoList"></ul>
+  
+  <div id="trocoContainer" style="display:none; margin-top:10px;">
+    <label for="troco">Troco para quanto?</label>
+    <input type="number" id="troco" placeholder="Ex: 50.00" step="0.01" min="0">
+</div>
+
 
   <button id="enviarWhats">Enviar via WhatsApp</button>
 
@@ -251,6 +259,8 @@ fetch('cardapio.json?t=' + new Date().getTime())
 
 
 
+
+
     // Criar lista de refrigerantes
     function criarListaRefrigerantes(refrigerantesObj, container){
         if (!container) return;
@@ -281,31 +291,68 @@ fetch('cardapio.json?t=' + new Date().getTime())
     }
 
     // Locais de entrega
+    const localSelect = document.getElementById("localEntrega");
+
+    // Primeiro: adicionar a opção RETIRAR NO LOCAL (taxa 0)
+    const optRetirada = document.createElement("option");
+    optRetirada.value = "Retirar no Local";
+    optRetirada.textContent = `Retirar no Local - R$0.00`;
+    optRetirada.dataset.taxa = "0";
+    localSelect.appendChild(optRetirada);
+
     (cardapioFinal.locaisEntrega || []).forEach((loc, i) => {
         const opt = document.createElement("option");
         opt.value = loc.nome;
         opt.dataset.taxa = loc.taxa;
         opt.textContent = `${loc.nome} - R$${loc.taxa.toFixed(2)}`;
-        if (i===0) taxaEntrega = loc.taxa;
-        document.getElementById("localEntrega").appendChild(opt);
+        localSelect.appendChild(opt);
     });
+
+    // definir taxa inicial com o primeiro disponível
+    taxaEntrega = parseFloat(localSelect.selectedOptions[0].dataset.taxa || 0);
+
+    // ao mudar local de entrega: ajustar taxa e esconder/exibir endereço conforme Retirada
     document.getElementById("localEntrega").addEventListener("change", () => {
-        taxaEntrega = parseFloat(document.getElementById("localEntrega").selectedOptions[0].dataset.taxa);
+        const sel = document.getElementById("localEntrega").selectedOptions[0];
+        taxaEntrega = parseFloat(sel.dataset.taxa || 0);
+
+        const enderecoWrapper = document.getElementById("enderecoWrapper");
+        if (sel.value === "Retirar no Local") {
+            // esconder campo de endereço e limpar seu valor
+            enderecoWrapper.classList.add('hidden');
+            document.getElementById("enderecoCliente").value = "";
+        } else {
+            enderecoWrapper.classList.remove('hidden');
+        }
+
         atualizarPedido();
     });
 
     // Formas de pagamento
-    (cardapioFinal.formasPagamento || []).forEach(f => {
-        const li = document.createElement("li");
-        li.innerHTML = `<div class="checkbox-fake">X</div><span>${f}</span>`;
-        li.addEventListener("click", () => {
-            document.getElementById("formasPagamentoList").querySelectorAll("li").forEach(l => l.classList.remove("selected"));
-            li.classList.add("selected");
-            pagamentoSelecionado = f;
-            atualizarPedido();
-        });
-        document.getElementById("formasPagamentoList").appendChild(li);
+(cardapioFinal.formasPagamento || []).forEach(f => {
+    const li = document.createElement("li");
+    li.innerHTML = `<div class="checkbox-fake">X</div><span>${f}</span>`;
+    li.addEventListener("click", () => {
+        document.getElementById("formasPagamentoList").querySelectorAll("li").forEach(l => l.classList.remove("selected"));
+        li.classList.add("selected");
+        pagamentoSelecionado = f;
+
+        // Mostrar campo troco apenas para Dinheiro
+        if (f.toLowerCase().includes("dinheiro")) {
+            document.getElementById("trocoContainer").style.display = "block";
+        } else {
+            document.getElementById("trocoContainer").style.display = "none";
+            document.getElementById("troco").value = "";
+        }
+
+        atualizarPedido();
     });
+    document.getElementById("formasPagamentoList").appendChild(li);
+});
+
+
+
+
 
     // Criar listas do dia
     const hojeCardapio = cardapioFinal.cardapio[diasSemana[hojeDate.getDay()]] || { carnes: [], acompanhamentos: [] };
@@ -316,6 +363,16 @@ fetch('cardapio.json?t=' + new Date().getTime())
     document.getElementById("adicionais").addEventListener("input", atualizarPedido);
     document.getElementById("observacoes").addEventListener("input", atualizarPedido);
 
+    // atualizar UI inicial (caso a opção retirada esteja selecionada por default)
+    (function initLocalBehaviour(){
+        const sel = localSelect.selectedOptions[0];
+        if (sel && sel.value === "Retirar no Local") {
+            document.getElementById("enderecoWrapper").classList.add('hidden');
+            taxaEntrega = 0;
+        }
+        atualizarPedido();
+    })();
+
 })
 .catch(err => {
     console.error("Erro ao carregar cardapio.json:", err);
@@ -323,19 +380,29 @@ fetch('cardapio.json?t=' + new Date().getTime())
 });
 </script>
 <script>
+
+
+
+
+
 // ========== ENVIAR WHATSAPP E GERAR PDF ==========
 document.getElementById("enviarWhats").addEventListener("click", () => {
     const endereco = document.getElementById("enderecoCliente").value.trim();
     const localNome = document.getElementById("localEntrega").value;
     const pagamentoGlobal = pagamentoSelecionado;
     const taxa = parseFloat(document.getElementById('localEntrega').selectedOptions[0]?.dataset.taxa || 0);
+    const trocoValor = parseFloat(document.getElementById("troco").value) || 0;
 
-    if (!endereco) return alert("Informe o endereço de entrega.");
-    if (!localNome) return alert("Escolha o local de entrega.");
-    if (!pagamentoGlobal) return alert("Escolha a forma de pagamento.");
-    if (!marmita && pedido.length === 0 && !document.getElementById("adicionais").value) return alert("Nenhum item selecionado.");
+    // Validações
+    if (localNome !== "Retirar no Local" && !endereco) 
+        return alert("Informe o endereço de entrega.");
+    if (!localNome) 
+        return alert("Escolha o local de entrega.");
+    if (!pagamentoGlobal) 
+        return alert("Escolha a forma de pagamento.");
+    if (!marmita && pedido.length === 0 && !document.getElementById("adicionais").value) 
+        return alert("Nenhum item selecionado.");
 
-    // Monta o pedido
     const pedidos = [{
         nome: document.getElementById("nomeCliente").value || "Cliente",
         marmita,
@@ -354,102 +421,114 @@ document.getElementById("enviarWhats").addEventListener("click", () => {
     // ======== LISTA DE CLIENTES ========
     const nomesClientes = pedidos.map(p => p.nome).join(", ");
 
-    let msg = `🍽️ *Pedidos do cliente: ${nomesClientes}*\n📍 Local: ${localNome}\n📍 Endereço: ${endereco}\n💳 Pagamento: ${pagamentoGlobal}\n🏍️ Taxa de Entrega: R$${taxa.toFixed(2)}\n`;
+    let msg = `🍽️ *Pedidos do cliente: ${nomesClientes}*\n📍 Local: ${localNome}\n`;
+    if (localNome !== "Retirar no Local") 
+        msg += `📍 Endereço: ${endereco}\n`;
+    msg += `💳 Pagamento: ${pagamentoGlobal}\n`;
+
+    // Troco, apenas para pagamento em dinheiro
+    if (pagamentoGlobal.toLowerCase().includes("dinheiro") && trocoValor > 0) {
+        msg += `💵 Troco para: R$${trocoValor.toFixed(2)}\n`;
+    }
+
+    if (taxa > 0) {
+        msg += `🏍️ Taxa de Entrega: R$${taxa.toFixed(2)}\n`;
+    }
+
     let totalGeral = 0;
 
     pedidos.forEach((p, i) => {
-    msg += `\n📌 Pedido ${i + 1} - ${p.nome}\n`;
-    let subtotal = p.valorMarmita || 0;
+        msg += `\n📌 Pedido ${i + 1} - ${p.nome}\n`;
+        let subtotal = p.valorMarmita || 0;
 
-    const campos = []; // <<< DECLARE AQUI
+        const campos = [];
 
-    if (p.marmita) campos.push({ titulo: 'Marmita:', valor: `${p.marmita} - R$${(p.valorMarmita || 0).toFixed(2)}` });
-    if (p.carnes && p.carnes.length) campos.push({ titulo: 'Carnes:', valor: p.carnes.join(", ") });
-    if (p.acompanhamentos && p.acompanhamentos.length) campos.push({ titulo: 'Acomp:', valor: p.acompanhamentos.join(", ") });
+        if (p.marmita) campos.push({ titulo: 'Marmita:', valor: `${p.marmita} - R$${(p.valorMarmita || 0).toFixed(2)}` });
+        if (p.carnes && p.carnes.length) campos.push({ titulo: 'Carnes:', valor: p.carnes.join(", ") });
+        if (p.acompanhamentos && p.acompanhamentos.length) campos.push({ titulo: 'Acomp:', valor: p.acompanhamentos.join(", ") });
 
-    campos.forEach(c => {
-        msg += `${c.titulo} ${c.valor}\n`;
-    });
-
-    if (p.refrigerantes && p.refrigerantes.length) {
-        p.refrigerantes.forEach(r => {
-            msg += `🥤 ${r.nome} x${r.qtd} - R$${(r.preco * r.qtd).toFixed(2)}\n`;
-            subtotal += r.preco * r.qtd;
+        campos.forEach(c => {
+            msg += `${c.titulo} ${c.valor}\n`;
         });
-    }
 
-    if (p.adicionais) {
-        msg += `📝 Adicionais: ${p.adicionais} - R$4.00\n`;
-        subtotal += 4.00;
-    }
+        if (p.refrigerantes && p.refrigerantes.length) {
+            p.refrigerantes.forEach(r => {
+                msg += `🥤 ${r.nome} x${r.qtd} - R$${(r.preco * r.qtd).toFixed(2)}\n`;
+                subtotal += r.preco * r.qtd;
+            });
+        }
 
-    if (p.observacao) {
-        msg += `💬 Obs: ${p.observacao}\n`;
-    }
+        if (p.adicionais) {
+            msg += `📝 Adicionais: ${p.adicionais} - R$4.00\n`;
+            subtotal += 4.00;
+        }
 
-    msg += `Subtotal: R$${subtotal.toFixed(2)}\n`;
-    totalGeral += subtotal;
-});
+        if (p.observacao) {
+            msg += `💬 Obs: ${p.observacao}\n`;
+        }
 
+        msg += `Subtotal: R$${subtotal.toFixed(2)}\n`;
+        totalGeral += subtotal;
+    });
 
     totalGeral += taxa;
     msg += `\n💸 *TOTAL GERAL: R$${totalGeral.toFixed(2)}*`;
 
-    // Envia para WhatsApp
+    // Envia mensagem para WhatsApp
     window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_blank");
 
-
-    // ========== GERAR PDF PROFISSIONAL ==========
+    // ========== GERAR PDF ==========
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: [226, 1000] });
     const t = texto => texto.normalize("NFC");
     const larguraMax = 206;
 
-    const hoje = new Date();
-    const dia = String(hoje.getDate()).padStart(2,'0');
-    const mes = String(hoje.getMonth()+1).padStart(2,'0');
-    const ano = hoje.getFullYear();
-
     // Cabeçalho
     doc.setFont('helvetica', 'bold'); 
     doc.setFontSize(14); 
-    doc.text(t('Restaurante Colinas'), 113, 20, { align: 'center' });
+    doc.text(t('Restaurante Kolinas'), 113, 20, { align: 'center' });
 
     doc.setFont('helvetica', 'normal'); 
     doc.setFontSize(10); 
+    const data = new Date();
+    const dia = String(data.getDate()).padStart(2, '0');
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const ano = data.getFullYear();
     doc.text(t(`Pedidos de ${dia}/${mes}/${ano}`), 113, 35, { align: 'center' });
 
     // Informações gerais
     let y = 55;
-    [`Local: ${localNome}`, `Endereço: ${endereco}`, `Pagamento: ${pagamentoGlobal}`, `Taxa de entrega: R$${taxa.toFixed(2)}`].forEach(texto => {
-        const linhas = doc.splitTextToSize(t(texto), larguraMax);
-        doc.text(linhas, 10, y);
-        y += linhas.length * 10;
-    });
-    y += 5;
+    doc.text(t(`Local: ${localNome}`), 10, y); y += 10;
+    if (localNome !== "Retirar no Local") {
+        doc.text(t(`Endereço: ${endereco}`), 10, y); y += 10;
+    }
+    doc.text(t(`Pagamento: ${pagamentoGlobal}`), 10, y); y += 10;
+
+    if (pagamentoGlobal.toLowerCase().includes("dinheiro") && trocoValor > 0) {
+        doc.text(t(`Troco para: R$${trocoValor.toFixed(2)}`), 10, y); y += 10;
+    }
+
+    if (taxa > 0) {
+        doc.text(t(`Taxa de entrega: R$${taxa.toFixed(2)}`), 10, y); y += 10;
+    }
 
     let totalGeralPDF = 0;
 
     pedidos.forEach((p, i) => {
-        // Divisória entre pedidos
         doc.setDrawColor(0);
         doc.setLineWidth(0.5);
-        doc.line(10, y, 216, y);
-        y += 8;
+        doc.line(10, y, 216, y); y += 10;
 
-        // Título do pedido
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
-        doc.text(`PEDIDO ${i + 1} - ${p.nome}`, 10, y);
-        y += 12;
+        doc.text(`PEDIDO ${i + 1} - ${p.nome}`, 10, y); y += 12;
 
         let subtotal = p.valorMarmita || 0;
         const campos = [];
 
-        if (p.marmita) msg += `🍱 Marmita ${p.marmita} - R$${(p.valorMarmita || 0).toFixed(2)}\n`;
-        if (p.carnes && p.carnes.length) campos.push({ titulo: 'Carnes:', valor: p.carnes.join(", ") });
-        if (p.acompanhamentos && p.acompanhamentos.length) campos.push({ titulo: 'Acomp:', valor: p.acompanhamentos.join(", ") });
-
+        if (p.marmita) campos.push({ titulo: 'Marmita:', valor: `${p.marmita} - R$${(p.valorMarmita || 0).toFixed(2)}` });
+        if (p.carnes && p.carnes.length) campos.push({ titulo: 'Carnes:', valor: `${p.carnes.join(", ")}` });
+        if (p.acompanhamentos && p.acompanhamentos.length) campos.push({ titulo: 'Acomp:', valor: `${p.acompanhamentos.join(", ")}` });
 
         if (p.refrigerantes && p.refrigerantes.length) {
             const bebidasText = p.refrigerantes.map(r => `${r.nome} x${r.qtd} - R$${(r.preco*r.qtd).toFixed(2)}`).join(", ");
@@ -457,16 +536,15 @@ document.getElementById("enviarWhats").addEventListener("click", () => {
             p.refrigerantes.forEach(r => subtotal += r.preco*r.qtd);
         }
 
-        if (p.adicionais) {
+        if (p.adicionais && p.adicionais.trim() !== "") {
             campos.push({ titulo: 'Adicionais:', valor: `${p.adicionais} - R$4.00` });
             subtotal += 4.00;
         }
 
-        if (p.observacao) {
+        if (p.observacao && p.observacao.trim() !== "") {
             campos.push({ titulo: 'Obs:', valor: p.observacao });
         }
 
-        // Escrever campos no PDF
         campos.forEach(c => {
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(9);
@@ -475,33 +553,25 @@ document.getElementById("enviarWhats").addEventListener("click", () => {
             y += linhas.length * 10;
         });
 
-        // Subtotal do pedido
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
-        doc.text(`Subtotal: R$${subtotal.toFixed(2)}`, 10, y);
-        y += 15;
+        doc.text(`Subtotal: R$${subtotal.toFixed(2)}`, 10, y); y += 15;
 
         totalGeralPDF += subtotal;
     });
 
-    // Divisória antes do total geral
     doc.setDrawColor(0);
     doc.setLineWidth(0.8);
     doc.line(10, y, 216, y);
-    y += 8;
-
-    // Total geral
-    totalGeralPDF += taxa;
+    y += 15;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.text(`TOTAL GERAL: R$${totalGeralPDF.toFixed(2)}`, 10, y);
 
     doc.save('Pedidos.pdf');
 });
+
 </script>
 
-
-
-   
 </body>
 </html>
