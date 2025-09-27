@@ -109,9 +109,12 @@ li.selected .checkbox-fake {
   <ul id="formasPagamentoList"></ul>
   
   <div id="trocoContainer" style="display:none; margin-top:10px;">
-    <label for="troco">Troco para quanto?</label>
-    <input type="number" id="troco" placeholder="Ex: 50.00" step="0.01" min="0">
+  <label for="valorPago">💵 Valor pago (Dinheiro)</label>
+  <input type="number" id="valorPago" placeholder="Digite o valor pago" min="0" step="0.01">
+  <p id="trocoInfo" style="margin-top:5px; font-weight:bold;"></p>
 </div>
+
+
 
 
   <button id="enviarWhats">Enviar via WhatsApp</button>
@@ -338,17 +341,35 @@ fetch('cardapio.json?t=' + new Date().getTime())
         pagamentoSelecionado = f;
 
         // Mostrar campo troco apenas para Dinheiro
+              
         if (f.toLowerCase().includes("dinheiro")) {
             document.getElementById("trocoContainer").style.display = "block";
         } else {
             document.getElementById("trocoContainer").style.display = "none";
-            document.getElementById("troco").value = "";
+            document.getElementById("valorPago").value = "";
+            document.getElementById("trocoInfo").innerText = "";
         }
 
         atualizarPedido();
     });
     document.getElementById("formasPagamentoList").appendChild(li);
 });
+
+// Atualizar troco dinamicamente
+document.getElementById("valorPago").addEventListener("input", () => {
+    const valorPago = parseFloat(document.getElementById("valorPago").value) || 0;
+    const total = parseFloat(document.querySelector("#itensPedido li:last-child")?.innerText.replace("💰 Total: R$", "") || 0);
+
+    if (valorPago > 0 && total > 0) {
+        const troco = valorPago - total;
+        document.getElementById("trocoInfo").innerText = troco >= 0 
+            ? `Troco: R$${troco.toFixed(2)}`
+            : "Valor insuficiente 💸";
+    } else {
+        document.getElementById("trocoInfo").innerText = "";
+    }
+});
+
 
 
 
@@ -391,7 +412,8 @@ document.getElementById("enviarWhats").addEventListener("click", () => {
     const localNome = document.getElementById("localEntrega").value;
     const pagamentoGlobal = pagamentoSelecionado;
     const taxa = parseFloat(document.getElementById('localEntrega').selectedOptions[0]?.dataset.taxa || 0);
-    const trocoValor = parseFloat(document.getElementById("troco").value) || 0;
+
+    const valorPago = parseFloat(document.getElementById("valorPago").value) || 0;
 
     // Validações
     if (localNome !== "Retirar no Local" && !endereco) 
@@ -425,15 +447,6 @@ document.getElementById("enviarWhats").addEventListener("click", () => {
     if (localNome !== "Retirar no Local") 
         msg += `📍 Endereço: ${endereco}\n`;
     msg += `💳 Pagamento: ${pagamentoGlobal}\n`;
-
-    // Troco, apenas para pagamento em dinheiro
-    if (pagamentoGlobal.toLowerCase().includes("dinheiro") && trocoValor > 0) {
-        msg += `💵 Troco para: R$${trocoValor.toFixed(2)}\n`;
-    }
-
-    if (taxa > 0) {
-        msg += `🏍️ Taxa de Entrega: R$${taxa.toFixed(2)}\n`;
-    }
 
     let totalGeral = 0;
 
@@ -472,6 +485,21 @@ document.getElementById("enviarWhats").addEventListener("click", () => {
     });
 
     totalGeral += taxa;
+
+    // Troco, apenas para pagamento em dinheiro
+    if (pagamentoGlobal.toLowerCase().includes("dinheiro")) {
+        const troco = valorPago - totalGeral;
+        if (troco >= 0) {
+            msg += `\n💵 Troco: R$${troco.toFixed(2)}\n`;
+        } else {
+            msg += `\n💵 Troco: ⚠️ Valor insuficiente\n`;
+        }
+    }
+
+    if (taxa > 0) {
+        msg += `🏍️ Taxa de Entrega: R$${taxa.toFixed(2)}\n`;
+    }
+
     msg += `\n💸 *TOTAL GERAL: R$${totalGeral.toFixed(2)}*`;
 
     // Envia mensagem para WhatsApp
@@ -504,8 +532,14 @@ document.getElementById("enviarWhats").addEventListener("click", () => {
     }
     doc.text(t(`Pagamento: ${pagamentoGlobal}`), 10, y); y += 10;
 
-    if (pagamentoGlobal.toLowerCase().includes("dinheiro") && trocoValor > 0) {
-        doc.text(t(`Troco para: R$${trocoValor.toFixed(2)}`), 10, y); y += 10;
+    if (pagamentoGlobal.toLowerCase().includes("dinheiro")) {
+        const troco = valorPago - totalGeral;
+        if (troco >= 0) {
+            doc.text(t(`Troco: R$${troco.toFixed(2)}`), 10, y); 
+        } else {
+            doc.text(t(`Troco: ⚠️ Valor insuficiente`), 10, y);
+        }
+        y += 10;
     }
 
     if (taxa > 0) {
@@ -570,6 +604,7 @@ document.getElementById("enviarWhats").addEventListener("click", () => {
 
     doc.save('Pedidos.pdf');
 });
+
 
 </script>
 
