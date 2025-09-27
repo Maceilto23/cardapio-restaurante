@@ -621,11 +621,7 @@ window.open(`https://wa.me/+556192633504?text=${encodeURIComponent(msg)}`, "_bla
 
 
 
-
-  
-
-  // ===== PDF SIMPLES =====
-  // ===== PDF SIMPLES =====
+// ===== PDF SIMPLES =====
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: [226, 1000] });
 const t = texto => texto.normalize("NFC");
@@ -646,7 +642,13 @@ doc.setFontSize(10);
 doc.text(t(`Pedidos de ${dia}/${mes}/${ano}`), 113, 35, { align: 'center' });
 
 let y = 55;
-[`Local: ${localNome}`, taxa > 0 ? `Endereço: ${endereco}` : null, `Pagamento: ${pagamentoGlobal}`, taxa > 0 ? `Taxa de entrega: R$${taxa.toFixed(2)}` : "Retirar no Local", trocoTexto ? trocoTexto.replace(/^💰\s*/, '') : null].forEach(texto => {
+[
+  `Local: ${localNome}`,
+  taxa > 0 ? `Endereço: ${endereco}` : null,
+  `Pagamento: ${pagamentoGlobal}`,
+  taxa > 0 ? `Taxa de entrega: R$${taxa.toFixed(2)}` : "Retirar no Local",
+  trocoTexto ? trocoTexto.replace(/^💰\s*/, '') : null
+].forEach(texto => {
     if (texto) {
         const linhas = doc.splitTextToSize(t(texto), larguraMax);
         doc.text(linhas, 10, y);
@@ -706,25 +708,26 @@ pedidos.forEach((p, i) => {
     totalGeralPDF += subtotal;
 });
 
+// Linha antes do total
 doc.setDrawColor(0);
 doc.setLineWidth(0.8);
 doc.line(10, y, 216, y);
-y += 4; // antes estava 8, agora menor espaçamento
+y += 4; // espaço menor antes do TOTAL
 
+// Total Geral
 totalGeralPDF += taxa;
 doc.setFont('helvetica', 'bold');
 doc.setFontSize(12);
 doc.text(`TOTAL GERAL: R$${totalGeralPDF.toFixed(2)}`, 10, y);
 
+// Troco ou falta
 if (trocoTexto) {
-  y += 15;
+  y += 10; // espaço maior depois do TOTAL
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(10);
 
-  // Ajusta mensagens do troco
   let textoFinal = trocoTexto.replace(/^💰\s*/, '').trim();
 
-  // Se vier no formato "Valor insuficiente" → troca pela mensagem personalizada
   if (/insuficiente/i.test(textoFinal)) {
       const falta = (totalGeralPDF - (parseFloat(document.getElementById("valorPago").value) || 0)).toFixed(2);
       textoFinal = `Falta: R$ ${falta}\nPor Troco no valor de : R$ ${falta}`;
@@ -734,8 +737,8 @@ if (trocoTexto) {
   doc.text(linhas, 10, y);
 }
 
-
 doc.save('Pedidos.pdf');
+
 
 });
 
@@ -746,6 +749,7 @@ doc.save('Pedidos.pdf');
 </script>
 </body>
 </html>
+
 
 
 
