@@ -709,7 +709,7 @@ pedidos.forEach((p, i) => {
 doc.setDrawColor(0);
 doc.setLineWidth(0.8);
 doc.line(10, y, 216, y);
-y += 8;
+y += 4; // antes estava 8, agora menor espaçamento
 
 totalGeralPDF += taxa;
 doc.setFont('helvetica', 'bold');
@@ -720,12 +720,27 @@ if (trocoTexto) {
   y += 15;
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(10);
-  doc.text(trocoTexto.replace(/^💰\s*/, ''), 10, y); // remove apenas o ícone
+
+  // Ajusta mensagens do troco
+  let textoFinal = trocoTexto.replace(/^💰\s*/, '').trim();
+
+  // Se vier no formato "Valor insuficiente" → troca pela mensagem personalizada
+  if (/insuficiente/i.test(textoFinal)) {
+      const falta = (totalGeralPDF - (parseFloat(document.getElementById("valorPago").value) || 0)).toFixed(2);
+      textoFinal = `Falta: R$ ${falta}\nPor Troco no valor de : R$ ${falta}`;
+  }
+
+  const linhas = doc.splitTextToSize(t(textoFinal), larguraMax);
+  doc.text(linhas, 10, y);
 }
+
 
 doc.save('Pedidos.pdf');
 
 });
+
+
+
 
 
 </script>
