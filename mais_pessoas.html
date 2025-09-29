@@ -712,7 +712,7 @@ pedidos.forEach((p, i) => {
 doc.setDrawColor(0);
 doc.setLineWidth(0.8);
 doc.line(10, y, 216, y);
-y += 8; // <-- mais espaço antes do TOTAL GERAL
+y += 12; // <-- mais espaço antes do TOTAL GERAL
 
 // Total Geral
 totalGeralPDF += taxa;
@@ -746,6 +746,7 @@ doc.save('Pedidos.pdf');
 </script>
 </body>
 </html>
+
 
 
 
