@@ -647,7 +647,7 @@ let y = 55;
   taxa > 0 ? `Endereço: ${endereco}` : null,
   `Pagamento: ${pagamentoGlobal}`,
   taxa > 0 ? `Taxa de entrega: R$${taxa.toFixed(2)}` : "Retirar no Local",
-  trocoTexto ? trocoTexto.replace(/^💰\s*/, '') : null
+  trocoTexto ? trocoTexto.replace(/^💰\s*/, '') : null // <-- sem ícone de troco
 ].forEach(texto => {
     if (texto) {
         const linhas = doc.splitTextToSize(t(texto), larguraMax);
@@ -712,7 +712,7 @@ pedidos.forEach((p, i) => {
 doc.setDrawColor(0);
 doc.setLineWidth(0.8);
 doc.line(10, y, 216, y);
-y += 4; // espaço menor antes do TOTAL
+y += 8; // <-- mais espaço antes do TOTAL GERAL
 
 // Total Geral
 totalGeralPDF += taxa;
@@ -722,11 +722,11 @@ doc.text(`TOTAL GERAL: R$${totalGeralPDF.toFixed(2)}`, 10, y);
 
 // Troco ou falta
 if (trocoTexto) {
-  y += 10; // espaço maior depois do TOTAL
+  y += 12; // espaço maior depois do TOTAL
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(10);
 
-  let textoFinal = trocoTexto.replace(/^💰\s*/, '').trim();
+  let textoFinal = trocoTexto.replace(/^💰\s*/, '').trim(); // <-- sem ícone
 
   if (/insuficiente/i.test(textoFinal)) {
       const falta = (totalGeralPDF - (parseFloat(document.getElementById("valorPago").value) || 0)).toFixed(2);
@@ -740,15 +740,13 @@ if (trocoTexto) {
 doc.save('Pedidos.pdf');
 
 
+
 });
-
-
-
-
-
+  
 </script>
 </body>
 </html>
+
 
 
 
