@@ -1,0 +1,245 @@
+{
+  "horarioFuncionamento": {
+    "abertura": "10:30",
+    "fechamento": "14:00"
+  },
+  "valoresMarmita": {
+    "01 Opção de Carne": 15,
+    "02 Opção de Carnes": 20,
+    "Porção Pequena de Carne": 25,
+    "Porção Grande de Carne": 40
+  },
+  "cardapio": {
+    "domingo": {
+      "carnes": [
+        "Frango ao molho",
+        "Churrasco",
+        "Lasanha"
+      ],
+      "acompanhamentos": [
+        "Arroz",
+        "Feijão",
+        "Macarrão alho e óleo",
+        "Farofa",
+        "Salada",
+        "Maionese",
+        "Verduras cozidas"
+      ]
+    },
+    "segunda-feira": {
+      "carnes": [
+        "Frango ao molho",
+        "Costela com mandioca",
+        "Peito de frango grelhado"
+      ],
+      "acompanhamentos": [
+        "Arroz",
+        "Feijão",
+        "Macarrão alho e óleo",
+        "Purê",
+        "Farofa",
+        "Verduras cozidas",
+        "Salada"
+      ]
+    },
+    "terça-feira": {
+      "carnes": [
+        "Churrasco",
+        "Carne de porco frita",
+        "Frango ao molho"
+      ],
+      "acompanhamentos": [
+        "Arroz",
+        "Feijão",
+        "Macarrão alho e óleo",
+        "Farofa",
+        "Verduras cozidas",
+        "Salada",
+        "Batata frita"
+      ]
+    },
+    "quarta-feira": {
+      "carnes": [
+        "Churrasco",
+        "Strogonoff de frango",
+        "Frango ao molho"
+      ],
+      "acompanhamentos": [
+        "Arroz",
+        "Feijão",
+        "Macarrão alho e óleo",
+        "Farofa",
+        "Verduras cozidas",
+        "Salada",
+        "Batata palha",
+        "Batata temperada"
+      ]
+    },
+    "quinta-feira": {
+      "carnes": [
+        "Churrasco",
+        "Frango ao molho",
+        "Fígado"
+      ],
+      "acompanhamentos": [
+        "Arroz",
+        "Feijão",
+        "Macarrão alho e óleo",
+        "Farofa",
+        "Verduras cozidas",
+        "Salada",
+        "Batata frita"
+      ]
+    },
+    "sexta-feira": {
+      "carnes": [
+        "Churrasco",
+        "Frango ao molho",
+        "Coxa e sobrecoxa assada"
+      ],
+      "acompanhamentos": [
+        "Arroz",
+        "Feijão",
+        "Macarrão alho e óleo",
+        "Farofa",
+        "Verduras cozidas",
+        "Salada",
+        "Batata frita"
+      ]
+    },
+    "sábado": {
+      "carnes": [
+        "Churrasco",
+        "Feijoada",
+        "Frango ao molho"
+      ],
+      "acompanhamentos": [
+        "Arroz",
+        "Feijão",
+        "Macarrão alho e óleo",
+        "Farofa",
+        "Verduras cozidas",
+        "Salada",
+        "Batata frita"
+      ]
+    }
+  },
+  "refrigerantes": {
+  "Refrigerantes": [
+    {
+      "nome": "Coca Cola Lata",
+      "preco": 5.00
+    },
+    {
+      "nome": "Coca Cola Zero Lata",
+      "preco": 5.00
+    },
+    {
+      "nome": "Fanta Laranja Lata",
+      "preco": 5.00
+    },
+    {
+      "nome": "Fanta Uva Lata",
+      "preco": 5.00
+    },
+    {
+      "nome": "Água Tônica",
+      "preco": 5.00
+    },
+    {
+      "nome": "Sprite Lata",
+      "preco": 5.00
+    },
+    {
+      "nome": "Coca 600ml",
+      "preco": 8.00
+    },
+    {
+      "nome": "Coca Cola 1,5L",
+      "preco": 11.00
+    },
+    {
+      "nome": "Mineiro 2L",
+      "preco": 10.00
+    },
+    {
+      "nome": "Coca Cola 2L",
+      "preco": 13.00
+    },
+    {
+      "nome": "Água Mineral",
+      "preco": 3.00
+    },
+    {
+      "nome": "Água com Gás",
+      "preco": 3.50
+    }
+  ]
+},
+
+  
+  "locaisEntrega": [
+    {
+      "nome": "Alvorada",
+      "taxa": 3
+    },
+    {
+      "nome": "América do Sul",
+      "taxa": 4
+    },
+    {
+      "nome": "Boa Vista 1",
+      "taxa": 3
+    },
+    {
+      "nome": "Boa Vista 2",
+      "taxa": 4
+    },
+    {
+      "nome": "Lago Azul",
+      "taxa": 4
+    },
+    {
+      "nome": "Lunabel 3",
+      "taxa": 3
+    },
+    {
+      "nome": "Lunabel 3A",
+      "taxa": 3
+    },
+    {
+      "nome": "Lunabel 3B",
+      "taxa": 3
+    },
+    {
+      "nome": "Lunabel 3C",
+      "taxa": 3
+    },
+    {
+      "nome": "Lunabel 3H",
+      "taxa": 3
+    },
+    {
+      "nome": "Alphaville Paiva",
+      "taxa": 3
+    },
+    {
+      "nome": "Jardim Paiva",
+      "taxa": 3
+    },
+    {
+      "nome": "Cidade Nova",
+      "taxa": 6
+    },
+    {
+      "nome": "Mont Serrat",
+      "taxa": 3
+    }
+  ],
+  "formasPagamento": [
+    "Dinheiro",
+    "Pix",
+    "Cartão de Crédito",
+    "Cartão de Débito"
+  ]
+}
