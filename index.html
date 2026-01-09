@@ -204,6 +204,37 @@ function atualizarPedido() {
   itensEl.innerHTML = html;
 }
 
+
+
+// Funções para salvar e buscar clientes no localStorage
+function salvarCliente(cliente) {
+  if (!cliente.nome) return;
+  const clientes = JSON.parse(localStorage.getItem('clientes') || '{}');
+  clientes[cliente.nome] = { 
+    marmita: cliente.marmita,
+    carnes: cliente.carnes,
+    acompanhamentos: cliente.acompanhamentos,
+    refrigerantes: cliente.refrigerantes,
+    adicionais: cliente.adicionais,
+    observacao: cliente.observacao
+  };
+  localStorage.setItem('clientes', JSON.stringify(clientes));
+}
+
+function buscarCliente(nome) {
+  const clientes = JSON.parse(localStorage.getItem('clientes') || '{}');
+  return clientes[nome] || null;
+}
+
+
+
+
+
+
+
+
+
+
 // ========== CARREGAR CARDÁPIO ==========
 fetch('cardapio.json?t=' + new Date().getTime())
 .then(res => res.json())
@@ -419,9 +450,52 @@ container.scrollIntoView({ behavior: "smooth", block: "end" });
 
  // Atualizar nome do cliente
   container.querySelector(".nomeCliente").addEventListener("input", e=>{
-    pedidoObj.nome = e.target.value.trim();
-    atualizarPedido();
-  });
+  const nome = e.target.value.trim();
+  pedidoObj.nome = nome;
+  
+  // Se existir no histórico, preencher campos automaticamente
+  const dadosCliente = buscarCliente(nome);
+  if(dadosCliente) {
+    pedidoObj.marmita = dadosCliente.marmita;
+    pedidoObj.carnes = dadosCliente.carnes;
+    pedidoObj.acompanhamentos = dadosCliente.acompanhamentos;
+    pedidoObj.refrigerantes = dadosCliente.refrigerantes;
+    pedidoObj.adicionais = dadosCliente.adicionais;
+    pedidoObj.observacao = dadosCliente.observacao;
+
+    // Atualiza a interface visual
+    if(dadosCliente.marmita) {
+      const radio = container.querySelector(`input[name="marmita${container.dataset.index}"][value="${dadosCliente.marmita}"]`);
+      if(radio) radio.checked = true;
+    }
+
+    // Marcar carnes
+    container.querySelectorAll(".carnes li").forEach(li => {
+      li.classList.toggle("selected", dadosCliente.carnes.includes(li.dataset.item));
+    });
+
+    // Marcar acompanhamentos
+    container.querySelectorAll(".acompanhamentos li").forEach(li => {
+      li.classList.toggle("selected", dadosCliente.acompanhamentos.includes(li.dataset.item));
+    });
+
+    // Refrigerantes
+    container.querySelectorAll(".refrigerantes li").forEach(li => {
+      const r = dadosCliente.refrigerantes.find(r => r.nome === li.dataset.item);
+      const input = li.querySelector(".qtd");
+      input.value = r ? r.qtd : 0;
+      li.classList.toggle("selected", !!r && r.qtd > 0);
+    });
+
+    // Adicionais
+    container.querySelector(".adicionais").value = dadosCliente.adicionais || "";
+    // Observação
+    container.querySelector(".observacao").value = dadosCliente.observacao || "";
+  }
+
+  atualizarPedido();
+});
+
   
 
 
@@ -798,10 +872,14 @@ window.open(url, "_blank");
 });
 
 
+pedidos.forEach(p => {
+  salvarCliente(p);
+});
+
+
 </script>
 </body>
 </html>
-
 
 
 
