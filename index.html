@@ -280,7 +280,7 @@ document.getElementById('ano').innerText =
     `© ${new Date().getFullYear()} – Guia Comercial do Bairro Alvorada`;
 
 /* CARREGAR EMPRESAS */
-fetch('assets/data/empresas.json')
+fetch('empresas.json')
     .then(response => {
         if (!response.ok) {
             throw new Error('Arquivo empresas.json não encontrado');
