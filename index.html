@@ -1,343 +1,342 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema de Pedidos</title>
+    <meta charset="UTF-8">
+    <title>Guia Comercial | Bairro Alvorada</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Guia Comercial do Bairro Alvorada. Valorize o comércio local.">
+
+  
 <style>
-  body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
-  h1 { text-align: center; }
-  .pedido { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; background: #fff; border-radius: 8px; }
-  .pedido h2 { margin-top: 0; }
-  .section { margin-bottom: 10px; }
-  .section label { display: block; margin-bottom: 5px; font-weight: bold; }
-  .lista li { display: inline-block; padding: 5px 10px; margin: 2px; border: 1px solid #ccc; border-radius: 5px; cursor: pointer; }
-  .lista li.selected { background: #4CAF50; color: white; }
-  input.qtd { width: 40px; text-align: center; }
-  #pedidosContainer { margin-bottom: 20px; }
-  #totalGeral { font-weight: bold; margin-bottom: 20px; }
-  button { padding: 10px 20px; margin-right: 10px; cursor: pointer; border: none; border-radius: 5px; background: #2196F3; color: #fff; }
-  button:hover { background: #1976D2; }
-  .hidden { display: none; }
-  input[readonly] { background: #eee; }
+/* ================= RESET ================= */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ================= BODY ================= */
+body {
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f4f6f8;
+    color: #2b2b2b;
+    line-height: 1.6;
+}
+
+/* ================= HEADER ================= */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 12px; /* reduzido para alinhar com grid */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.logo {
+    font-weight: 700;
+    font-size: 22px;
+    color: #0b4da2;
+    text-transform: uppercase;
+}
+
+.menu-toggle {
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    margin-right: 4px; /* alinhamento preciso à direita */
+}
+
+/* MENU MOBILE */
+.menu {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    background: #fff;
+    position: absolute;
+    top: 52px; /* ajustado */
+    right: 12px;
+    padding: 8px;
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.menu.open {
+    display: flex;
+}
+
+.menu a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 600;
+    padding: 8px 10px;
+    border-radius: 6px;
+    transition: background 0.3s;
+}
+
+.menu a:hover {
+    background: #e8f4f9;
+}
+
+/* ================= CONTAINER PRINCIPAL ================= */
+.container {
+    padding: 22px 12px; /* reduzido para zero gap nas laterais */
+    max-width: 1200px;
+    margin: auto;
+}
+
+h1#empresas {
+    text-align: center;
+    font-size: 26px;
+    color: #0a7c6d;
+    margin-bottom: 20px;
+    font-weight: 700;
+}
+
+/* ================= GRID ================= */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px; /* espaço menor e uniforme */
+    width: 100%; /* garante preencher largura */
+}
+
+/* ================= CARDS DAS EMPRESAS ================= */
+.card {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 10px 8px;
+    display: flex;
+    gap: 8px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    align-items: flex-start;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+/* ÍCONE DO CARD */
+.card .icone {
+    font-size: 36px;
+    background: #e8f4f9;
+    padding: 10px;
+    border-radius: 50%;
+    color: #0b4da2;
+    flex-shrink: 0;
+}
+
+/* CONTEÚDO DO CARD */
+.card .info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.card h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0a7c6d;
+    margin-bottom: 2px;
+}
+
+.card .categoria {
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+/* CONTATOS */
+.card .contatos {
+    margin-top: auto;
+    display: flex;
+    gap: 6px;
+    justify-content: flex-start; /* alinha à esquerda */
+    flex-wrap: wrap;
+}
+
+.card .btn {
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.3s ease;
+}
+
+/* BOTÕES */
+.btn.telefone {
+    background: #eef2f7;
+    color: #333;
+}
+
+.btn.telefone:hover {
+    background: #d6e4ed;
+}
+
+.btn.whatsapp {
+    background: #25d366;
+    color: #fff;
+}
+
+.btn.whatsapp:hover {
+    background: #1ea859;
+}
+
+/* ================= FOOTER ================= */
+.footer {
+    margin-top: 28px;
+    padding: 16px 8px;
+    text-align: center;
+    font-size: 13px;
+    color: #555;
+}
+
+/* ================= RESPONSIVIDADE ================= */
+@media (min-width: 600px) {
+    .grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 900px) {
+    .grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    .menu {
+        display: flex !important;
+        flex-direction: row;
+        position: static;
+        box-shadow: none;
+        background: none;
+        gap: 14px;
+    }
+    .menu-toggle {
+        display: none;
+    }
+}
 </style>
+
+
+
 </head>
+
 <body>
 
-<h1>Sistema de Pedidos</h1>
+<!-- HEADER -->
+<header class="header">
+    <div class="logo">🏪 Guia Comercial</div>
 
-<div id="pedidosContainer"></div>
+    <button class="menu-toggle" aria-label="Abrir menu">☰</button>
 
-<button id="adicionarPedido">Adicionar Pedido</button>
-<button id="enviarWhats">Enviar WhatsApp</button>
-<button id="gerarPDF">Gerar PDF</button>
+    <nav class="menu">
+        <a href="index.html">Início</a>
+        <a href="#empresas">Lojas</a>
+        <a href="onibus.html">Ônibus</a>
+        <a href="posto_saude.html">Posto de Saúde</a>
+        <a href="contatos_uteis.html">Contatos Úteis</a>
+    </nav>
+</header>
 
-<div id="totalGeral">Total Geral: R$ 0,00</div>
 
-<!-- Template de pedido -->
-<template id="pedidoTemplate">
-  <div class="pedido" data-index="">
-    <h2>Pedido <span class="numPedido"></span></h2>
-    <div class="section">
-      <label>Nome do Cliente:</label>
-      <input type="text" class="nomeCliente" placeholder="Digite o nome">
+<!-- CONTEÚDO -->
+<main class="container">
+    <h1 id="empresas">Lojas do Residencial Alvorada</h1>
+
+    <div class="grid" id="lista-empresas">
+        <p style="text-align:center;">Carregando empresas...</p>
     </div>
+</main>
 
-    <div class="section">
-      <label>Marmita:</label>
-      <label><input type="radio" name="marmita" value="Tradicional"> Tradicional (R$ 25,00)</label>
-      <label><input type="radio" name="marmita" value="Vegetariana"> Vegetariana (R$ 25,00)</label>
-      <label><input type="radio" name="marmita" value="Especial"> Especial (R$ 30,00)</label>
-    </div>
+<!-- FOOTER -->
+<footer class="footer" id="contato">
+    <p id="ano"></p>
+    <p>Valorize o comércio local </p>
+</footer>
 
-    <div class="section">
-      <label>Carnes:</label>
-      <ul class="lista carnes">
-        <li data-item="Frango">Frango</li>
-        <li data-item="Carne Bovina">Carne Bovina</li>
-        <li data-item="Peixe">Peixe</li>
-      </ul>
-    </div>
-
-    <div class="section">
-      <label>Acompanhamentos:</label>
-      <ul class="lista acompanhamentos">
-        <li data-item="Arroz">Arroz</li>
-        <li data-item="Feijão">Feijão</li>
-        <li data-item="Salada">Salada</li>
-        <li data-item="Batata Frita">Batata Frita</li>
-      </ul>
-    </div>
-
-    <div class="section">
-      <label>Refrigerantes:</label>
-      <ul class="lista refrigerantes">
-        <li data-item="Coca-Cola">Coca-Cola <input type="number" class="qtd" min="0" value="0"></li>
-        <li data-item="Guaraná">Guaraná <input type="number" class="qtd" min="0" value="0"></li>
-        <li data-item="Fanta">Fanta <input type="number" class="qtd" min="0" value="0"></li>
-      </ul>
-    </div>
-
-    <div class="section">
-      <label>Adicionais:</label>
-      <input type="text" class="adicionais" placeholder="Ex: Maionese extra">
-    </div>
-
-    <div class="section">
-      <label>Observação:</label>
-      <input type="text" class="observacao" placeholder="Ex: Sem cebola">
-    </div>
-
-    <div class="section">
-      <label>Entrega / Retirada:</label>
-      <select class="localEntrega">
-        <option value="Retirada" data-taxa="0">Retirada</option>
-        <option value="Bairro A" data-taxa="5">Bairro A (R$5)</option>
-        <option value="Bairro B" data-taxa="8">Bairro B (R$8)</option>
-      </select>
-    </div>
-
-    <div class="section enderecoContainer hidden">
-      <label>Endereço:</label>
-      <input type="text" class="endereco" placeholder="Digite o endereço">
-      <div class="taxaEntregaInfo"></div>
-    </div>
-
-    <div class="section">
-      <label>Total do Pedido:</label>
-      <div class="totalPedido">R$ 0,00</div>
-    </div>
-  </div>
-</template>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+<!-- JS -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+/* MENU MOBILE */
+const toggle = document.querySelector('.menu-toggle');
+const menu = document.querySelector('.menu');
 
-  const pedidosContainer = document.getElementById("pedidosContainer");
-  const adicionarPedidoBtn = document.getElementById("adicionarPedido");
-  const enviarWhatsBtn = document.getElementById("enviarWhats");
-  const gerarPDFBtn = document.getElementById("gerarPDF");
-  const totalGeralDiv = document.getElementById("totalGeral");
-  const pedidoTemplate = document.getElementById("pedidoTemplate").content;
-
-  let pedidos = [];
-
-  // Preços
-  const precos = {
-    marmita: { Tradicional: 25, Vegetariana: 25, Especial: 30 },
-    carnes: 0, // inclusa na marmita
-    acompanhamentos: 0, // inclusos
-    refrigerantes: { "Coca-Cola": 5, "Guaraná": 5, "Fanta": 5 }
-  };
-
-  // Salvar/Buscar clientes
-  function salvarCliente(cliente) {
-    if(!cliente.nome) return;
-    const clientes = JSON.parse(localStorage.getItem('clientes') || '{}');
-    clientes[cliente.nome] = {
-      marmita: cliente.marmita,
-      carnes: cliente.carnes,
-      acompanhamentos: cliente.acompanhamentos,
-      refrigerantes: cliente.refrigerantes,
-      adicionais: cliente.adicionais,
-      observacao: cliente.observacao
-    };
-    localStorage.setItem('clientes', JSON.stringify(clientes));
-  }
-
-  function buscarCliente(nome) {
-    const clientes = JSON.parse(localStorage.getItem('clientes') || '{}');
-    return clientes[nome] || null;
-  }
-
-  // Criar novo pedido
-  function criarPedido() {
-    const clone = document.importNode(pedidoTemplate, true);
-    const index = pedidos.length;
-    clone.querySelector(".pedido").dataset.index = index;
-    clone.querySelector(".numPedido").textContent = index + 1;
-
-    const pedidoObj = {
-      nome: "",
-      marmita: "",
-      carnes: [],
-      acompanhamentos: [],
-      refrigerantes: [],
-      adicionais: "",
-      observacao: "",
-      localEntrega: "Retirada",
-      endereco: "",
-      taxaEntrega: 0,
-      total: 0
-    };
-    pedidos.push(pedidoObj);
-
-    const container = clone.querySelector(".pedido");
-
-    // Nome do cliente com autocompletar
-    const nomeInput = container.querySelector(".nomeCliente");
-    nomeInput.addEventListener("input", e => {
-      const nome = e.target.value.trim();
-      pedidoObj.nome = nome;
-
-      const dados = buscarCliente(nome);
-      if(dados) {
-        pedidoObj.marmita = dados.marmita;
-        pedidoObj.carnes = dados.carnes;
-        pedidoObj.acompanhamentos = dados.acompanhamentos;
-        pedidoObj.refrigerantes = dados.refrigerantes;
-        pedidoObj.adicionais = dados.adicionais;
-        pedidoObj.observacao = dados.observacao;
-
-        // Atualiza interface
-        const radio = container.querySelector(`input[name="marmita"][value="${dados.marmita}"]`);
-        if(radio) radio.checked = true;
-
-        container.querySelectorAll(".carnes li").forEach(li => li.classList.toggle("selected", dados.carnes.includes(li.dataset.item)));
-        container.querySelectorAll(".acompanhamentos li").forEach(li => li.classList.toggle("selected", dados.acompanhamentos.includes(li.dataset.item)));
-        container.querySelectorAll(".refrigerantes li").forEach(li => {
-          const r = dados.refrigerantes.find(rf => rf.nome === li.dataset.item);
-          li.querySelector(".qtd").value = r ? r.qtd : 0;
-          li.classList.toggle("selected", !!r && r.qtd>0);
-        });
-
-        container.querySelector(".adicionais").value = dados.adicionais || "";
-        container.querySelector(".observacao").value = dados.observacao || "";
-      }
-      atualizarPedido(index);
-    });
-
-    // Marmita
-    container.querySelectorAll('input[name="marmita"]').forEach(radio => {
-      radio.addEventListener("change", e => {
-        pedidoObj.marmita = e.target.value;
-        atualizarPedido(index);
-      });
-    });
-
-    // Carnes e Acompanhamentos
-    container.querySelectorAll(".carnes li, .acompanhamentos li").forEach(li => {
-      li.addEventListener("click", e => {
-        li.classList.toggle("selected");
-        const lista = li.parentElement.classList.contains("carnes") ? "carnes" : "acompanhamentos";
-        pedidoObj[lista] = Array.from(container.querySelectorAll(`.${lista} li.selected`)).map(l => l.dataset.item);
-        atualizarPedido(index);
-      });
-    });
-
-    // Refrigerantes
-    container.querySelectorAll(".refrigerantes li").forEach(li => {
-      const input = li.querySelector(".qtd");
-      input.addEventListener("input", () => {
-        const qtd = parseInt(input.value) || 0;
-        li.classList.toggle("selected", qtd>0);
-        pedidoObj.refrigerantes = Array.from(container.querySelectorAll(".refrigerantes li.selected")).map(l => ({
-          nome: l.dataset.item,
-          qtd: parseInt(l.querySelector(".qtd").value)
-        }));
-        atualizarPedido(index);
-      });
-    });
-
-    // Adicionais e Observação
-    container.querySelector(".adicionais").addEventListener("input", e => {
-      pedidoObj.adicionais = e.target.value;
-    });
-    container.querySelector(".observacao").addEventListener("input", e => {
-      pedidoObj.observacao = e.target.value;
-    });
-
-    // Local de entrega
-    const localSelect = container.querySelector(".localEntrega");
-    const enderecoContainer = container.querySelector(".enderecoContainer");
-    const enderecoInput = container.querySelector(".endereco");
-    const taxaEntregaInfo = container.querySelector(".taxaEntregaInfo");
-
-    function atualizarCampo() {
-      const local = localSelect.value;
-      const taxa = parseFloat(localSelect.selectedOptions[0].dataset.taxa || 0);
-      pedidoObj.localEntrega = local;
-      pedidoObj.taxaEntrega = taxa;
-
-      if(local.toLowerCase() === "retirada") {
-        enderecoContainer.classList.add("hidden");
-        enderecoInput.value = "📍 Retirada no Local";
-        enderecoInput.readOnly = true;
-      } else {
-        enderecoContainer.classList.remove("hidden");
-        enderecoInput.value = "";
-        enderecoInput.readOnly = false;
-      }
-      taxaEntregaInfo.textContent = local.toLowerCase()==="retirada" ? "🏠 Retirar no Local" : `🏍️ Taxa de entrega: R$ ${taxa.toFixed(2)}`;
-      atualizarPedido(index);
-    }
-
-    localSelect.addEventListener("change", atualizarCampo);
-    enderecoInput.addEventListener("input", e => { pedidoObj.endereco = e.target.value; });
-
-    // Atualizar total do pedido
-    function atualizarPedido(i) {
-      const p = pedidos[i];
-      let total = 0;
-      if(p.marmita) total += precos.marmita[p.marmita] || 0;
-      p.refrigerantes.forEach(r => { total += (precos.refrigerantes[r.nome] || 0) * r.qtd; });
-      total += p.taxaEntrega;
-      p.total = total;
-
-      container.querySelector(".totalPedido").textContent = `R$ ${total.toFixed(2)}`;
-      atualizarTotalGeral();
-    }
-
-    function atualizarTotalGeral() {
-      const totalGeral = pedidos.reduce((acc,p)=>acc+p.total,0);
-      totalGeralDiv.textContent = `Total Geral: R$ ${totalGeral.toFixed(2)}`;
-    }
-
-    container.atualizarPedido = atualizarPedido.bind(null,index);
-
-    pedidosContainer.appendChild(clone);
-    atualizarCampo();
-    atualizarPedido(index);
-  }
-
-  // Botões
-  adicionarPedidoBtn.addEventListener("click", criarPedido);
-
-  enviarWhatsBtn.addEventListener("click", () => {
-    pedidos.forEach(p => salvarCliente(p));
-    const mensagem = pedidos.map((p,i)=> {
-      let msg = `Pedido ${i+1}\nCliente: ${p.nome}\nMarmita: ${p.marmita}\nCarnes: ${p.carnes.join(", ")}\nAcompanhamentos: ${p.acompanhamentos.join(", ")}\nRefrigerantes: ${p.refrigerantes.map(r=>r.qtd+"x "+r.nome).join(", ")}\nAdicionais: ${p.adicionais}\nObservação: ${p.observacao}\nLocal: ${p.localEntrega}\nEndereço: ${p.endereco}\nTotal: R$ ${p.total.toFixed(2)}`;
-      return msg;
-    }).join("\n\n");
-    const url = `https://wa.me/5511999999999?text=${encodeURIComponent(mensagem)}`;
-    window.open(url,"_blank");
-  });
-
-  gerarPDFBtn.addEventListener("click", () => {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    let y = 10;
-    pedidos.forEach((p,i) => {
-      doc.text(`Pedido ${i+1}`,10,y); y+=6;
-      doc.text(`Cliente: ${p.nome}`,10,y); y+=6;
-      doc.text(`Marmita: ${p.marmita}`,10,y); y+=6;
-      doc.text(`Carnes: ${p.carnes.join(", ")}`,10,y); y+=6;
-      doc.text(`Acompanhamentos: ${p.acompanhamentos.join(", ")}`,10,y); y+=6;
-      doc.text(`Refrigerantes: ${p.refrigerantes.map(r=>r.qtd+"x "+r.nome).join(", ")}`,10,y); y+=6;
-      doc.text(`Adicionais: ${p.adicionais}`,10,y); y+=6;
-      doc.text(`Observação: ${p.observacao}`,10,y); y+=6;
-      doc.text(`Local: ${p.localEntrega}`,10,y); y+=6;
-      doc.text(`Endereço: ${p.endereco}`,10,y); y+=6;
-      doc.text(`Total: R$ ${p.total.toFixed(2)}`,10,y); y+=10;
-    });
-    doc.save("pedidos.pdf");
-  });
-
-  // Inicializa com um pedido
-  criarPedido();
+toggle.addEventListener('click', () => {
+    menu.classList.toggle('open');
 });
+
+/* ANO AUTOMÁTICO */
+document.getElementById('ano').innerText =
+    `© ${new Date().getFullYear()} – Guia Comercial do Bairro Alvorada`;
+
+/* CARREGAR EMPRESAS */
+fetch('assets/data/empresas.json')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Arquivo empresas.json não encontrado');
+        }
+        return response.json();
+    })
+    .then(empresas => {
+        const grid = document.getElementById('lista-empresas');
+        grid.innerHTML = '';
+
+        if (!Array.isArray(empresas) || empresas.length === 0) {
+            grid.innerHTML =
+                '<p style="color:red; text-align:center;">Nenhuma empresa cadastrada.</p>';
+            return;
+        }
+
+        empresas.forEach(empresa => {
+            const foneLimpo = empresa.fone.replace(/\D/g, '');
+            const foneFormatado = foneLimpo.replace(
+                /(\d{2})(\d{5})(\d{4})/,
+                '($1) $2-$3'
+            );
+
+            grid.innerHTML += `
+                <div class="card">
+                    <div class="icone">${empresa.icone}</div>
+
+                    <div class="info">
+                        <h3>${empresa.nome}</h3>
+                        <span class="categoria">${empresa.categoria}</span>
+
+                        <div class="contatos">
+                            <a class="btn telefone" href="tel:${foneLimpo}">
+                                📞 ${foneFormatado}
+                            </a>
+
+                            <a class="btn whatsapp"
+                               href="https://wa.me/55${foneLimpo}"
+                               target="_blank"
+                               aria-label="Conversar no WhatsApp">
+                                🟢 WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    })
+    .catch(error => {
+        document.getElementById('lista-empresas').innerHTML = `
+            <p style="color:red; text-align:center; font-weight:bold;">
+                ${error.message}
+            </p>
+        `;
+        console.error(error);
+    });
 </script>
 
 </body>
